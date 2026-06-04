@@ -3,210 +3,289 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Trading</title>
+<title>SCPDD Research</title>
 <meta name="theme-color" content="#dec09a">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Trading">
-<meta name="application-name" content="Trading">
-<meta name="description" content="Trading YouTube channels for Indian Markets — ad-free video hub">
+<meta name="apple-mobile-web-app-title" content="SCPDD Research">
+<meta name="application-name" content="SCPDD Research">
+<meta name="description" content="Smart Connected Product Design & Development — Research Hub for Accenture Consultants">
 <link rel="manifest" href="#" id="pwa-manifest-link">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='28' fill='%23b8925f'/%3E%3Ccircle cx='96' cy='96' r='55' fill='none' stroke='%231a1a1a' stroke-width='6'/%3E%3Cpolyline points='55,130 80,102 100,110 125,72 140,55' stroke='%231a1a1a' stroke-width='7' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpolygon points='132,48 148,48 148,64' stroke='%231a1a1a' stroke-width='5' fill='none' stroke-linejoin='round'/%3E%3C/svg%3E">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='28' fill='%23b8925f'/%3E%3Ccircle cx='96' cy='96' r='55' fill='none' stroke='%231a1a1a' stroke-width='6'/%3E%3Cpolyline points='55,130 80,102 100,110 125,72 140,55' stroke='%231a1a1a' stroke-width='7' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpolygon points='132,48 148,48 148,64' stroke='%231a1a1a' stroke-width='5' fill='none' stroke-linejoin='round'/%3E%3C/svg%3E">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@700;900&family=DM+Serif+Display&family=Noto+Sans+Devanagari:wght@700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='28' fill='%23b8925f'/%3E%3Ccircle cx='96' cy='80' r='32' fill='none' stroke='%231a1a1a' stroke-width='6'/%3E%3Crect x='72' y='110' width='48' height='6' rx='3' fill='%231a1a1a'/%3E%3Crect x='80' y='124' width='32' height='6' rx='3' fill='%231a1a1a'/%3E%3Crect x='88' y='138' width='16' height='6' rx='3' fill='%231a1a1a'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='28' fill='%23b8925f'/%3E%3Ccircle cx='96' cy='80' r='32' fill='none' stroke='%231a1a1a' stroke-width='6'/%3E%3Crect x='72' y='110' width='48' height='6' rx='3' fill='%231a1a1a'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700;900&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <style>
 @media(prefers-reduced-motion){*{animation:none!important;transition:none!important}}
-:root{--bg:#dec09a;--surface:#b8925f;--card:#d4b896;--accent:#1a1a1a;--series-hl:#2c4a2e;--videos-hl:#1a2e4a;--wl-hl:#6b2d00;--text:#0d0d0d;--muted:#4a3828;--border:#9e7a52;--light:#e8d5b8;--lighter:#f0e6d0}
+:root{
+  --bg:#dec09a;
+  --surface:#b8925f;
+  --card:#d4b896;
+  --accent:#1a1a1a;
+  --rss-hl:#1a4a2e;
+  --videos-hl:#1a2e4a;
+  --books-hl:#4a1a2e;
+  --news-hl:#4a3800;
+  --text:#0d0d0d;
+  --muted:#4a3828;
+  --border:#9e7a52;
+  --light:#e8d5b8;
+  --lighter:#f0e6d0;
+  --acc-purple:#7B2EDE;
+}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);background-image:repeating-linear-gradient(90deg,transparent,transparent 3px,rgba(0,0,0,0.016) 3px,rgba(0,0,0,0.016) 4px),repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.016) 3px,rgba(0,0,0,0.016) 4px);color:var(--text);min-height:100vh;overflow-x:hidden}
 .app-header{background:var(--surface);border-bottom:3px solid var(--accent);position:sticky;top:0;z-index:100;box-shadow:0 3px 14px rgba(0,0,0,0.22)}
 .header-top{display:flex;align-items:center;padding:13px 16px 9px;gap:12px}
-.play-icon{width:36px;height:36px;flex-shrink:0}
+.brand-icon{width:36px;height:36px;flex-shrink:0}
 .app-title-wrap{flex:1}
-.app-title{font-family:'DM Serif Display',serif;font-size:38px;letter-spacing:.5px;color:var(--text);line-height:1}
-.app-subtitle{font-size:14px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-top:3px}
-.tab-bar{display:flex;border-top:1px solid rgba(0,0,0,0.18)}
-.tab-btn{flex:1;padding:10px 4px;background:transparent;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;cursor:pointer;position:relative;transition:color .2s,background .2s;line-height:1.5;text-align:center}
+.app-title{font-family:'DM Serif Display',serif;font-size:34px;letter-spacing:.5px;color:var(--text);line-height:1}
+.app-subtitle{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-top:3px}
+.tab-bar{display:flex;border-top:1px solid rgba(0,0,0,0.18);overflow-x:auto;scrollbar-width:none}
+.tab-bar::-webkit-scrollbar{display:none}
+.tab-btn{flex:1;min-width:80px;padding:9px 4px;background:transparent;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;position:relative;transition:color .2s,background .2s;line-height:1.5;text-align:center;white-space:nowrap}
 .tab-btn.active{background:rgba(0,0,0,0.07)}
 .tab-btn.active::after{content:'';position:absolute;bottom:0;left:10%;width:80%;height:3px;border-radius:2px 2px 0 0}
-.tab-btn.tab-series.active{color:var(--series-hl)}
-.tab-btn.tab-series.active::after{background:var(--series-hl)}
+.tab-btn.tab-rss.active{color:var(--rss-hl)}
+.tab-btn.tab-rss.active::after{background:var(--rss-hl)}
 .tab-btn.tab-videos.active{color:var(--videos-hl)}
 .tab-btn.tab-videos.active::after{background:var(--videos-hl)}
-.tab-btn.tab-watchlater.active{color:var(--wl-hl)}
-.tab-btn.tab-watchlater.active::after{background:var(--wl-hl)}
-.tab-icon{font-size:22px;display:block;margin-bottom:2px}
-.wl-count{display:inline-block;background:var(--wl-hl);color:#fff;font-size:12px;min-width:20px;height:20px;line-height:20px;border-radius:10px;padding:0 6px;vertical-align:middle;margin-left:3px}
+.tab-btn.tab-books.active{color:var(--books-hl)}
+.tab-btn.tab-books.active::after{background:var(--books-hl)}
+.tab-btn.tab-news.active{color:var(--news-hl)}
+.tab-btn.tab-news.active::after{background:var(--news-hl)}
+.tab-icon{font-size:20px;display:block;margin-bottom:2px}
 .app-body{max-width:960px;margin:0 auto;padding-bottom:80px}
 .tab-panel{display:none}
 .tab-panel.active{display:block}
+
+/* Section Banner */
 .section-banner{padding:14px 16px 10px;border-bottom:2px solid rgba(0,0,0,0.14);display:flex;align-items:center;gap:10px;background:rgba(0,0,0,0.07)}
-.banner-title{font-family:'DM Serif Display',serif;font-size:32px;letter-spacing:.3px}
-.banner-title.s{color:var(--series-hl)}
-.banner-title.v{color:var(--videos-hl)}
-.banner-title.w{color:var(--wl-hl)}
-.banner-sub{font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
-.banner-count{margin-left:auto;font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.banner-title{font-family:'DM Serif Display',serif;font-size:28px;letter-spacing:.3px}
+.banner-title.rss{color:var(--rss-hl)}
+.banner-title.vid{color:var(--videos-hl)}
+.banner-title.bk{color:var(--books-hl)}
+.banner-title.nws{color:var(--news-hl)}
+.banner-sub{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+/* Channel / Source Groups */
 .channel-group{border-bottom:1px solid rgba(0,0,0,0.11)}
 .ch-header{display:flex;align-items:center;padding:11px 16px;cursor:pointer;user-select:none;gap:10px;transition:background .15s}
 .ch-header:hover{background:rgba(0,0,0,0.06)}
-.ch-badge{font-size:12px;font-weight:900;text-transform:uppercase;padding:3px 8px;border-radius:2px;letter-spacing:.1em;flex-shrink:0}
-.badge-s{background:rgba(44,74,46,.12);color:var(--series-hl);border:1px solid var(--series-hl)}
-.badge-v{background:rgba(26,46,74,.12);color:var(--videos-hl);border:1px solid var(--videos-hl)}
-.badge-mr{background:rgba(0,0,0,.07);color:var(--text);border:1px solid var(--border)}
-.ch-name{font-size:20px;flex:1;color:var(--text)}
-.ch-lang{font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-.ch-arrow{color:var(--muted);font-size:15px;transition:transform .25s}
+.ch-badge{font-size:11px;font-weight:900;text-transform:uppercase;padding:3px 7px;border-radius:2px;letter-spacing:.1em;flex-shrink:0}
+.badge-rss{background:rgba(26,74,46,.12);color:var(--rss-hl);border:1px solid var(--rss-hl)}
+.badge-vid{background:rgba(26,46,74,.12);color:var(--videos-hl);border:1px solid var(--videos-hl)}
+.badge-bk{background:rgba(74,26,46,.12);color:var(--books-hl);border:1px solid var(--books-hl)}
+.badge-news{background:rgba(74,56,0,.12);color:var(--news-hl);border:1px solid var(--news-hl)}
+.ch-name{font-size:18px;flex:1;color:var(--text)}
+.ch-desc{font-size:13px;color:var(--muted);margin-top:1px}
+.ch-arrow{color:var(--muted);font-size:15px;transition:transform .25s;flex-shrink:0}
 .channel-group.open .ch-arrow{transform:rotate(180deg)}
 .feed-grid{display:none;padding:0 10px 10px;flex-direction:column;background:rgba(0,0,0,0.04)}
 .channel-group.open .feed-grid{display:flex}
-.feed-item{padding:10px 6px;border-bottom:1px solid rgba(0,0,0,0.07);display:flex;align-items:flex-start;gap:10px;cursor:pointer;transition:background .15s;border-radius:3px}
+
+/* RSS Feed Items */
+.feed-item{padding:10px 6px;border-bottom:1px solid rgba(0,0,0,0.07);cursor:pointer;transition:background .15s;border-radius:3px}
 .feed-item:last-of-type{border-bottom:none}
 .feed-item:hover{background:rgba(0,0,0,0.05)}
-.item-thumb{width:150px;height:84px;object-fit:cover;flex-shrink:0;border-radius:3px;border:1px solid rgba(0,0,0,0.18);background:var(--card)}
+.feed-item-inner{display:flex;align-items:flex-start;gap:10px}
 .item-info{flex:1;min-width:0}
-.item-title{font-size:18px;line-height:1.45;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.item-date{font-size:14px;color:var(--muted);margin-top:4px;letter-spacing:.07em;text-transform:uppercase}
+.item-title{font-size:16px;line-height:1.45;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-weight:700}
+.item-summary{font-size:13px;color:var(--muted);margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.5}
+.item-date{font-size:12px;color:var(--muted);margin-top:5px;letter-spacing:.07em;text-transform:uppercase}
+.item-source{font-size:11px;font-weight:900;color:var(--border);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+.item-tag{display:inline-block;font-size:10px;font-weight:900;text-transform:uppercase;padding:2px 6px;border-radius:2px;margin-right:4px;margin-top:4px;letter-spacing:.08em}
+.tag-iot{background:rgba(26,74,46,.15);color:var(--rss-hl);border:1px solid var(--rss-hl)}
+.tag-ai{background:rgba(26,46,74,.15);color:var(--videos-hl);border:1px solid var(--videos-hl)}
+.tag-cloud{background:rgba(74,56,0,.15);color:var(--news-hl);border:1px solid var(--news-hl)}
+.tag-strategy{background:rgba(74,26,46,.15);color:var(--books-hl);border:1px solid var(--books-hl)}
+.tag-accenture{background:rgba(123,46,222,.12);color:#5b1ea8;border:1px solid #7B2EDE}
+.ext-link-btn{display:inline-flex;align-items:center;gap:4px;margin-top:7px;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);text-decoration:none;padding:4px 10px;border:1px solid var(--border);border-radius:2px;background:var(--lighter);transition:background .15s}
+.ext-link-btn:hover{background:var(--card)}
+
+/* Video Items */
+.video-item{padding:10px 6px;border-bottom:1px solid rgba(0,0,0,0.07);display:flex;align-items:flex-start;gap:10px;cursor:pointer;transition:background .15s;border-radius:3px}
+.video-item:last-of-type{border-bottom:none}
+.video-item:hover{background:rgba(0,0,0,0.05)}
+.item-thumb{width:148px;height:83px;object-fit:cover;flex-shrink:0;border-radius:3px;border:1px solid rgba(0,0,0,0.18);background:var(--card)}
+.thumb-placeholder{width:148px;height:83px;flex-shrink:0;border-radius:3px;border:1px solid rgba(0,0,0,0.18);background:var(--card);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:27px}
 .item-actions{display:flex;flex-direction:column;gap:5px;align-items:center;flex-shrink:0}
 .btn-play{width:36px;height:36px;background:var(--accent);color:#fff;border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:transform .15s,opacity .15s}
 .btn-play:hover{transform:scale(1.1);opacity:.85}
-.btn-wl{width:36px;height:36px;background:var(--lighter);color:var(--wl-hl);border:1px solid var(--wl-hl);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;transition:background .15s}
-.btn-wl:hover{background:#ffe0c8}
-.btn-wl.saved{background:var(--wl-hl);color:#fff}
-.loading-row{padding:18px 16px;text-align:center;font-size:15px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.btn-save{width:36px;height:36px;background:var(--lighter);color:var(--books-hl);border:1px solid var(--books-hl);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:background .15s}
+.btn-save:hover{background:#f0d8e8}
+.btn-save.saved{background:var(--books-hl);color:#fff}
+
+/* Books Tab */
+.book-card{padding:14px 16px;border-bottom:1px solid rgba(0,0,0,0.10);display:flex;gap:14px;align-items:flex-start;background:transparent;transition:background .15s;cursor:default}
+.book-card:hover{background:rgba(0,0,0,0.04)}
+.book-cover{width:64px;height:88px;flex-shrink:0;border-radius:3px;border:1px solid rgba(0,0,0,0.18);background:var(--card);display:flex;align-items:center;justify-content:center;font-size:28px;overflow:hidden}
+.book-cover img{width:100%;height:100%;object-fit:cover}
+.book-info{flex:1;min-width:0}
+.book-title{font-size:17px;font-weight:900;line-height:1.3;color:var(--text)}
+.book-author{font-size:13px;color:var(--muted);margin-top:3px;font-style:italic}
+.book-why{font-size:13px;color:var(--text);margin-top:7px;line-height:1.5}
+.book-tags{margin-top:7px}
+.book-links{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}
+.book-link{display:inline-flex;align-items:center;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);text-decoration:none;padding:3px 9px;border:1px solid var(--border);border-radius:2px;background:var(--lighter);transition:background .15s}
+.book-link:hover{background:var(--card)}
+.book-section-hdr{padding:12px 16px 8px;background:rgba(0,0,0,0.07);border-bottom:1px solid rgba(0,0,0,0.10);font-size:11px;font-weight:900;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+
+/* News Tab */
+.news-hero{margin:14px 12px;border:2px solid var(--news-hl);border-radius:3px;overflow:hidden;background:rgba(0,0,0,0.04)}
+.news-hero-hdr{background:var(--news-hl);padding:9px 14px;font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:.13em;color:#fff;display:flex;align-items:center;gap:8px}
+.news-item{padding:12px 14px;border-bottom:1px solid rgba(0,0,0,0.09)}
+.news-item:last-of-type{border-bottom:none}
+.news-item:hover{background:rgba(0,0,0,0.04)}
+.news-title{font-size:16px;font-weight:700;line-height:1.4;color:var(--text)}
+.news-meta{font-size:12px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.07em}
+.news-excerpt{font-size:13px;color:var(--muted);margin-top:5px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+
+/* Shared */
+.loading-row{padding:18px 16px;text-align:center;font-size:14px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
 .spin{display:inline-block;animation:spin .8s linear infinite;margin-right:5px}
 @keyframes spin{to{transform:rotate(360deg)}}
-.error-row{padding:12px 16px;font-size:15px;color:#7a2020;text-align:center;letter-spacing:.08em}
-.series-tool{margin:14px 12px;border:2px solid var(--accent);border-radius:3px;overflow:hidden;background:rgba(0,0,0,0.04)}
-.series-tool-hdr{background:var(--accent);padding:9px 14px;font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:.13em;color:#fff}
-.series-tool-body{padding:12px}
-.stool-input{width:100%;padding:9px 11px;background:var(--lighter);border:1px solid var(--border);color:var(--text);font-family:'DM Sans',sans-serif;font-size:18px;border-radius:3px;margin-bottom:9px;outline:none;transition:border-color .2s}
-.stool-input:focus{border-color:var(--accent)}
-.stool-input::placeholder{color:var(--muted)}
-.stool-btn{width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:3px;font-family:'DM Sans',sans-serif;font-size:17px;font-weight:900;text-transform:uppercase;letter-spacing:.11em;cursor:pointer}
-.stool-btn:hover{opacity:.87}
-.series-results{margin-top:12px;border-top:1px solid var(--border);padding-top:12px}
-.wl-empty{text-align:center;padding:50px 20px;font-size:20px;color:var(--muted)}
-.wl-empty-icon{font-size:60px;display:block;margin-bottom:12px}
-.wl-item{padding:12px 14px;border-bottom:1px solid rgba(0,0,0,0.1);display:flex;align-items:flex-start;gap:10px}
-.wl-item:hover{background:rgba(0,0,0,0.04)}
-.wl-thumb{width:144px;height:81px;object-fit:cover;flex-shrink:0;border-radius:3px;border:1px solid rgba(0,0,0,0.18);background:var(--card)}
-.wl-info{flex:1;min-width:0}
-.wl-title{font-size:18px;line-height:1.45;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.wl-meta{font-size:14px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.06em}
-.wl-actions{display:flex;flex-direction:column;gap:5px;flex-shrink:0}
-.btn-wl-play{width:36px;height:36px;background:var(--accent);color:#fff;border:none;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:opacity .15s}
-.btn-wl-play:hover{opacity:.85}
-.btn-wl-remove{width:36px;height:36px;background:var(--lighter);color:#7a2020;border:1px solid #7a2020;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background .15s}
-.btn-wl-remove:hover{background:#ffe0d0}
-.wl-clear-row{padding:12px 14px;border-top:2px solid rgba(0,0,0,0.12);text-align:right}
-.btn-clear-all{background:none;border:2px solid #7a2020;color:#7a2020;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;padding:6px 14px;cursor:pointer;border-radius:3px}
-.btn-clear-all:hover{background:#ffe0d0}
+.error-row{padding:12px 16px;font-size:14px;color:#7a2020;text-align:center;letter-spacing:.08em}
 .load-more-wrap{text-align:center;padding:14px}
-.btn-load-more{background:var(--lighter);border:2px solid var(--accent);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;padding:8px 20px;cursor:pointer;border-radius:3px;transition:background .2s}
+.btn-load-more{background:var(--lighter);border:2px solid var(--accent);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;padding:8px 20px;cursor:pointer;border-radius:3px;transition:background .2s}
 .btn-load-more:hover{background:var(--card)}
+.refresh-row{padding:8px 14px;text-align:right}
+.btn-refresh{background:none;border:1px solid var(--border);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;padding:4px 10px;cursor:pointer;border-radius:2px}
+.btn-refresh:hover{background:rgba(0,0,0,0.05)}
+
+/* Player Overlay */
 #player-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:500;display:none;flex-direction:column}
 #player-overlay.active{display:flex}
 #player-overlay.portrait .player-wrap{padding-bottom:56.25%;flex-shrink:0;position:relative;width:100%;background:#000}
 #player-overlay.portrait .player-info{flex:1;overflow-y:auto}
 #player-overlay.landscape .player-wrap{flex:1;position:relative;padding-bottom:0;background:#000}
 #player-overlay.landscape .player-info{display:none}
-.btn-orientation{background:var(--lighter);border:1px solid var(--border);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;padding:6px 10px;cursor:pointer;border-radius:3px;flex-shrink:0;text-transform:uppercase;letter-spacing:.07em;white-space:nowrap}
+.btn-orientation{background:var(--lighter);border:1px solid var(--border);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:5px 9px;cursor:pointer;border-radius:3px;flex-shrink:0;text-transform:uppercase;letter-spacing:.07em;white-space:nowrap}
 .player-topbar{display:flex;align-items:center;padding:11px 14px;background:var(--surface);border-bottom:3px solid var(--accent);gap:10px;flex-shrink:0}
-.btn-close{background:var(--accent);border:none;color:#fff;padding:7px 14px;font-family:'DM Sans',sans-serif;font-size:17px;font-weight:900;cursor:pointer;border-radius:3px;text-transform:uppercase;letter-spacing:.06em;flex-shrink:0}
-.player-ttl{font-size:17px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
-.btn-wl-player{background:var(--lighter);border:2px solid var(--wl-hl);color:var(--wl-hl);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:900;padding:6px 10px;cursor:pointer;border-radius:3px;flex-shrink:0;text-transform:uppercase;letter-spacing:.08em;transition:background .15s;white-space:nowrap}
-.btn-wl-player:hover{background:#ffe0c8}
-.btn-wl-player.saved{background:var(--wl-hl);color:#fff;border-color:var(--wl-hl)}
-.btn-yt-open{background:var(--lighter);border:1px solid var(--border);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;padding:6px 10px;cursor:pointer;border-radius:3px;text-decoration:none;display:inline-flex;align-items:center;gap:3px;flex-shrink:0;text-transform:uppercase;letter-spacing:.07em}
+.btn-close{background:var(--accent);border:none;color:#fff;padding:7px 14px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:900;cursor:pointer;border-radius:3px;text-transform:uppercase;letter-spacing:.06em;flex-shrink:0}
+.player-ttl{font-size:16px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+.btn-yt-open{background:var(--lighter);border:1px solid var(--border);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:5px 9px;cursor:pointer;border-radius:3px;text-decoration:none;display:inline-flex;align-items:center;gap:3px;flex-shrink:0;text-transform:uppercase;letter-spacing:.07em}
 .player-wrap{position:relative;width:100%;padding-bottom:56.25%;background:#000;flex-shrink:0}
 .player-iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
 .player-info{padding:14px 16px;overflow-y:auto;flex:1;background:var(--surface)}
-.player-info-title{font-family:'DM Serif Display',serif;font-size:27px;line-height:1.35;color:var(--text);margin-bottom:6px}
-.player-info-meta{font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.11em}
+.player-info-title{font-family:'DM Serif Display',serif;font-size:24px;line-height:1.35;color:var(--text);margin-bottom:6px}
+.player-info-meta{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.11em}
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 ::-webkit-scrollbar-thumb:hover{background:var(--muted)}
-#pwa-badge{position:fixed;bottom:20px;left:16px;z-index:1300;background:var(--accent);color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:900;padding:9px 18px;border-radius:20px;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,0.3);display:none;letter-spacing:.1em;text-transform:uppercase}
-.thumb-placeholder{width:150px;height:84px;flex-shrink:0;border-radius:3px;border:1px solid rgba(0,0,0,0.18);background:var(--card);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:27px}
+#pwa-badge{position:fixed;bottom:20px;left:16px;z-index:1300;background:var(--accent);color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:900;padding:9px 18px;border-radius:20px;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,0.3);display:none;letter-spacing:.1em;text-transform:uppercase}
+
+/* Accenture badge in header */
+.acc-badge{background:#A100FF;color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:2px;letter-spacing:.1em;text-transform:uppercase;margin-left:auto;flex-shrink:0}
+
+/* Consultant tip box */
+.tip-box{margin:12px 12px 0;padding:10px 14px;background:rgba(26,46,74,.07);border-left:3px solid var(--videos-hl);border-radius:2px;font-size:13px;color:var(--muted);line-height:1.5}
+.tip-box strong{color:var(--text)}
 </style>
 </head>
 <body>
+
 <div class="app-header">
   <div class="header-top">
-    <svg class="play-icon" viewBox="0 0 36 36" fill="none">
-      <circle cx="18" cy="18" r="17" fill="rgba(0,0,0,0.1)"/>
-      <circle cx="18" cy="18" r="17" stroke="#1a1a1a" stroke-width="2"/>
-      <polyline points="9,26 16,16 22,20 28,10" stroke="#1a1a1a" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Brand Icon: circuit/IoT node motif -->
+    <svg class="brand-icon" viewBox="0 0 36 36" fill="none">
+      <circle cx="18" cy="18" r="17" fill="rgba(0,0,0,0.10)"/>
+      <circle cx="18" cy="18" r="17" stroke="#1a1a1a" stroke-width="1.5"/>
+      <circle cx="18" cy="18" r="5" fill="#1a1a1a"/>
+      <circle cx="18" cy="7"  r="2.5" fill="#1a1a1a"/>
+      <circle cx="18" cy="29" r="2.5" fill="#1a1a1a"/>
+      <circle cx="7"  cy="18" r="2.5" fill="#1a1a1a"/>
+      <circle cx="29" cy="18" r="2.5" fill="#1a1a1a"/>
+      <line x1="18" y1="13" x2="18" y2="9.5"  stroke="#1a1a1a" stroke-width="1.5"/>
+      <line x1="18" y1="23" x2="18" y2="26.5" stroke="#1a1a1a" stroke-width="1.5"/>
+      <line x1="13" y1="18" x2="9.5" y2="18"  stroke="#1a1a1a" stroke-width="1.5"/>
+      <line x1="23" y1="18" x2="26.5" y2="18" stroke="#1a1a1a" stroke-width="1.5"/>
     </svg>
     <div class="app-title-wrap">
-      <div class="app-title">Trading</div>
-      <div class="app-subtitle">Trading Channels · Indian Markets · Ad-Free</div>
+      <div class="app-title">SCPDD Research</div>
+      <div class="app-subtitle">Smart Connected Product Design &amp; Development · Accenture Industry X</div>
     </div>
+    <span class="acc-badge">Accenture</span>
   </div>
   <div class="tab-bar">
-    <button class="tab-btn tab-series active" data-tab="series">
-      <span class="tab-icon">🎬</span>YouTube Series
+    <button class="tab-btn tab-rss active" data-tab="rss">
+      <span class="tab-icon">📡</span>RSS Feeds
     </button>
     <button class="tab-btn tab-videos" data-tab="videos">
-      <span class="tab-icon">📈</span>Trading Videos
+      <span class="tab-icon">🎥</span>Videos
     </button>
-    <button class="tab-btn tab-watchlater" data-tab="watchlater">
-      <span class="tab-icon">🕐</span>Watch Later<span class="wl-count" id="wl-count" style="display:none">0</span>
+    <button class="tab-btn tab-books" data-tab="books">
+      <span class="tab-icon">📚</span>Books
+    </button>
+    <button class="tab-btn tab-news" data-tab="news">
+      <span class="tab-icon">🏢</span>Accenture News
     </button>
   </div>
 </div>
+
 <div class="app-body">
-  <div id="panel-series" class="tab-panel active">
+
+  <!-- ================================================================ RSS TAB ================================================================ -->
+  <div id="panel-rss" class="tab-panel active">
     <div class="section-banner">
-      <span style="font-size:20px">🎬</span>
+      <span style="font-size:20px">📡</span>
       <div>
-        <div class="banner-title s">YouTube Series</div>
-        <div class="banner-sub">Short Films · Drama · Comedy</div>
-      </div>
-      <div class="banner-count">30 Channels</div>
-    </div>
-    <div class="series-tool">
-      <div class="series-tool-hdr">🔍 Fetch Any Playlist / Channel Episodes</div>
-      <div class="series-tool-body">
-        <input class="stool-input" id="series-input" placeholder="Paste YouTube Playlist or Channel URL (list=…)" onkeydown="if(event.key==='Enter') App.fetchSeries()">
-        <button class="stool-btn" onclick="App.fetchSeries()">▶ Fetch Episodes</button>
-        <div id="series-results" class="series-results" style="display:none"></div>
+        <div class="banner-title rss">Industry RSS Feeds</div>
+        <div class="banner-sub">IoT · AI · Cloud · Connectivity · Product Strategy</div>
       </div>
     </div>
-    <div id="series-channels"></div>
+    <div class="tip-box"><strong>Consultant Tip:</strong> Scan these feeds daily. Look for client-relevant signals on IoT adoption, cloud shifts, and AI-in-product trends before client meetings.</div>
+    <div id="rss-channels"></div>
   </div>
+
+  <!-- ================================================================ VIDEOS TAB ================================================================ -->
   <div id="panel-videos" class="tab-panel">
     <div class="section-banner">
-      <span style="font-size:20px">📈</span>
+      <span style="font-size:20px">🎥</span>
       <div>
-        <div class="banner-title v">Trading Videos</div>
-        <div class="banner-sub">Indian Markets · Stock &amp; Index Trading</div>
+        <div class="banner-title vid">Learning Videos</div>
+        <div class="banner-sub">IoT · Product Strategy · Connected Devices · AI/Cloud · Consulting</div>
       </div>
-      <div class="banner-count">20 Channels</div>
     </div>
+    <div class="tip-box"><strong>Consultant Tip:</strong> Watch keynotes and case studies. These build your ability to narrate digital transformation stories to C-suite clients.</div>
     <div id="video-channels"></div>
   </div>
-  <div id="panel-watchlater" class="tab-panel">
+
+  <!-- ================================================================ BOOKS TAB ================================================================ -->
+  <div id="panel-books" class="tab-panel">
     <div class="section-banner">
-      <span style="font-size:20px">🕐</span>
+      <span style="font-size:20px">📚</span>
       <div>
-        <div class="banner-title w">Watch Later</div>
-        <div class="banner-sub">Your saved videos</div>
+        <div class="banner-title bk">Essential Reading</div>
+        <div class="banner-sub">Strategy · IoT · Product Management · Connected Business Models</div>
       </div>
-      <div class="banner-count" id="wl-banner-count">0 videos</div>
     </div>
-    <div id="wl-list"></div>
+    <div class="tip-box"><strong>Consultant Tip:</strong> These books form the intellectual bedrock of SCPDD consulting. Use the frameworks from these during client workshops and proposals.</div>
+    <div id="books-list"></div>
   </div>
-</div>
+
+  <!-- ================================================================ ACCENTURE NEWS TAB ================================================================ -->
+  <div id="panel-news" class="tab-panel">
+    <div class="section-banner">
+      <span style="font-size:20px">🏢</span>
+      <div>
+        <div class="banner-title nws">Accenture News</div>
+        <div class="banner-sub">Industry X · Research · Press Releases · Thought Leadership</div>
+      </div>
+    </div>
+    <div class="tip-box"><strong>Consultant Tip:</strong> Stay current on Accenture's own publications. Citing internal case studies and analyst reports in client decks builds credibility.</div>
+    <div id="news-channels"></div>
+  </div>
+
+</div><!-- end app-body -->
+
+<!-- Player Overlay -->
 <div id="player-overlay">
   <div class="player-topbar">
     <button class="btn-close" onclick="Player.close()">✕ Close</button>
     <span class="player-ttl" id="p-title">Loading…</span>
-    <button class="btn-orientation" id="p-orient-btn" onclick="Player.toggleOrientation()" title="Switch to Portrait">↻ Landscape</button>
-    <button class="btn-wl-player" id="p-wl-btn" onclick="Player.toggleWL()">+ Watch Later</button>
+    <button class="btn-orientation" id="p-orient-btn" onclick="Player.toggleOrientation()">↻ Landscape</button>
     <a class="btn-yt-open" id="p-yt-link" href="#" target="_blank" rel="noopener noreferrer">↗ YouTube</a>
   </div>
   <div class="player-wrap">
@@ -214,100 +293,473 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);background-image:repe
   </div>
   <div class="player-info">
     <div class="player-info-title" id="p-info-title"></div>
-    <div class="player-info-meta" id="p-info-meta"></div>
+    <div class="player-info-meta"  id="p-info-meta"></div>
   </div>
 </div>
+
 <div id="pwa-badge" onclick="App.pwaTriggerInstall()">⬇ Install App</div>
 
 <script>
 'use strict';
 
 /* =====================================================================
-   SANDBOX 1: DATA — All channel definitions
+   DATA — RSS Sources, Video Channels, Books, News Sources
    ===================================================================== */
 var Data = (function() {
-  var series = [
-    {name:"Pocket Films",        lang:"Hindi",         channelId:"UCWnTC8o8AycL6a2eRrKSdBg"},
-    {name:"Royal Select",        lang:"Hindi",         channelId:"UC6pBQ3VyBPfx4NqLRiDVlLQ"},
-    {name:"Large Short Films",   lang:"Hindi",         channelId:"UCvCMlBp8D6jpeCRKMwIkMPg"},
-    {name:"TVF",                 lang:"Hindi",         channelId:"UCNJcSUSzUeFm8W9P7UUlSeQ"},
-    {name:"Dice Media",          lang:"Hindi",         channelId:"UCqmGmh5PkIwBZISRMdO-CrQ"},
-    {name:"Terribly Tiny Tales", lang:"Hindi",         channelId:"UCkeTY4uVFOVHhXCPP7rFKqw"},
-    {name:"The Screen Patti",    lang:"Hindi",         channelId:"UCy3L-bSFG2N7cVp-wl7R7nQ"},
-    {name:"Girliyapa",           lang:"Hindi",         channelId:"UCPiLR1FE1eOYJspoQCCjvDw"},
-    {name:"FilterCopy",          lang:"Hindi",         channelId:"UCo8bcnLyZH8tBIH9V1mLgqQ"},
-    {name:"The Timeliners",      lang:"Hindi",         channelId:"UCgF_agQxE1lHjFxlPmR6Ung"},
-    {name:"RVCJ Media",          lang:"Hindi",         channelId:"UCpEhnqL0y41EpW2TvWAHD7Q"},
-    {name:"Six Sigma Films",     lang:"Hindi/Marathi", channelId:"UCBFDmbGfqRQ7XTkHhvBOEQQ"},
-    {name:"HumaraMovie",         lang:"Hindi",         channelId:"UC1N8_SUjJLkBYFflMNnBF3Q"},
-    {name:"Gorilla Shorts",      lang:"Hindi",         channelId:"UCIjAdHQTcBHJJMeZDFD0gEQ"},
-    {name:"Natak Pictures",      lang:"Hindi",         channelId:"UCB6Km-g1mCMVkT7K31vSCWA"},
-    {name:"Shudh Desi Endings",  lang:"Hindi",         channelId:"UCaFMGMBLf3lJPRF5o4M35rA"},
-    {name:"Shortfundly",         lang:"Hindi",         channelId:"UCOU6TFkfV_cpSq5rh1yBhjg"},
-    {name:"Web Talkies",         lang:"Hindi",         channelId:"UC60oBP3R0LBb5h2NLfKrJ8A"},
-    {name:"BhaDiPa",             lang:"Marathi",       channelId:"UC6P0P6Q-K1H0_v1vHw6TzXg"},
-    {name:"Karbhari",            lang:"Marathi",       channelId:"UC5X7u_3FN7IIxC1L_VTJqcw"},
-    {name:"Atrangii",            lang:"Hindi",         channelId:"UCBfBACobZO_P2m7xP-4ySDQ"},
-    {name:"Desi Studios",        lang:"Hindi",         channelId:"UCnbfV0YvrxWMq3h0hmo13Jg"},
-    {name:"FWF Originals",       lang:"Hindi",         channelId:"UCG55trMQKKI1Gpa93nnfFXA"},
-    {name:"FWF Big Shorts",      lang:"Hindi",         channelId:"UCvYjsskcPHTSKZq5jHX1R5g"},
-    {name:"Indian Short Films",  lang:"Hindi",         channelId:"UCRpHd7yoytMmLAkHwOJJjJA"},
-    {name:"Mega Short Films",    lang:"Hindi",         channelId:"UC0Gc80GsW3OC6z89hYsnj3Q"},
-    {name:"Suryaa Drama",        lang:"Hindi",         channelId:"UCuBBmRtpHwkqz2-nphMvL1g"},
-    {name:"Arre",                lang:"Hindi",         channelId:"UCkYhoWbz967rcd8kZjKe3iA"},
-    {name:"Viddsee",             lang:"Hindi",         channelId:"UClQMNIPzABe5FqUrOO0yEiQ"},
-    {name:"ScoopWhoop",          lang:"Hindi",         channelId:"UCx2HcmpB-UZGkMXOCJ4QIVA"}
+
+  /* --- RSS Feed Sources --- */
+  var rssFeeds = [
+    {
+      name: "IoT Analytics",
+      category: "IoT",
+      badge: "IoT",
+      desc: "Enterprise IoT research, market analysis & insights",
+      url: "https://iot-analytics.com/feed/",
+      tags: ["iot","strategy"]
+    },
+    {
+      name: "IoT For All",
+      category: "IoT",
+      badge: "IoT",
+      desc: "Accessible IoT news, use cases & industry applications",
+      url: "https://www.iotforall.com/feed",
+      tags: ["iot"]
+    },
+    {
+      name: "Stacey on IoT",
+      category: "IoT",
+      badge: "IoT",
+      desc: "Connected devices commentary & smart product analysis",
+      url: "https://staceyoniot.com/feed/",
+      tags: ["iot","strategy"]
+    },
+    {
+      name: "MIT Technology Review",
+      category: "AI & Tech",
+      badge: "AI",
+      desc: "Deep dives on AI, computing & emerging technology",
+      url: "https://www.technologyreview.com/feed/",
+      tags: ["ai","strategy"]
+    },
+    {
+      name: "Harvard Business Review – Tech",
+      category: "Strategy",
+      badge: "Strategy",
+      desc: "Business & strategy lens on digital transformation",
+      url: "https://hbr.org/topic/subject/technology.rss",
+      tags: ["strategy","ai"]
+    },
+    {
+      name: "McKinsey Insights – Digital",
+      category: "Strategy",
+      badge: "Strategy",
+      desc: "Consulting-grade digital & IoT transformation reports",
+      url: "https://www.mckinsey.com/capabilities/mckinsey-digital/our-insights/rss",
+      tags: ["strategy","cloud"]
+    },
+    {
+      name: "AWS News Blog",
+      category: "Cloud",
+      badge: "Cloud",
+      desc: "AWS product launches, IoT services & cloud architecture",
+      url: "https://aws.amazon.com/blogs/aws/feed/",
+      tags: ["cloud","iot"]
+    },
+    {
+      name: "Google Cloud Blog",
+      category: "Cloud",
+      badge: "Cloud",
+      desc: "Cloud platform, AI/ML products & connected solutions",
+      url: "https://cloudblog.withgoogle.com/rss/",
+      tags: ["cloud","ai"]
+    },
+    {
+      name: "Microsoft IoT Blog",
+      category: "IoT",
+      badge: "IoT",
+      desc: "Azure IoT Hub, Edge computing & industrial IoT updates",
+      url: "https://techcommunity.microsoft.com/t5/internet-of-things-blog/bg-p/IoTBlog/rss",
+      tags: ["iot","cloud"]
+    },
+    {
+      name: "Product Coalition",
+      category: "Product Strategy",
+      badge: "Strategy",
+      desc: "Product management frameworks, roadmaps & case studies",
+      url: "https://productcoalition.com/feed",
+      tags: ["strategy"]
+    },
+    {
+      name: "Gartner Newsroom",
+      category: "Strategy",
+      badge: "Strategy",
+      desc: "Analyst forecasts, magic quadrants & tech hype cycles",
+      url: "https://www.gartner.com/en/newsroom/feed",
+      tags: ["strategy","ai","iot"]
+    },
+    {
+      name: "Connected World Magazine",
+      category: "IoT",
+      badge: "IoT",
+      desc: "Connected product design, M2M & industrial IoT coverage",
+      url: "https://connectedworld.com/feed/",
+      tags: ["iot","strategy"]
+    }
   ];
 
-  var videos = [
-    {name:"Pushkar Raj Thakur",      lang:"Hindi",   channelId:"UCEAAzv2OBqxsSczKJ2QZyGQ"},
-    {name:"Pranjal Kamra",           lang:"Hindi",   channelId:"UCwAdQUuPT6laN-AQR17fe1g"},
-    {name:"CA Rachana Ranade",       lang:"Hindi",   channelId:"UCe3qdG0A_gr-sEdat5y2twQ"},
-    {name:"Power of Stocks",         lang:"Hindi",   channelId:"UCE5wDMNEZElnuRDk6TDPOYg"},
-    {name:"Asset Yogi",              lang:"Hindi",   channelId:"UCsNxHPbaCWL1tKw2hxGQD6g"},
-    {name:"Vivek Bajaj",             lang:"Hindi",   channelId:"UCBnG19e3YPT3OTMY7uFfu7A"},
-    {name:"Neeraj Joshi",            lang:"Hindi",   channelId:"UCfYHvYyFICHwHVO9lHwmiig"},
-    {name:"Booming Bulls",           lang:"Hindi",   channelId:"UC2sIhf108S02F0Qlb2a88eQ"},
-    {name:"Nitin Bhatia",            lang:"Hindi",   channelId:"UCqvVj1LkOpA8tjb7RadTvOg"},
-    {name:"IITian Trader",           lang:"Hindi",   channelId:"UCDMXq5B7zaiM3AxIG-kQHiw"},
-    {name:"Elearnmarkets",           lang:"English", channelId:"UCMec1m9iUC3agiEK-nsndSg"},
-    {name:"Bharat Jhunjhunwala",     lang:"English", channelId:"UCiyqiag20iAsOwL9SHJMQ4g"},
-    {name:"Equitymaster",            lang:"English", channelId:"UCuLyyxpAOqEsOYiNMapZNKg"},
-    {name:"Value Research",          lang:"English", channelId:"UCcYn9RpMAuYtO_uzGgtZJUQ"},
-    {name:"CA Deveshh K Khivssara",  lang:"Hindi",   channelId:"UCaZCbtXW2cyJjIaAcFe9fjQ"},
-    {name:"Anurag Dwivedi Classes",  lang:"Hindi",   channelId:"UCOIvY0oBf6T5BMbacalUClg"},
-    {name:"RSI Pro",                 lang:"English", channelId:"UCfbE1lNN-GvNi8in1TSKn1A"},
-    {name:"Financially Free",        lang:"English", channelId:"UClvoS75rpVDc8n5ZxHWxWkA"},
-    {name:"CapMint Trading",         lang:"English", channelId:"UCpwBDf83Fy_3c-GZmmaqsBw"},
-    {name:"Smart Money Trader",      lang:"English", channelId:"UCGIVkRDJ8K5jRgo9MTPChFA"}
+  /* --- Video Channels (YouTube) --- */
+  var videoChannels = [
+    {
+      name: "McKinsey & Company",
+      category: "Strategy",
+      badge: "Strategy",
+      desc: "Digital transformation, Industry 4.0 & IoT strategy talks",
+      channelId: "UCMqzRNSiJSFX9pBqeGzWmfA"
+    },
+    {
+      name: "Accenture",
+      category: "Accenture",
+      badge: "Accenture",
+      desc: "Industry X, technology innovation & connected product stories",
+      channelId: "UCMNQiSRnr0YHFkfCsJFOzog"
+    },
+    {
+      name: "Gartner",
+      category: "Strategy",
+      badge: "Strategy",
+      desc: "IT leadership, emerging tech & product lifecycle insights",
+      channelId: "UCaaBHtWVV9LFV_FdDVoKHMA"
+    },
+    {
+      name: "MIT OpenCourseWare",
+      category: "Learning",
+      badge: "Learning",
+      desc: "Product design engineering, systems thinking & MBA-level content",
+      channelId: "UCEBb1b_L6zDS3xTUrIALZOw"
+    },
+    {
+      name: "IoT For All",
+      category: "IoT",
+      badge: "IoT",
+      desc: "Connected product explainers, IoT architecture & use cases",
+      channelId: "UCx0dZFUg3RSwlJpvVXmreMg"
+    },
+    {
+      name: "AWS Events",
+      category: "Cloud",
+      badge: "Cloud",
+      desc: "re:Invent IoT sessions, cloud architecture & edge computing",
+      channelId: "UCd6MoB9NC6ujSNBQk7-yCSA"
+    },
+    {
+      name: "SAP",
+      category: "Industry X",
+      badge: "Industry X",
+      desc: "Digital manufacturing, connected supply chain & Industry 4.0",
+      channelId: "UCiKoypGKLI9bF2Rsu7zS84Q"
+    },
+    {
+      name: "World Economic Forum",
+      category: "Strategy",
+      badge: "Strategy",
+      desc: "Technology policy, AI governance & connected economy discussions",
+      channelId: "UCWX3yGbOSk4kGYAJmcFsF_A"
+    },
+    {
+      name: "Siemens",
+      category: "Industry X",
+      badge: "Industry X",
+      desc: "Smart connected products, digital twin & industrial IoT",
+      channelId: "UCFzJDIENWX2MFn3xCGS2IGA"
+    },
+    {
+      name: "TED Talks – Technology",
+      category: "Inspiration",
+      badge: "Inspiration",
+      desc: "Big ideas on connectivity, AI futures & design thinking",
+      channelId: "UCsooa4yRKGN_zEE8iknghZA"
+    }
   ];
 
-  function feedUrl(ch) { return 'https://www.youtube.com/feeds/videos.xml?channel_id=' + ch.channelId; }
+  function feedUrl(ch) {
+    return 'https://www.youtube.com/feeds/videos.xml?channel_id=' + ch.channelId;
+  }
 
-  return { series: series, videos: videos, feedUrl: feedUrl };
+  return { rssFeeds: rssFeeds, videoChannels: videoChannels, feedUrl: feedUrl };
 })();
 
 /* =====================================================================
-   SANDBOX 2: FEED — RSS fetching with primary + fallback proxy
+   BOOKS DATA — Curated list for SCPDD MBA Consultants
+   ===================================================================== */
+var BooksData = [
+  {
+    section: "IoT & Connected Products",
+    books: [
+      {
+        title: "The Internet of Things",
+        author: "Samuel Greengard",
+        emoji: "🌐",
+        why: "Foundational primer on IoT architecture, business implications, and connected product strategy. Essential for explaining IoT value to clients.",
+        tags: ["iot","strategy"],
+        amazon: "https://www.amazon.com/s?k=The+Internet+of+Things+Greengard",
+        goodreads: "https://www.goodreads.com/book/show/23168213"
+      },
+      {
+        title: "Building the Internet of Things",
+        author: "Maciej Kranz",
+        emoji: "🔧",
+        why: "Practical guide from a Cisco executive on building IoT strategy and driving organizational adoption. Great for client engagement narratives.",
+        tags: ["iot","strategy"],
+        amazon: "https://www.amazon.com/s?k=Building+Internet+of+Things+Kranz",
+        goodreads: "https://www.goodreads.com/book/show/30280867"
+      },
+      {
+        title: "Designing Connected Products",
+        author: "Claire Rowland et al.",
+        emoji: "🔗",
+        why: "Covers UX for smart, connected devices — essential for client workshops on digital product design. Bridges engineering and business.",
+        tags: ["iot","strategy"],
+        amazon: "https://www.amazon.com/s?k=Designing+Connected+Products+Rowland",
+        goodreads: "https://www.goodreads.com/book/show/23259922"
+      }
+    ]
+  },
+  {
+    section: "Product Strategy & Management",
+    books: [
+      {
+        title: "Competing Against Luck",
+        author: "Clayton Christensen",
+        emoji: "🎯",
+        why: "The 'Jobs to Be Done' theory is a must for client discovery workshops. Reshapes how you think about connected product value propositions.",
+        tags: ["strategy"],
+        amazon: "https://www.amazon.com/s?k=Competing+Against+Luck+Christensen",
+        goodreads: "https://www.goodreads.com/book/show/28820024"
+      },
+      {
+        title: "Continuous Discovery Habits",
+        author: "Teresa Torres",
+        emoji: "🔁",
+        why: "Modern product discovery framework for iterating connected products with customer feedback loops — aligns with Accenture's MVP methodology.",
+        tags: ["strategy"],
+        amazon: "https://www.amazon.com/s?k=Continuous+Discovery+Habits+Torres",
+        goodreads: "https://www.goodreads.com/book/show/58046715"
+      },
+      {
+        title: "The Lean Startup",
+        author: "Eric Ries",
+        emoji: "🚀",
+        why: "MVP thinking underpins Accenture's SCPDD slicing methodology. Fluency in lean language improves client credibility in startup-minded organizations.",
+        tags: ["strategy"],
+        amazon: "https://www.amazon.com/s?k=The+Lean+Startup+Ries",
+        goodreads: "https://www.goodreads.com/book/show/10127019"
+      }
+    ]
+  },
+  {
+    section: "Digital Transformation & Industry 4.0",
+    books: [
+      {
+        title: "The Fourth Industrial Revolution",
+        author: "Klaus Schwab",
+        emoji: "🏭",
+        why: "WEF perspective on how AI, IoT, and cloud reshape industries. Essential context for positioning SCPDD within the broader Industry X narrative.",
+        tags: ["strategy","iot","ai"],
+        amazon: "https://www.amazon.com/s?k=Fourth+Industrial+Revolution+Schwab",
+        goodreads: "https://www.goodreads.com/book/show/28251672"
+      },
+      {
+        title: "Crossing the Chasm",
+        author: "Geoffrey A. Moore",
+        emoji: "📉",
+        why: "Classic tech adoption model. Helps consultants position connected product rollouts on the adoption curve when presenting go-to-market strategy.",
+        tags: ["strategy"],
+        amazon: "https://www.amazon.com/s?k=Crossing+the+Chasm+Moore",
+        goodreads: "https://www.goodreads.com/book/show/61329"
+      },
+      {
+        title: "Platform Revolution",
+        author: "Parker, Van Alstyne & Choudary",
+        emoji: "🔄",
+        why: "Connected products increasingly rely on platform ecosystems. This book builds fluency in platform economics for client advisory discussions.",
+        tags: ["strategy","cloud"],
+        amazon: "https://www.amazon.com/s?k=Platform+Revolution+Parker",
+        goodreads: "https://www.goodreads.com/book/show/25622861"
+      }
+    ]
+  },
+  {
+    section: "AI, Cloud & Data for Products",
+    books: [
+      {
+        title: "AI Superpowers",
+        author: "Kai-Fu Lee",
+        emoji: "🤖",
+        why: "Strategic perspective on AI's business impact. Sharpens the lens for advising clients on AI-embedded connected product strategies.",
+        tags: ["ai","strategy"],
+        amazon: "https://www.amazon.com/s?k=AI+Superpowers+Kai+Fu+Lee",
+        goodreads: "https://www.goodreads.com/book/show/38242135"
+      },
+      {
+        title: "Designing Data-Intensive Applications",
+        author: "Martin Kleppmann",
+        emoji: "📊",
+        why: "Not a coding book — it's a systems thinking guide. Helps you ask the right architectural questions when connected products generate data at scale.",
+        tags: ["cloud","iot"],
+        amazon: "https://www.amazon.com/s?k=Designing+Data+Intensive+Applications+Kleppmann",
+        goodreads: "https://www.goodreads.com/book/show/23463279"
+      }
+    ]
+  },
+  {
+    section: "Consulting & Presentation Skills",
+    books: [
+      {
+        title: "The McKinsey Way",
+        author: "Ethan Rasiel",
+        emoji: "💼",
+        why: "Foundational consulting toolkit: structured problem solving, hypothesis-driven analysis, and client communication. Directly applicable to SCPDD engagements.",
+        tags: ["strategy"],
+        amazon: "https://www.amazon.com/s?k=The+McKinsey+Way+Rasiel",
+        goodreads: "https://www.goodreads.com/book/show/123567"
+      },
+      {
+        title: "The Pyramid Principle",
+        author: "Barbara Minto",
+        emoji: "📐",
+        why: "Used by Accenture consultants globally for structuring client decks and executive communication. The SCQV framework elevates presentation quality.",
+        tags: ["strategy"],
+        amazon: "https://www.amazon.com/s?k=Pyramid+Principle+Minto",
+        goodreads: "https://www.goodreads.com/book/show/33206"
+      }
+    ]
+  }
+];
+
+/* =====================================================================
+   NEWS DATA — Accenture News Sources (RSS-based)
+   ===================================================================== */
+var NewsData = {
+  sources: [
+    {
+      name: "Accenture Newsroom",
+      badge: "Accenture",
+      desc: "Official press releases, acquisitions & partnerships",
+      url: "https://newsroom.accenture.com/rss/accenture-news.xml"
+    },
+    {
+      name: "Accenture Research",
+      badge: "Research",
+      desc: "Reports, surveys & analyst-grade technology insights",
+      url: "https://www.accenture.com/us-en/insights/research/feed"
+    },
+    {
+      name: "Accenture Industry X Blog",
+      badge: "Industry X",
+      desc: "Smart connected products, digital engineering & manufacturing",
+      url: "https://www.accenture.com/us-en/blogs/blogs-industry-x/rss"
+    }
+  ],
+  /* Static curated Accenture news items as fallback / permanent reference */
+  curated: [
+    {
+      title: "Accenture Completes Acquisition of Avanade: Digital Engineering Scale",
+      date: "2024",
+      source: "Accenture Newsroom",
+      excerpt: "Accenture expands Industry X and digital product engineering capabilities through strategic acquisition, adding thousands of engineers across cloud, IoT and connected products.",
+      url: "https://newsroom.accenture.com/news/2024",
+      tags: ["accenture","strategy"]
+    },
+    {
+      title: "Accenture's Digital Service Factory: End-to-End Connected Product Launch",
+      date: "2023",
+      source: "Industry X Blog",
+      excerpt: "The Digital Service Factory offering helps clients navigate IoT product pitfalls from MVP to scaled launch, combining R&D, engineering, and operations expertise.",
+      url: "https://www.accenture.com/nl-en/blogs/insights/smart-connected-product-design-and-development",
+      tags: ["accenture","iot","strategy"]
+    },
+    {
+      title: "Technology Vision 2024: Human by Design",
+      date: "2024",
+      source: "Accenture Research",
+      excerpt: "Accenture's annual Technology Vision report outlines five key tech trends reshaping industries — with AI-embedded connected products at the center.",
+      url: "https://www.accenture.com/us-en/insights/technology/technology-trends-annual-report",
+      tags: ["accenture","ai","strategy"]
+    },
+    {
+      title: "Winning with Industrial IoT: Accenture's Perspective on Scaling Smart Products",
+      date: "2024",
+      source: "Accenture Research",
+      excerpt: "Research shows companies that combine IoT hardware with cloud-native software platforms achieve 3x higher revenue growth from connected product portfolios.",
+      url: "https://www.accenture.com/us-en/insights/industry-x",
+      tags: ["accenture","iot","cloud"]
+    },
+    {
+      title: "Product Delivery at Scale: Accenture's Slicing Methodology for MVPs",
+      date: "2023",
+      source: "Industry X Blog",
+      excerpt: "The slicing methodology ensures IoT MVP platforms are built for growth from day one — with OTA updates, device management, and security-by-design as foundational features.",
+      url: "https://www.accenture.com/nl-en/blogs/insights/smart-connected-product-design-and-development",
+      tags: ["accenture","iot","strategy"]
+    },
+    {
+      title: "VanBerlo + Accenture: 20 Years of Connected Product Design Experience",
+      date: "2022",
+      source: "Accenture Newsroom",
+      excerpt: "The acquisition of VanBerlo Design Agency brings Accenture deep industrial design expertise, enabling end-to-end product strategy, design, and engineering for connected device clients.",
+      url: "https://vanberloagency.com/",
+      tags: ["accenture","strategy"]
+    },
+    {
+      title: "Accenture's Hardware Platform Asset: Rapid Prototyping for Connected Products",
+      date: "2023",
+      source: "Industry X Blog",
+      excerpt: "Accenture's proprietary hardware platform accelerates high-end connected product prototyping with advanced edge analytics, sensing capabilities, and data-privacy-by-design principles.",
+      url: "https://www.accenture.com/nl-en/blogs/insights/smart-connected-product-design-and-development",
+      tags: ["accenture","iot","cloud"]
+    },
+    {
+      title: "Energy Transition & Utilities: Accenture Designs Smart In-Home Energy Meters",
+      date: "2023",
+      source: "Industry X Blog",
+      excerpt: "From EV charger solutions to smart meters, Accenture Industry X is delivering connected product engineering across the energy transition sector with VanBerlo design capabilities.",
+      url: "https://www.accenture.com/us-en/industries/energy",
+      tags: ["accenture","iot","strategy"]
+    },
+    {
+      title: "Accenture Named a Leader in Engineering Services by Everest Group 2024",
+      date: "2024",
+      source: "Accenture Awards",
+      excerpt: "Accenture is recognized as a Global Leader in Digital Engineering Services, with Industry X capabilities spanning connected product design, R&D digitization and engineering operations.",
+      url: "https://www.accenture.com/us-en/about/awards-recognition",
+      tags: ["accenture","strategy"]
+    },
+    {
+      title: "The Future of Connected Automotive: Accenture & ESR Labs",
+      date: "2023",
+      source: "Accenture Newsroom",
+      excerpt: "Following the acquisition of ESR Labs, Accenture now delivers automotive-grade software, connected car platforms, and in-vehicle UX design for global OEM clients.",
+      url: "https://newsroom.accenture.com/news/accenture-completes-acquisition-of-esr-labs-to-help-automotive-companies-drive-greater-value-from-software.htm",
+      tags: ["accenture","iot","strategy"]
+    }
+  ]
+};
+
+/* =====================================================================
+   FEED — RSS fetching (rss2json primary, allorigins XML fallback)
    ===================================================================== */
 var Feed = (function() {
   var PRIMARY  = 'https://api.rss2json.com/v1/api.json?rss_url=';
   var FALLBACK = 'https://api.allorigins.win/get?url=';
-  var BATCH    = 8;
+  var BATCH    = 6;
 
   function getVid(url) {
     if (!url) return null;
     var m = url.match(/[?&]v=([A-Za-z0-9_-]{11})/) || url.match(/youtu\.be\/([A-Za-z0-9_-]{11})/);
     return m ? m[1] : null;
   }
-
-  function thumbUrl(vid) {
-    return vid ? 'https://img.youtube.com/vi/' + vid + '/mqdefault.jpg' : null;
-  }
-
-  function embedUrl(vid) {
-    return 'https://www.youtube.com/embed/' + vid + '?autoplay=1&rel=0&modestbranding=1&iv_load_policy=3&showinfo=0&fs=1';
-  }
+  function thumbUrl(vid) { return vid ? 'https://img.youtube.com/vi/' + vid + '/mqdefault.jpg' : null; }
+  function embedUrl(vid) { return 'https://www.youtube.com/embed/' + vid + '?autoplay=1&rel=0&modestbranding=1&iv_load_policy=3&showinfo=0&fs=1'; }
 
   function fmtDate(s) {
     try { return new Date(s).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}); }
@@ -318,6 +770,10 @@ var Feed = (function() {
     return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
+  function stripHtml(s) {
+    return (s||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().substring(0,200);
+  }
+
   function parseXMLItems(xmlText) {
     var items = [], entryRegex = /<entry>([\s\S]*?)<\/entry>/g, m;
     while ((m = entryRegex.exec(xmlText)) !== null) {
@@ -325,14 +781,34 @@ var Feed = (function() {
       var vidMatch   = block.match(/<yt:videoId>([^<]+)<\/yt:videoId>/);
       var titleMatch = block.match(/<title>([^<]*)<\/title>/);
       var pubMatch   = block.match(/<published>([^<]+)<\/published>/);
-      var thumbMatch = block.match(/url="(https:\/\/i[^"]+)"/);
       if (vidMatch) {
         var vid = vidMatch[1].trim();
         items.push({
           link: 'https://www.youtube.com/watch?v=' + vid,
           title: titleMatch ? titleMatch[1].replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>') : 'Untitled',
           pubDate: pubMatch ? pubMatch[1] : '',
-          thumbnail: thumbMatch ? thumbMatch[1] : thumbUrl(vid)
+          thumbnail: thumbUrl(vid)
+        });
+      }
+    }
+    return items;
+  }
+
+  function parseXMLRSS(xmlText) {
+    var items = [];
+    var itemRegex = /<item>([\s\S]*?)<\/item>/g, m;
+    while ((m = itemRegex.exec(xmlText)) !== null) {
+      var block = m[1];
+      var titleM = block.match(/<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/);
+      var linkM  = block.match(/<link>([^<]+)<\/link>/);
+      var pubM   = block.match(/<pubDate>([^<]+)<\/pubDate>/);
+      var descM  = block.match(/<description>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/description>/);
+      if (titleM) {
+        items.push({
+          title:   titleM ? titleM[1].trim() : 'Untitled',
+          link:    linkM  ? linkM[1].trim()  : '#',
+          pubDate: pubM   ? pubM[1].trim()   : '',
+          description: descM ? stripHtml(descM[1]) : ''
         });
       }
     }
@@ -345,8 +821,7 @@ var Feed = (function() {
       .then(function(r) { return r.json(); })
       .then(function(d) {
         if (d.status === 'ok' && d.items && d.items.length > 0) {
-          var items = d.items.filter(function(i) { return i.link && getVid(i.link); });
-          if (items.length > 0) { onSuccess(items); return; }
+          onSuccess(d.items); return;
         }
         throw new Error('primary empty');
       })
@@ -356,67 +831,28 @@ var Feed = (function() {
           .then(function(r) { return r.json(); })
           .then(function(d) {
             var xml = d.contents || '';
-            var items = parseXMLItems(xml);
-            if (items.length > 0) { onSuccess(items); }
-            else { onError('No videos found'); }
+            // Try YouTube XML
+            var ytItems = parseXMLItems(xml);
+            if (ytItems.length > 0) { onSuccess(ytItems); return; }
+            // Try standard RSS
+            var rssItems = parseXMLRSS(xml);
+            if (rssItems.length > 0) { onSuccess(rssItems); return; }
+            onError('No items found in feed');
           })
           .catch(function(e) { onError(e.message || 'Network error'); });
       });
   }
 
-  return { getVid: getVid, thumbUrl: thumbUrl, embedUrl: embedUrl, fmtDate: fmtDate, esc: esc, fetchFeed: fetchFeed, BATCH: BATCH };
+  return { getVid:getVid, thumbUrl:thumbUrl, embedUrl:embedUrl, fmtDate:fmtDate, esc:esc, stripHtml:stripHtml, fetchFeed:fetchFeed, BATCH:BATCH };
 })();
 
 /* =====================================================================
-   SANDBOX 3: STORAGE — Watch Later via localStorage
-   ===================================================================== */
-var Storage = (function() {
-  var KEY = 'trading_wl';
-  var _wl = [];
-
-  function load() {
-    try { _wl = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch(e) { _wl = []; }
-    return _wl;
-  }
-
-  function save() {
-    try { localStorage.setItem(KEY, JSON.stringify(_wl)); } catch(e) {}
-    return _wl;
-  }
-
-  function getAll() { return _wl; }
-
-  function has(vid) { return _wl.some(function(v) { return v.vid === vid; }); }
-
-  function add(item) {
-    if (!has(item.vid)) { _wl.unshift(item); save(); }
-    return _wl;
-  }
-
-  function remove(vid) {
-    _wl = _wl.filter(function(v) { return v.vid !== vid; });
-    save();
-    return _wl;
-  }
-
-  function clear() {
-    _wl = []; save();
-    return _wl;
-  }
-
-  function count() { return _wl.length; }
-
-  load();
-  return { getAll: getAll, has: has, add: add, remove: remove, clear: clear, count: count, load: load };
-})();
-
-/* =====================================================================
-   SANDBOX 4: PLAYER — YouTube embed overlay
+   PLAYER — YouTube embed overlay
    ===================================================================== */
 var Player = (function() {
-  var _vid = null, _item = null;
+  var _vid = null;
   var _isLandscape = true;
-  var _fsGuard = false;   // prevents fullscreenchange -> close on intentional exit
+  var _fsGuard = false;
 
   var overlay = document.getElementById('player-overlay');
   var iframe  = document.getElementById('player-iframe');
@@ -424,217 +860,108 @@ var Player = (function() {
   var pInfo   = document.getElementById('p-info-title');
   var pMeta   = document.getElementById('p-info-meta');
   var pLink   = document.getElementById('p-yt-link');
-  var pBtn    = document.getElementById('p-wl-btn');
   var pOrient = document.getElementById('p-orient-btn');
 
-  /* ---- cross-browser fullscreen helpers ---- */
-  function requestFS(el) {
-    return (el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen).call(el);
-  }
-  function exitFS() {
-    return (document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen).call(document);
-  }
-  function getFS() {
-    return document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
-  }
+  function requestFS(el) { return (el.requestFullscreen||el.webkitRequestFullscreen||el.msRequestFullscreen).call(el); }
+  function exitFS() { return (document.exitFullscreen||document.webkitExitFullscreen||document.msExitFullscreen).call(document); }
+  function getFS() { return document.fullscreenElement||document.webkitFullscreenElement||document.msFullscreenElement; }
 
-  /* ---- orientation helpers ---- */
   function lockOrientation(landscape) {
-    try {
-      if (screen.orientation && screen.orientation.lock) {
-        screen.orientation.lock(landscape ? 'landscape' : 'portrait').catch(function(){});
-      }
-    } catch(e) {}
+    try { if (screen.orientation&&screen.orientation.lock) screen.orientation.lock(landscape?'landscape':'portrait').catch(function(){}); } catch(e){}
   }
   function unlockOrientation() {
-    try {
-      if (screen.orientation && screen.orientation.unlock) { screen.orientation.unlock(); }
-    } catch(e) {}
+    try { if (screen.orientation&&screen.orientation.unlock) screen.orientation.unlock(); } catch(e){}
   }
-
-  /* ---- fullscreen + orientation combo ---- */
-  function enterFullscreenAndLock() {
-    requestFS(iframe).then(function() {
-      lockOrientation(true);
-    }).catch(function(){});
-  }
-  function exitFullscreenAndUnlock() {
-    if (getFS()) { exitFS().catch(function(){}); }
-    unlockOrientation();
-  }
-
-  /* ---- UI state ---- */
   function setOrientation(landscape) {
     _isLandscape = landscape;
     overlay.classList.toggle('landscape', landscape);
     overlay.classList.toggle('portrait', !landscape);
     pOrient.textContent = landscape ? '↻ Landscape' : '↻ Portrait';
-    pOrient.title = landscape ? 'Switch to Portrait' : 'Switch to Landscape';
   }
 
-  /* ---- fullscreen-change sync ---- */
-  function onFSChange() {
-    if (_fsGuard) { _fsGuard = false; return; }
-    if (!getFS() && overlay.classList.contains('active')) {
-      close();
-    }
-  }
-  document.addEventListener('fullscreenchange', onFSChange);
-  document.addEventListener('webkitfullscreenchange', onFSChange);
-  document.addEventListener('msfullscreenchange', onFSChange);
+  document.addEventListener('fullscreenchange', function() { if (_fsGuard){_fsGuard=false;return;} if (!getFS()&&overlay.classList.contains('active')) close(); });
+  document.addEventListener('webkitfullscreenchange', function() { if (_fsGuard){_fsGuard=false;return;} if (!getFS()&&overlay.classList.contains('active')) close(); });
 
-  function updateBtn() {
-    if (!_vid) return;
-    if (Storage.has(_vid)) {
-      pBtn.textContent = '✓ Saved'; pBtn.classList.add('saved');
-    } else {
-      pBtn.textContent = '+ Watch Later'; pBtn.classList.remove('saved');
-    }
-  }
-
-  function open(vid, title, date, feed, link) {
+  function open(vid, title, date, channel, link) {
     _vid = vid;
-    _item = {vid:vid, title:title, date:date, feed:feed};
     iframe.src = Feed.embedUrl(vid);
     pTitle.textContent = title;
     pInfo.textContent = title;
-    pMeta.textContent = (feed||'') + (date ? ' · ' + date : '');
+    pMeta.textContent = (channel||'') + (date ? ' · ' + date : '');
     pLink.href = link || ('https://www.youtube.com/watch?v=' + vid);
-    updateBtn();
     setOrientation(true);
     overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
-    enterFullscreenAndLock();
+    try { requestFS(iframe).then(function(){ lockOrientation(true); }).catch(function(){}); } catch(e){}
   }
 
   function close() {
     overlay.classList.remove('active');
     iframe.src = '';
     document.body.style.overflow = '';
-    exitFullscreenAndUnlock();
-    _vid = null; _item = null;
+    try { if (getFS()) exitFS().catch(function(){}); unlockOrientation(); } catch(e){}
+    _vid = null;
   }
 
   function toggleOrientation() {
-    if (_isLandscape) {
-      _fsGuard = true;
-      exitFullscreenAndUnlock();
-      setOrientation(false);
-    } else {
-      setOrientation(true);
-      enterFullscreenAndLock();
-    }
+    if (_isLandscape) { _fsGuard=true; try{if(getFS())exitFS().catch(function(){});}catch(e){} unlockOrientation(); setOrientation(false); }
+    else { setOrientation(true); try{requestFS(iframe).then(function(){lockOrientation(true);}).catch(function(){});}catch(e){} }
   }
 
-  function toggleWL() {
-    if (!_vid || !_item) return;
-    if (Storage.has(_vid)) { Storage.remove(_vid); }
-    else { Storage.add(_item); }
-    updateBtn();
-    var wlBtn = document.querySelector('.btn-wl[data-vid="' + _vid + '"]');
-    if (wlBtn) {
-      wlBtn.classList.toggle('saved', Storage.has(_vid));
-      wlBtn.title = Storage.has(_vid) ? 'Remove from Watch Later' : 'Watch Later';
-    }
-    UI.renderWL();
-  }
-
-  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') close(); });
-
-  return { open: open, close: close, toggleWL: toggleWL, updateBtn: updateBtn, toggleOrientation: toggleOrientation };
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
+  return { open:open, close:close, toggleOrientation:toggleOrientation };
 })();
 
 /* =====================================================================
-   SANDBOX 5: UI — Rendering, tabs, templates
+   UI — Rendering
    ===================================================================== */
 var UI = (function() {
   var loadedFeeds = {};
 
-  /* ---- Tabs ---- */
+  /* --- TABS --- */
   function switchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
     document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
     document.querySelector('.tab-btn.tab-' + tab).classList.add('active');
     document.getElementById('panel-' + tab).classList.add('active');
-    if (tab === 'watchlater') renderWL();
   }
-
   document.querySelectorAll('.tab-btn').forEach(function(btn) {
-    btn.addEventListener('click', function() { switchTab(this.getAttribute('data-tab')); });
+    btn.addEventListener('click', function(){ switchTab(this.getAttribute('data-tab')); });
   });
 
-  /* ---- Watch Later ---- */
-  function updateWLBade() {
-    var n = Storage.count();
-    var badge = document.getElementById('wl-count');
-    var bannerCount = document.getElementById('wl-banner-count');
-    if (n > 0) { badge.textContent = n; badge.style.display = 'inline-block'; }
-    else { badge.style.display = 'none'; }
-    if (bannerCount) bannerCount.textContent = n + ' video' + (n !== 1 ? 's' : '');
+  /* --- Tag badge HTML --- */
+  function tagBadge(tag) {
+    var map = { iot:'tag-iot', ai:'tag-ai', cloud:'tag-cloud', strategy:'tag-strategy', accenture:'tag-accenture' };
+    var labels = { iot:'IoT', ai:'AI', cloud:'Cloud', strategy:'Strategy', accenture:'Accenture' };
+    var cls = map[tag] || 'tag-strategy';
+    return '<span class="item-tag ' + cls + '">' + (labels[tag]||tag.toUpperCase()) + '</span>';
   }
 
-  function renderWL() {
-    var el = document.getElementById('wl-list');
-    updateWLBade();
-    if (Storage.count() === 0) {
-      el.innerHTML = '<div class="wl-empty"><span class="wl-empty-icon">🕐</span>No saved videos yet.<br>Tap 🕐 on any video to save it here.</div>';
-      return;
-    }
-    var html = '';
-    Storage.getAll().forEach(function(v) {
-      html +=
-        '<div class="wl-item" id="wli-' + v.vid + '">' +
-          '<img class="wl-thumb" src="' + Feed.esc(Feed.thumbUrl(v.vid)) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' +
-          '<div class="wl-info">' +
-            '<div class="wl-title">' + Feed.esc(v.title) + '</div>' +
-            '<div class="wl-meta">' + Feed.esc(v.feed || '') + (v.date ? ' · ' + Feed.esc(v.date) : '') + '</div>' +
-          '</div>' +
-          '<div class="wl-actions">' +
-            '<button class="btn-wl-play" data-vid="' + Feed.esc(v.vid) + '" data-title="' + Feed.esc(v.title).replace(/'/g,"&#39;") + '" data-date="' + Feed.esc(v.date) + '" data-feed="' + Feed.esc(v.feed||'') + '">▶</button>' +
-            '<button class="btn-wl-remove" data-vid="' + Feed.esc(v.vid) + '" title="Remove">✕</button>' +
-          '</div>' +
-        '</div>';
-    });
-    html += '<div class="wl-clear-row"><button class="btn-clear-all" id="btn-clear-all">✕ Clear All</button></div>';
-    el.innerHTML = html;
-
-    el.querySelectorAll('.btn-wl-play').forEach(function(b) {
-      b.addEventListener('click', function() {
-        Player.open(this.getAttribute('data-vid'), this.getAttribute('data-title'), this.getAttribute('data-date'), this.getAttribute('data-feed'), 'https://www.youtube.com/watch?v=' + this.getAttribute('data-vid'));
-      });
-    });
-    el.querySelectorAll('.btn-wl-remove').forEach(function(b) {
-      b.addEventListener('click', function() {
-        Storage.remove(this.getAttribute('data-vid'));
-        renderWL();
-      });
-    });
-    var clearBtn = el.querySelector('#btn-clear-all');
-    if (clearBtn) {
-      clearBtn.addEventListener('click', function() {
-        if (Storage.count() === 0) return;
-        if (confirm('Remove all ' + Storage.count() + ' saved videos?')) {
-          Storage.clear();
-          renderWL();
-        }
-      });
-    }
+  /* --- Badge color by category --- */
+  function badgeClass(badge) {
+    var b = (badge||'').toLowerCase();
+    if (b==='iot') return 'badge-rss';
+    if (b==='cloud') return 'badge-vid';
+    if (['accenture','industry x','research'].indexOf(b)>=0) return 'badge-news';
+    if (['strategy','learning','inspiration'].indexOf(b)>=0) return 'badge-bk';
+    return 'badge-rss';
   }
 
-  /* ---- Channel Groups ---- */
-  function buildGroup(ch, type, container) {
-    var gid  = 'g-' + type + '-' + ch.name.replace(/\W+/g,'');
-    var grid = 'f-' + type + '-' + ch.name.replace(/\W+/g,'');
-    var isMarathi = ch.lang && ch.lang.toLowerCase().includes('marathi');
-    var badgeCls  = type === 'series' ? 'badge-s' : (isMarathi ? 'badge-mr' : 'badge-v');
+  /* --- Build collapsible group header --- */
+  function buildGroup(item, type, container, onOpen) {
+    var gid  = 'g-' + type + '-' + item.name.replace(/\W+/g,'');
+    var grid = 'f-' + type + '-' + item.name.replace(/\W+/g,'');
 
     var div = document.createElement('div');
     div.className = 'channel-group';
     div.id = gid;
     div.innerHTML =
       '<div class="ch-header">' +
-        '<span class="ch-badge ' + badgeCls + '">' + Feed.esc(ch.lang) + '</span>' +
-        '<span class="ch-name">' + Feed.esc(ch.name) + '</span>' +
+        '<span class="ch-badge ' + badgeClass(item.badge) + '">' + Feed.esc(item.badge) + '</span>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div class="ch-name">' + Feed.esc(item.name) + '</div>' +
+          (item.desc ? '<div class="ch-desc">' + Feed.esc(item.desc) + '</div>' : '') +
+        '</div>' +
         '<span class="ch-arrow">▼</span>' +
       '</div>' +
       '<div class="feed-grid" id="' + grid + '">' +
@@ -643,28 +970,56 @@ var UI = (function() {
     container.appendChild(div);
 
     div.querySelector('.ch-header').addEventListener('click', function() {
-      toggleGroup(gid, grid, ch, type);
+      var grp  = document.getElementById(gid);
+      var gridEl = document.getElementById(grid);
+      if (grp.classList.contains('open')) { grp.classList.remove('open'); return; }
+      grp.classList.add('open');
+      if (loadedFeeds[grid]) return;
+      loadedFeeds[grid] = true;
+      onOpen(gridEl, item);
     });
   }
 
-  function toggleGroup(gid, gridId, ch, type) {
-    var grp  = document.getElementById(gid);
-    var grid = document.getElementById(gridId);
-    if (grp.classList.contains('open')) {
-      grp.classList.remove('open'); return;
-    }
-    grp.classList.add('open');
-    if (loadedFeeds[gridId]) return;
-    loadedFeeds[gridId] = true;
+  /* --- RSS items renderer --- */
+  function renderRSSItems(gridEl, items, start, count, sourceName) {
+    var end = Math.min(start + count, items.length);
+    for (var i = start; i < end; i++) {
+      var it = items[i];
+      var link = it.link || it.url || '#';
+      var title = it.title || 'Untitled';
+      var date = Feed.fmtDate(it.pubDate || it.isoDate || it.date || '');
+      var desc = it.description || it.summary || it.content || '';
+      if (desc) desc = Feed.stripHtml(desc);
 
-    Feed.fetchFeed(
-      Data.feedUrl(ch),
-      function(items) { renderItems(grid, items, 0, Feed.BATCH, ch.name); },
-      function(err)   { grid.innerHTML = '<div class="error-row">⚠ ' + Feed.esc(err) + ' — try again later</div>'; }
-    );
+      var div = document.createElement('div');
+      div.className = 'feed-item';
+      div.innerHTML =
+        '<div class="feed-item-inner">' +
+          '<div class="item-info">' +
+            '<div class="item-title">' + Feed.esc(title) + '</div>' +
+            (desc ? '<div class="item-summary">' + Feed.esc(desc) + '</div>' : '') +
+            '<div class="item-date">' + (date||'') + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<a class="ext-link-btn" href="' + Feed.esc(link) + '" target="_blank" rel="noopener noreferrer">↗ Read Article</a>';
+      gridEl.appendChild(div);
+    }
+    var old = gridEl.querySelector('.load-more-wrap');
+    if (old) old.remove();
+    if (end < items.length) {
+      var wrap = document.createElement('div');
+      wrap.className = 'load-more-wrap';
+      var btn = document.createElement('button');
+      btn.className = 'btn-load-more';
+      btn.textContent = '▼ Show More (' + (items.length - end) + ' remaining)';
+      btn.addEventListener('click', function(){ renderRSSItems(gridEl, items, end, count, sourceName); });
+      wrap.appendChild(btn);
+      gridEl.appendChild(wrap);
+    }
   }
 
-  function renderItems(grid, items, start, count, feedTitle) {
+  /* --- Video items renderer --- */
+  function renderVideoItems(gridEl, items, start, count, channelName) {
     var end = Math.min(start + count, items.length);
     for (var i = start; i < end; i++) {
       var it   = items[i];
@@ -674,15 +1029,13 @@ var UI = (function() {
       var title = it.title || 'Untitled';
       var date  = Feed.fmtDate(it.pubDate || it.isoDate || '');
       var link  = it.link;
-      var feed  = feedTitle || it.author || '';
-      var inWL  = Storage.has(vid);
 
       var div = document.createElement('div');
-      div.className = 'feed-item';
+      div.className = 'video-item';
       div.setAttribute('data-vid', vid);
       div.setAttribute('data-title', title);
       div.setAttribute('data-date', date);
-      div.setAttribute('data-feed', feed);
+      div.setAttribute('data-channel', channelName);
       div.setAttribute('data-link', link);
 
       var thumbHtml = thumb
@@ -697,47 +1050,21 @@ var UI = (function() {
         '</div>' +
         '<div class="item-actions">' +
           '<button class="btn-play">▶</button>' +
-          '<button class="btn-wl' + (inWL ? ' saved' : '') + '" title="' + (inWL ? 'Remove from Watch Later' : 'Watch Later') + '">🕐</button>' +
         '</div>';
 
-      grid.appendChild(div);
-    }
-
-    grid.addEventListener('click', function(e) {
-      var target = e.target;
-      if (target.classList.contains('btn-play')) {
-        var item = target.closest('.feed-item');
-        Player.open(item.getAttribute('data-vid'), item.getAttribute('data-title'), item.getAttribute('data-date'), item.getAttribute('data-feed'), item.getAttribute('data-link'));
-        return;
-      }
-      if (target.classList.contains('btn-wl')) {
-        var item = target.closest('.feed-item');
-        var vid = item.getAttribute('data-vid');
-        if (Storage.has(vid)) {
-          Storage.remove(vid);
-          target.classList.remove('saved');
-          target.title = 'Watch Later';
-        } else {
-          Storage.add({
-            vid: vid,
-            title: item.getAttribute('data-title'),
-            date: item.getAttribute('data-date'),
-            feed: item.getAttribute('data-feed')
-          });
-          target.classList.add('saved');
-          target.title = 'Remove from Watch Later';
+      div.querySelector('.btn-play').addEventListener('click', function(e) {
+        e.stopPropagation();
+        var p = this.closest('.video-item');
+        Player.open(p.getAttribute('data-vid'), p.getAttribute('data-title'), p.getAttribute('data-date'), p.getAttribute('data-channel'), p.getAttribute('data-link'));
+      });
+      div.addEventListener('click', function(e) {
+        if (!e.target.closest('.item-actions')) {
+          var pb = this.querySelector('.btn-play'); if (pb) pb.click();
         }
-        renderWL();
-        Player.updateBtn();
-        return;
-      }
-      if (target.closest('.feed-item') && !target.closest('.item-actions')) {
-        var playBtn = target.closest('.feed-item').querySelector('.btn-play');
-        if (playBtn) playBtn.click();
-      }
-    });
-
-    var old = grid.querySelector('.load-more-wrap');
+      });
+      gridEl.appendChild(div);
+    }
+    var old = gridEl.querySelector('.load-more-wrap');
     if (old) old.remove();
     if (end < items.length) {
       var wrap = document.createElement('div');
@@ -745,82 +1072,155 @@ var UI = (function() {
       var btn = document.createElement('button');
       btn.className = 'btn-load-more';
       btn.textContent = '▼ Show More (' + (items.length - end) + ' remaining)';
-      btn.addEventListener('click', function() { renderItems(grid, items, end, count, feedTitle); });
+      btn.addEventListener('click', function(){ renderVideoItems(gridEl, items, end, count, channelName); });
       wrap.appendChild(btn);
-      grid.appendChild(wrap);
+      gridEl.appendChild(wrap);
     }
   }
 
-  return { switchTab: switchTab, renderWL: renderWL, buildGroup: buildGroup, renderItems: renderItems };
+  /* --- Books renderer --- */
+  function renderBooks() {
+    var container = document.getElementById('books-list');
+    BooksData.forEach(function(section) {
+      var hdr = document.createElement('div');
+      hdr.className = 'book-section-hdr';
+      hdr.textContent = section.section;
+      container.appendChild(hdr);
+
+      section.books.forEach(function(book) {
+        var card = document.createElement('div');
+        card.className = 'book-card';
+        var tagHTML = (book.tags||[]).map(function(t){
+          var map = {iot:'tag-iot',ai:'tag-ai',cloud:'tag-cloud',strategy:'tag-strategy',accenture:'tag-accenture'};
+          var labels = {iot:'IoT',ai:'AI',cloud:'Cloud',strategy:'Strategy',accenture:'Accenture'};
+          return '<span class="item-tag ' + (map[t]||'tag-strategy') + '">' + (labels[t]||t) + '</span>';
+        }).join('');
+
+        card.innerHTML =
+          '<div class="book-cover">' + book.emoji + '</div>' +
+          '<div class="book-info">' +
+            '<div class="book-title">' + Feed.esc(book.title) + '</div>' +
+            '<div class="book-author">' + Feed.esc(book.author) + '</div>' +
+            '<div class="book-why">' + Feed.esc(book.why) + '</div>' +
+            '<div class="book-tags">' + tagHTML + '</div>' +
+            '<div class="book-links">' +
+              '<a class="book-link" href="' + book.amazon + '" target="_blank" rel="noopener noreferrer">↗ Amazon</a>' +
+              '<a class="book-link" href="' + book.goodreads + '" target="_blank" rel="noopener noreferrer">↗ Goodreads</a>' +
+            '</div>' +
+          '</div>';
+        container.appendChild(card);
+      });
+    });
+  }
+
+  /* --- Accenture News renderer --- */
+  function renderNews() {
+    var container = document.getElementById('news-channels');
+
+    /* Live RSS sources */
+    NewsData.sources.forEach(function(src) {
+      buildGroup(src, 'news', container, function(gridEl, item) {
+        Feed.fetchFeed(
+          item.url,
+          function(items) { renderRSSItems(gridEl, items, 0, Feed.BATCH, item.name); gridEl.querySelector('.loading-row') && gridEl.querySelector('.loading-row').remove(); },
+          function(err) { gridEl.innerHTML = '<div class="error-row">⚠ ' + Feed.esc(err) + '</div>'; }
+        );
+      });
+    });
+
+    /* Curated static section */
+    var staticSection = document.createElement('div');
+    staticSection.innerHTML = '<div class="book-section-hdr">📌 SCPDD Reference: Key Accenture Articles & Reports</div>';
+    container.appendChild(staticSection);
+
+    NewsData.curated.forEach(function(item) {
+      var tagMap = {iot:'tag-iot',ai:'tag-ai',cloud:'tag-cloud',strategy:'tag-strategy',accenture:'tag-accenture'};
+      var tagLabels = {iot:'IoT',ai:'AI',cloud:'Cloud',strategy:'Strategy',accenture:'Accenture'};
+      var tagHTML = (item.tags||[]).map(function(t){
+        return '<span class="item-tag ' + (tagMap[t]||'tag-strategy') + '">' + (tagLabels[t]||t) + '</span>';
+      }).join('');
+
+      var div = document.createElement('div');
+      div.className = 'news-item';
+      div.innerHTML =
+        '<div class="news-title">' + Feed.esc(item.title) + '</div>' +
+        '<div class="news-meta">' + Feed.esc(item.source) + ' · ' + Feed.esc(item.date) + '</div>' +
+        '<div class="news-excerpt">' + Feed.esc(item.excerpt) + '</div>' +
+        '<div style="margin-top:8px">' + tagHTML + '</div>' +
+        '<a class="ext-link-btn" href="' + Feed.esc(item.url) + '" target="_blank" rel="noopener noreferrer" style="margin-top:8px">↗ Read on Accenture.com</a>';
+      container.appendChild(div);
+    });
+  }
+
+  return { renderBooks:renderBooks, renderNews:renderNews, buildGroup:buildGroup, renderRSSItems:renderRSSItems, renderVideoItems:renderVideoItems };
 })();
 
 /* =====================================================================
-   SANDBOX 6: APP — Initialization and orchestration
+   APP — Initialization
    ===================================================================== */
 var App = (function() {
-  /* ---- Series Fetch Tool ---- */
-  function fetchSeries() {
-    var input = document.getElementById('series-input');
-    var resEl = document.getElementById('series-results');
-    var url   = (input.value || '').trim();
-    if (!url) { alert('Please paste a YouTube Playlist or Channel URL.'); return; }
 
-    var rssUrl = '', m;
-    if ((m = url.match(/[?&]list=([^&#]+)/)))       rssUrl = 'https://www.youtube.com/feeds/videos.xml?playlist_id=' + m[1];
-    else if ((m = url.match(/channel\/([A-Za-z0-9_-]+)/))) rssUrl = 'https://www.youtube.com/feeds/videos.xml?channel_id=' + m[1];
-    else if ((m = url.match(/user\/([A-Za-z0-9_-]+)/)))    rssUrl = 'https://www.youtube.com/feeds/videos.xml?user=' + m[1];
-    else { alert('Could not detect Playlist or Channel ID. Use a full playlist URL (list=…) or channel URL (/channel/UC…).'); return; }
-
-    resEl.style.display = 'block';
-    resEl.innerHTML = '<div class="loading-row"><span class="spin">⟳</span> Fetching…</div>';
-
-    Feed.fetchFeed(
-      rssUrl,
-      function(items) {
-        resEl.innerHTML = '<div style="font-size:11px;font-weight:900;color:var(--series-hl);padding:4px 0 10px;">📺 ' + items.length + ' videos found</div>';
-        UI.renderItems(resEl, items, 0, Feed.BATCH, 'Playlist');
-      },
-      function(err) {
-        resEl.innerHTML = '<div class="error-row">⚠ ' + Feed.esc(err) + '</div>';
-      }
-    );
-  }
-
-  /* ---- PWA ---- */
   function pwaTriggerInstall() {
     if (window._pwaPrompt) {
       window._pwaPrompt.prompt();
-      window._pwaPrompt.userChoice.then(function() { window._pwaPrompt = null; document.getElementById('pwa-badge').style.display = 'none'; });
+      window._pwaPrompt.userChoice.then(function(){ window._pwaPrompt=null; document.getElementById('pwa-badge').style.display='none'; });
     }
   }
 
-  /* ---- Init ---- */
   function init() {
-    var sc = document.getElementById('series-channels');
-    Data.series.forEach(function(ch) { UI.buildGroup(ch, 'series', sc); });
+    /* Build RSS tab */
+    var rc = document.getElementById('rss-channels');
+    Data.rssFeeds.forEach(function(src) {
+      UI.buildGroup(src, 'rss', rc, function(gridEl, item) {
+        Feed.fetchFeed(
+          item.url,
+          function(items) {
+            var lr = gridEl.querySelector('.loading-row'); if(lr) lr.remove();
+            UI.renderRSSItems(gridEl, items, 0, Feed.BATCH, item.name);
+          },
+          function(err) { gridEl.innerHTML = '<div class="error-row">⚠ ' + Feed.esc(err) + ' — try again later</div>'; }
+        );
+      });
+    });
 
+    /* Build Videos tab */
     var vc = document.getElementById('video-channels');
-    Data.videos.forEach(function(ch) { UI.buildGroup(ch, 'videos', vc); });
+    Data.videoChannels.forEach(function(ch) {
+      UI.buildGroup(ch, 'vid', vc, function(gridEl, item) {
+        Feed.fetchFeed(
+          Data.feedUrl(item),
+          function(items) {
+            var lr = gridEl.querySelector('.loading-row'); if(lr) lr.remove();
+            UI.renderVideoItems(gridEl, items, 0, Feed.BATCH, item.name);
+          },
+          function(err) { gridEl.innerHTML = '<div class="error-row">⚠ ' + Feed.esc(err) + ' — try again later</div>'; }
+        );
+      });
+    });
 
-    UI.renderWL();
+    /* Build Books tab */
+    UI.renderBooks();
+
+    /* Build Accenture News tab */
+    UI.renderNews();
   }
 
   init();
 
-  return { fetchSeries: fetchSeries, pwaTriggerInstall: pwaTriggerInstall };
+  return { pwaTriggerInstall: pwaTriggerInstall };
 })();
 
 /* =====================================================================
-   PWA — Service Worker + Manifest (separate sandbox)
+   PWA — Manifest + Service Worker
    ===================================================================== */
 (function() {
   var manifest = {
-    name:"Trading", short_name:"Trading",
-    description:"Trading Channels — Indian Markets — ad-free",
+    name:"SCPDD Research", short_name:"SCPDD",
+    description:"Smart Connected Product Design & Development — Accenture Consultant Research Hub",
     start_url:"./", display:"standalone", orientation:"portrait-primary",
     background_color:"#c8a97e", theme_color:"#b8925f",
     icons:[{
-      src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='28' fill='%23b8925f'/%3E%3Ccircle cx='96' cy='96' r='55' fill='none' stroke='%231a1a1a' stroke-width='6'/%3E%3Cpolyline points='55,130 80,102 100,110 125,72 140,55' stroke='%231a1a1a' stroke-width='7' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpolygon points='132,48 148,48 148,64' stroke='%231a1a1a' stroke-width='5' fill='none' stroke-linejoin='round'/%3E%3C/svg%3E",
+      src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='28' fill='%23b8925f'/%3E%3Ccircle cx='96' cy='80' r='32' fill='none' stroke='%231a1a1a' stroke-width='8'/%3E%3Crect x='72' y='116' width='48' height='8' rx='4' fill='%231a1a1a'/%3E%3Crect x='80' y='132' width='32' height='8' rx='4' fill='%231a1a1a'/%3E%3C/svg%3E",
       sizes:"192x192", type:"image/svg+xml", purpose:"any maskable"
     }]
   };
@@ -830,7 +1230,7 @@ var App = (function() {
   } catch(e){}
 
   var SW =
-    'const C="trading-v1";' +
+    'const C="scpdd-v1";' +
     'self.addEventListener("install",e=>{self.skipWaiting();e.waitUntil(caches.open(C).then(c=>c.addAll(["./"])))});' +
     'self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});' +
     'self.addEventListener("fetch",e=>{const u=e.request.url;' +
@@ -849,11 +1249,10 @@ var App = (function() {
 
   window._pwaPrompt = null;
   window.addEventListener('beforeinstallprompt', function(e) {
-    e.preventDefault();
-    window._pwaPrompt = e;
-    document.getElementById('pwa-badge').style.display = 'flex';
+    e.preventDefault(); window._pwaPrompt=e;
+    document.getElementById('pwa-badge').style.display='flex';
   });
-  window.addEventListener('appinstalled', function(){ document.getElementById('pwa-badge').style.display = 'none'; });
+  window.addEventListener('appinstalled', function(){ document.getElementById('pwa-badge').style.display='none'; });
 })();
 </script>
 </body>
