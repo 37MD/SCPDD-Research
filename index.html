@@ -309,168 +309,227 @@ var Data = (function() {
 
   /* --- RSS Feed Sources --- */
   var rssFeeds = [
+    /* ── IoT ── */
     {
-      name: "IoT Analytics",
+      name: "IoT Analytics Blog",
       category: "IoT",
       badge: "IoT",
-      desc: "Enterprise IoT research, market analysis & insights",
+      desc: "Enterprise IoT research, market forecasts & in-depth analysis",
       url: "https://iot-analytics.com/feed/",
       tags: ["iot","strategy"]
     },
     {
-      name: "IoT For All",
+      name: "IoT Now",
       category: "IoT",
       badge: "IoT",
-      desc: "Accessible IoT news, use cases & industry applications",
-      url: "https://www.iotforall.com/feed",
+      desc: "Connected device news, enterprise IoT deployments & M2M coverage",
+      url: "https://www.iot-now.com/feed/"
+    },
+    {
+      name: "IoT Tech News",
+      category: "IoT",
+      badge: "IoT",
+      desc: "Latest IoT product launches, platform updates & industry news",
+      url: "https://www.iottechnews.com/feed/",
       tags: ["iot"]
     },
     {
-      name: "Stacey on IoT",
+      name: "IIoT World",
       category: "IoT",
       badge: "IoT",
-      desc: "Connected devices commentary & smart product analysis",
-      url: "https://staceyoniot.com/feed/",
+      desc: "Industrial IoT strategies, edge computing & smart manufacturing",
+      url: "https://iiot-world.com/feed/",
       tags: ["iot","strategy"]
     },
     {
-      name: "MIT Technology Review",
-      category: "AI & Tech",
+      name: "RTInsights – IoT",
+      category: "IoT",
+      badge: "IoT",
+      desc: "Real-time analytics, edge AI & industrial IoT case studies",
+      url: "https://www.rtinsights.com/feed/",
+      tags: ["iot","ai"]
+    },
+    {
+      name: "TechTarget – IoT Agenda",
+      category: "IoT",
+      badge: "IoT",
+      desc: "Enterprise IoT architecture, device management & security",
+      url: "https://www.techtarget.com/iotagenda/rss",
+      tags: ["iot","cloud"]
+    },
+    /* ── AI ── */
+    {
+      name: "VentureBeat – AI",
+      category: "AI",
       badge: "AI",
-      desc: "Deep dives on AI, computing & emerging technology",
+      desc: "Breaking AI business news, generative AI & enterprise AI strategy",
+      url: "https://venturebeat.com/category/ai/feed/",
+      tags: ["ai","strategy"]
+    },
+    {
+      name: "Unite.AI",
+      category: "AI",
+      badge: "AI",
+      desc: "Comprehensive AI coverage: ML research, products & business impact",
+      url: "https://www.unite.ai/feed/",
+      tags: ["ai"]
+    },
+    {
+      name: "Daily AI",
+      category: "AI",
+      badge: "AI",
+      desc: "Daily AI news digest — models, tools, policy & product launches",
+      url: "https://dailyai.com/feed/",
+      tags: ["ai"]
+    },
+    {
+      name: "AI Trends",
+      category: "AI",
+      badge: "AI",
+      desc: "Executive-focused AI intelligence for business leaders & consultants",
+      url: "https://aitrends.com/feed/",
+      tags: ["ai","strategy"]
+    },
+    {
+      name: "MIT Technology Review",
+      category: "AI",
+      badge: "AI",
+      desc: "Deep analysis on AI, computing & tech policy from MIT",
       url: "https://www.technologyreview.com/feed/",
       tags: ["ai","strategy"]
     },
     {
-      name: "Harvard Business Review – Tech",
-      category: "Strategy",
-      badge: "Strategy",
-      desc: "Business & strategy lens on digital transformation",
-      url: "https://hbr.org/topic/subject/technology.rss",
-      tags: ["strategy","ai"]
+      name: "The Register – AI & ML",
+      category: "AI",
+      badge: "AI",
+      desc: "Critical, analyst-grade tech journalism on AI & enterprise software",
+      url: "https://www.theregister.com/offbeat/bits_and_bytes/atom/",
+      tags: ["ai","cloud"]
     },
+    /* ── Cloud & Strategy ── */
     {
-      name: "McKinsey Insights – Digital",
-      category: "Strategy",
-      badge: "Strategy",
-      desc: "Consulting-grade digital & IoT transformation reports",
-      url: "https://www.mckinsey.com/capabilities/mckinsey-digital/our-insights/rss",
-      tags: ["strategy","cloud"]
-    },
-    {
-      name: "AWS News Blog",
+      name: "SiliconANGLE",
       category: "Cloud",
       badge: "Cloud",
-      desc: "AWS product launches, IoT services & cloud architecture",
-      url: "https://aws.amazon.com/blogs/aws/feed/",
-      tags: ["cloud","iot"]
+      desc: "Enterprise tech news covering AI, cloud & digital transformation",
+      url: "https://siliconangle.com/feed/",
+      tags: ["cloud","ai","strategy"]
+    },
+    {
+      name: "AWS Machine Learning Blog",
+      category: "Cloud",
+      badge: "Cloud",
+      desc: "AWS AI/ML services, IoT integrations & cloud-native architectures",
+      url: "https://aws.amazon.com/blogs/machine-learning/feed/",
+      tags: ["cloud","ai","iot"]
     },
     {
       name: "Google Cloud Blog",
       category: "Cloud",
       badge: "Cloud",
-      desc: "Cloud platform, AI/ML products & connected solutions",
+      desc: "Cloud AI, IoT Core, Vertex AI & digital product engineering",
       url: "https://cloudblog.withgoogle.com/rss/",
       tags: ["cloud","ai"]
     },
     {
-      name: "Microsoft IoT Blog",
-      category: "IoT",
-      badge: "IoT",
-      desc: "Azure IoT Hub, Edge computing & industrial IoT updates",
-      url: "https://techcommunity.microsoft.com/t5/internet-of-things-blog/bg-p/IoTBlog/rss",
-      tags: ["iot","cloud"]
+      name: "Microsoft Azure Blog",
+      category: "Cloud",
+      badge: "Cloud",
+      desc: "Azure IoT, AI services, digital twins & edge computing updates",
+      url: "https://azure.microsoft.com/en-us/blog/feed/",
+      tags: ["cloud","iot","ai"]
     },
     {
       name: "Product Coalition",
-      category: "Product Strategy",
+      category: "Strategy",
       badge: "Strategy",
-      desc: "Product management frameworks, roadmaps & case studies",
+      desc: "Product management frameworks, roadmaps & real-world case studies",
       url: "https://productcoalition.com/feed",
       tags: ["strategy"]
     },
     {
-      name: "Gartner Newsroom",
+      name: "Harvard Business Review – Management",
       category: "Strategy",
       badge: "Strategy",
-      desc: "Analyst forecasts, magic quadrants & tech hype cycles",
-      url: "https://www.gartner.com/en/newsroom/feed",
-      tags: ["strategy","ai","iot"]
+      desc: "Executive strategy, digital leadership & innovation management",
+      url: "https://feeds.hbr.org/harvardbusiness",
+      tags: ["strategy"]
     },
     {
-      name: "Connected World Magazine",
-      category: "IoT",
-      badge: "IoT",
-      desc: "Connected product design, M2M & industrial IoT coverage",
-      url: "https://connectedworld.com/feed/",
-      tags: ["iot","strategy"]
+      name: "McKinsey Global Institute",
+      category: "Strategy",
+      badge: "Strategy",
+      desc: "Global research on technology, automation & economic transformation",
+      url: "https://www.mckinsey.com/mgi/rss",
+      tags: ["strategy","ai"]
+    },
+    {
+      name: "Gartner Blog Network",
+      category: "Strategy",
+      badge: "Strategy",
+      desc: "Analyst commentary: hype cycles, tech trends & product strategy",
+      url: "https://blogs.gartner.com/feed/",
+      tags: ["strategy","ai","iot"]
     }
   ];
 
-  /* --- Video Channels (YouTube) --- */
+  /* --- Video Channels (YouTube) — all IDs verified --- */
   var videoChannels = [
-    {
-      name: "McKinsey & Company",
-      category: "Strategy",
-      badge: "Strategy",
-      desc: "Digital transformation, Industry 4.0 & IoT strategy talks",
-      channelId: "UCMqzRNSiJSFX9pBqeGzWmfA"
-    },
     {
       name: "Accenture",
       category: "Accenture",
       badge: "Accenture",
-      desc: "Industry X, technology innovation & connected product stories",
+      desc: "Industry X, connected product innovation & SCPDD case stories",
       channelId: "UCMNQiSRnr0YHFkfCsJFOzog"
+    },
+    {
+      name: "McKinsey & Company",
+      category: "Strategy",
+      badge: "Strategy",
+      desc: "Digital transformation, Industry 4.0 & connected product strategy",
+      channelId: "UCMqzRNSiJSFX9pBqeGzWmfA"
     },
     {
       name: "Gartner",
       category: "Strategy",
       badge: "Strategy",
-      desc: "IT leadership, emerging tech & product lifecycle insights",
-      channelId: "UCaaBHtWVV9LFV_FdDVoKHMA"
+      desc: "IT leadership, emerging tech hype cycles & analyst insights",
+      channelId: "UCSNX50LYGXWV_e5UWZGPGbw"
     },
     {
-      name: "MIT OpenCourseWare",
-      category: "Learning",
-      badge: "Learning",
-      desc: "Product design engineering, systems thinking & MBA-level content",
-      channelId: "UCEBb1b_L6zDS3xTUrIALZOw"
-    },
-    {
-      name: "IoT For All",
-      category: "IoT",
-      badge: "IoT",
-      desc: "Connected product explainers, IoT architecture & use cases",
-      channelId: "UCx0dZFUg3RSwlJpvVXmreMg"
+      name: "World Economic Forum",
+      category: "Strategy",
+      badge: "Strategy",
+      desc: "Tech policy, AI governance, Industry 4.0 & connected economy",
+      channelId: "UCw-kH-Od73XDAt7qtH9uBYA"
     },
     {
       name: "AWS Events",
       category: "Cloud",
       badge: "Cloud",
-      desc: "re:Invent IoT sessions, cloud architecture & edge computing",
-      channelId: "UCd6MoB9NC6ujSNBQk7-yCSA"
+      desc: "re:Invent IoT sessions, cloud architecture & edge computing talks",
+      channelId: "UCdoadna9HFHsxXWhafhNvKw"
     },
     {
       name: "SAP",
       category: "Industry X",
       badge: "Industry X",
       desc: "Digital manufacturing, connected supply chain & Industry 4.0",
-      channelId: "UCiKoypGKLI9bF2Rsu7zS84Q"
-    },
-    {
-      name: "World Economic Forum",
-      category: "Strategy",
-      badge: "Strategy",
-      desc: "Technology policy, AI governance & connected economy discussions",
-      channelId: "UCWX3yGbOSk4kGYAJmcFsF_A"
+      channelId: "UCVnIv2xF2wyMMCSKv1qF3pA"
     },
     {
       name: "Siemens",
       category: "Industry X",
       badge: "Industry X",
-      desc: "Smart connected products, digital twin & industrial IoT",
-      channelId: "UCFzJDIENWX2MFn3xCGS2IGA"
+      desc: "Smart connected products, digital twin & industrial automation",
+      channelId: "UCmyYOpZrHRh7v934X9cjBOw"
+    },
+    {
+      name: "MIT OpenCourseWare",
+      category: "Learning",
+      badge: "Learning",
+      desc: "Systems thinking, product design engineering & MBA-level content",
+      channelId: "UCEBb1b_L6zDS3xTUrIALZOw"
     },
     {
       name: "TED Talks – Technology",
@@ -478,6 +537,27 @@ var Data = (function() {
       badge: "Inspiration",
       desc: "Big ideas on connectivity, AI futures & design thinking",
       channelId: "UCsooa4yRKGN_zEE8iknghZA"
+    },
+    {
+      name: "Deloitte Insights",
+      category: "Strategy",
+      badge: "Strategy",
+      desc: "C-suite perspectives on tech strategy, IoT & digital transformation",
+      channelId: "UCBkEHkRQYrcaOGUuLTMGPhw"
+    },
+    {
+      name: "Siemens Software",
+      category: "Industry X",
+      badge: "Industry X",
+      desc: "PLM, digital twin, NX & connected product lifecycle tools",
+      channelId: "UCYR5Kgzn6suihs56iJ8_vfw"
+    },
+    {
+      name: "a16z",
+      category: "AI",
+      badge: "AI",
+      desc: "Venture-grade AI, deep tech & connected product business models",
+      channelId: "UC9cn0TuPq4dnbTY-CBsm8sg"
     }
   ];
 
@@ -746,12 +826,14 @@ var NewsData = {
 };
 
 /* =====================================================================
-   FEED — RSS fetching (rss2json primary, allorigins XML fallback)
+   FEED — RSS fetching with 3-proxy cascade for maximum reliability
    ===================================================================== */
 var Feed = (function() {
-  var PRIMARY  = 'https://api.rss2json.com/v1/api.json?rss_url=';
-  var FALLBACK = 'https://api.allorigins.win/get?url=';
-  var BATCH    = 6;
+  /* Three independent proxies tried in sequence */
+  var PROXY1 = 'https://api.rss2json.com/v1/api.json?rss_url=';
+  var PROXY2 = 'https://api.allorigins.win/get?url=';
+  var PROXY3 = 'https://corsproxy.io/?url=';
+  var BATCH  = 6;
 
   function getVid(url) {
     if (!url) return null;
@@ -771,7 +853,7 @@ var Feed = (function() {
   }
 
   function stripHtml(s) {
-    return (s||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().substring(0,200);
+    return (s||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().substring(0,220);
   }
 
   function parseXMLItems(xmlText) {
@@ -803,44 +885,56 @@ var Feed = (function() {
       var linkM  = block.match(/<link>([^<]+)<\/link>/);
       var pubM   = block.match(/<pubDate>([^<]+)<\/pubDate>/);
       var descM  = block.match(/<description>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/description>/);
-      if (titleM) {
+      if (titleM && titleM[1].trim()) {
         items.push({
-          title:   titleM ? titleM[1].trim() : 'Untitled',
-          link:    linkM  ? linkM[1].trim()  : '#',
-          pubDate: pubM   ? pubM[1].trim()   : '',
-          description: descM ? stripHtml(descM[1]) : ''
+          title:       titleM[1].trim(),
+          link:        linkM  ? linkM[1].trim()  : '#',
+          pubDate:     pubM   ? pubM[1].trim()   : '',
+          description: descM  ? stripHtml(descM[1]) : ''
         });
       }
     }
     return items;
   }
 
+  function tryProxy2(feedUrl, onSuccess, onError) {
+    fetch(PROXY2 + encodeURIComponent(feedUrl))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        var xml = d.contents || '';
+        var ytItems = parseXMLItems(xml);
+        if (ytItems.length > 0) { onSuccess(ytItems); return; }
+        var rssItems = parseXMLRSS(xml);
+        if (rssItems.length > 0) { onSuccess(rssItems); return; }
+        tryProxy3(feedUrl, onSuccess, onError);
+      })
+      .catch(function(){ tryProxy3(feedUrl, onSuccess, onError); });
+  }
+
+  function tryProxy3(feedUrl, onSuccess, onError) {
+    fetch(PROXY3 + encodeURIComponent(feedUrl))
+      .then(function(r){ return r.text(); })
+      .then(function(xml){
+        var ytItems = parseXMLItems(xml);
+        if (ytItems.length > 0) { onSuccess(ytItems); return; }
+        var rssItems = parseXMLRSS(xml);
+        if (rssItems.length > 0) { onSuccess(rssItems); return; }
+        onError('Feed unavailable – try again later');
+      })
+      .catch(function(e){ onError(e.message || 'Network error'); });
+  }
+
   function fetchFeed(feedUrl, onSuccess, onError) {
-    var api = PRIMARY + encodeURIComponent(feedUrl);
-    fetch(api)
-      .then(function(r) { return r.json(); })
-      .then(function(d) {
+    /* Proxy 1: rss2json (parsed JSON, best quality) */
+    fetch(PROXY1 + encodeURIComponent(feedUrl))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
         if (d.status === 'ok' && d.items && d.items.length > 0) {
           onSuccess(d.items); return;
         }
-        throw new Error('primary empty');
+        tryProxy2(feedUrl, onSuccess, onError);
       })
-      .catch(function() {
-        var fb = FALLBACK + encodeURIComponent(feedUrl);
-        fetch(fb)
-          .then(function(r) { return r.json(); })
-          .then(function(d) {
-            var xml = d.contents || '';
-            // Try YouTube XML
-            var ytItems = parseXMLItems(xml);
-            if (ytItems.length > 0) { onSuccess(ytItems); return; }
-            // Try standard RSS
-            var rssItems = parseXMLRSS(xml);
-            if (rssItems.length > 0) { onSuccess(rssItems); return; }
-            onError('No items found in feed');
-          })
-          .catch(function(e) { onError(e.message || 'Network error'); });
-      });
+      .catch(function(){ tryProxy2(feedUrl, onSuccess, onError); });
   }
 
   return { getVid:getVid, thumbUrl:thumbUrl, embedUrl:embedUrl, fmtDate:fmtDate, esc:esc, stripHtml:stripHtml, fetchFeed:fetchFeed, BATCH:BATCH };
@@ -1172,14 +1266,23 @@ var App = (function() {
     var rc = document.getElementById('rss-channels');
     Data.rssFeeds.forEach(function(src) {
       UI.buildGroup(src, 'rss', rc, function(gridEl, item) {
-        Feed.fetchFeed(
-          item.url,
-          function(items) {
-            var lr = gridEl.querySelector('.loading-row'); if(lr) lr.remove();
-            UI.renderRSSItems(gridEl, items, 0, Feed.BATCH, item.name);
-          },
-          function(err) { gridEl.innerHTML = '<div class="error-row">⚠ ' + Feed.esc(err) + ' — try again later</div>'; }
-        );
+        function loadRSS() {
+          gridEl.innerHTML = '<div class="loading-row"><span class="spin">⟳</span> Loading…</div>';
+          Feed.fetchFeed(
+            item.url,
+            function(items) {
+              gridEl.innerHTML = '';
+              UI.renderRSSItems(gridEl, items, 0, Feed.BATCH, item.name);
+            },
+            function(err) {
+              gridEl.innerHTML =
+                '<div class="error-row">⚠ Could not load feed' +
+                ' <button class="btn-load-more" style="margin-left:10px;font-size:11px;padding:4px 10px" onclick="this.closest(\'.feed-grid\').loadFn()">↺ Retry</button></div>';
+              gridEl.loadFn = loadRSS;
+            }
+          );
+        }
+        loadRSS();
       });
     });
 
@@ -1187,14 +1290,23 @@ var App = (function() {
     var vc = document.getElementById('video-channels');
     Data.videoChannels.forEach(function(ch) {
       UI.buildGroup(ch, 'vid', vc, function(gridEl, item) {
-        Feed.fetchFeed(
-          Data.feedUrl(item),
-          function(items) {
-            var lr = gridEl.querySelector('.loading-row'); if(lr) lr.remove();
-            UI.renderVideoItems(gridEl, items, 0, Feed.BATCH, item.name);
-          },
-          function(err) { gridEl.innerHTML = '<div class="error-row">⚠ ' + Feed.esc(err) + ' — try again later</div>'; }
-        );
+        function loadVid() {
+          gridEl.innerHTML = '<div class="loading-row"><span class="spin">⟳</span> Loading…</div>';
+          Feed.fetchFeed(
+            Data.feedUrl(item),
+            function(items) {
+              gridEl.innerHTML = '';
+              UI.renderVideoItems(gridEl, items, 0, Feed.BATCH, item.name);
+            },
+            function(err) {
+              gridEl.innerHTML =
+                '<div class="error-row">⚠ Could not load channel' +
+                ' <button class="btn-load-more" style="margin-left:10px;font-size:11px;padding:4px 10px" onclick="this.closest(\'.feed-grid\').loadFn()">↺ Retry</button></div>';
+              gridEl.loadFn = loadVid;
+            }
+          );
+        }
+        loadVid();
       });
     });
 
@@ -1230,12 +1342,12 @@ var App = (function() {
   } catch(e){}
 
   var SW =
-    'const C="scpdd-v1";' +
+    'const C="scpdd-v2";' +
     'self.addEventListener("install",e=>{self.skipWaiting();e.waitUntil(caches.open(C).then(c=>c.addAll(["./"])))});' +
     'self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});' +
     'self.addEventListener("fetch",e=>{const u=e.request.url;' +
     'if(e.request.method!=="GET"||u.startsWith("chrome-extension")||u.startsWith("data:"))return;' +
-    'if(u.includes("rss2json")||u.includes("allorigins")||u.includes("youtube.com")||u.includes("ytimg.com")||u.includes("googleapis")||u.includes("gstatic")){e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));return;}' +
+    'if(u.includes("rss2json")||u.includes("allorigins")||u.includes("corsproxy.io")||u.includes("youtube.com")||u.includes("ytimg.com")||u.includes("googleapis")||u.includes("gstatic")){e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));return;}' +
     'e.respondWith(caches.match(e.request).then(c=>{if(c)return c;return fetch(e.request).then(r=>{if(r&&r.status===200&&r.type!=="opaque")caches.open(C).then(x=>x.put(e.request,r.clone()));return r;}).catch(()=>caches.match("./"))}));});';
 
   if ('serviceWorker' in navigator) {
