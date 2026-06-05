@@ -182,6 +182,38 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);background-image:repe
 /* Consultant tip box */
 .tip-box{margin:12px 12px 0;padding:10px 14px;background:rgba(26,46,74,.07);border-left:3px solid var(--videos-hl);border-radius:2px;font-size:13px;color:var(--muted);line-height:1.5}
 .tip-box strong{color:var(--text)}
+
+/* ── Read/Watch Later ── */
+.tab-btn.tab-saved.active{color:#7a4a00}
+.tab-btn.tab-saved.active::after{background:#7a4a00}
+.tab-badge{display:inline-block;background:#c0392b;color:#fff;font-size:9px;font-weight:900;border-radius:8px;padding:1px 5px;margin-left:3px;vertical-align:middle;letter-spacing:.05em;line-height:1.5;min-width:16px;text-align:center}
+.btn-bookmark{display:inline-flex;align-items:center;gap:4px;margin-top:7px;margin-left:6px;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);text-decoration:none;padding:4px 10px;border:1px solid var(--border);border-radius:2px;background:var(--lighter);cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .15s,color .15s,border-color .15s}
+.btn-bookmark:hover{background:var(--card);color:#7a4a00;border-color:#7a4a00}
+.btn-bookmark.is-saved{background:#7a4a00;color:#fff;border-color:#7a4a00}
+.btn-vid-save{width:34px;height:34px;background:var(--lighter);color:var(--muted);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;transition:background .15s,color .15s;flex-shrink:0}
+.btn-vid-save:hover{background:var(--card);color:#7a4a00}
+.btn-vid-save.is-saved{background:#7a4a00;color:#fff;border-color:#7a4a00}
+.saved-section-hdr{padding:10px 16px 6px;background:rgba(0,0,0,0.07);border-bottom:1px solid rgba(0,0,0,0.10);font-size:11px;font-weight:900;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;justify-content:space-between}
+.btn-clear-section{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;background:none;border:1px solid var(--border);color:var(--muted);padding:2px 8px;border-radius:2px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.btn-clear-section:hover{color:#c0392b;border-color:#c0392b}
+.saved-item{padding:11px 14px;border-bottom:1px solid rgba(0,0,0,0.08);display:flex;align-items:flex-start;gap:10px;background:transparent;transition:background .15s}
+.saved-item:hover{background:rgba(0,0,0,0.04)}
+.saved-item-thumb{width:80px;height:45px;object-fit:cover;flex-shrink:0;border-radius:3px;border:1px solid rgba(0,0,0,0.14);background:var(--card)}
+.saved-item-thumb-ph{width:80px;height:45px;flex-shrink:0;border-radius:3px;border:1px solid rgba(0,0,0,0.14);background:var(--card);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--muted)}
+.saved-item-info{flex:1;min-width:0}
+.saved-item-title{font-size:15px;font-weight:700;line-height:1.4;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.saved-item-meta{font-size:11px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.07em}
+.saved-item-actions{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap;align-items:center}
+.saved-open-btn{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);text-decoration:none;padding:3px 9px;border:1px solid var(--border);border-radius:2px;background:var(--lighter);transition:background .15s}
+.saved-open-btn:hover{background:var(--card)}
+.saved-remove-btn{display:inline-flex;align-items:center;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:#c0392b;background:none;border:1px solid #c0392b;padding:3px 9px;border-radius:2px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .15s}
+.saved-remove-btn:hover{background:#fdecea}
+.saved-note{font-size:12px;border:1px solid var(--border);border-radius:2px;padding:4px 7px;width:100%;background:var(--lighter);color:var(--text);font-family:'DM Sans',sans-serif;resize:vertical;min-height:36px;margin-top:5px;display:block}
+.saved-note:focus{outline:2px solid #7a4a00}
+.saved-empty{padding:44px 20px;text-align:center;color:var(--muted);font-size:14px;line-height:1.8}
+.saved-empty-icon{font-size:40px;display:block;margin-bottom:10px}
+#save-toast{position:fixed;bottom:28px;right:16px;z-index:2000;background:var(--accent);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:900;padding:9px 16px;border-radius:20px;box-shadow:0 4px 18px rgba(0,0,0,0.28);opacity:0;transform:translateY(10px);transition:opacity .25s,transform .25s;pointer-events:none;letter-spacing:.07em;text-transform:uppercase}
+#save-toast.show{opacity:1;transform:translateY(0)}
 </style>
 </head>
 <body>
@@ -354,7 +386,7 @@ var Data = (function() {
       category: "IoT",
       badge: "IoT",
       desc: "Enterprise IoT architecture, device management & security",
-      url: "https://www.techtarget.com/iotagenda/rss",
+      url: "https://internetofthingsagenda.techtarget.com/rss/IoT-Agenda.xml",
       tags: ["iot","cloud"]
     },
     /* ── AI ── */
@@ -371,7 +403,7 @@ var Data = (function() {
       category: "AI",
       badge: "AI",
       desc: "Comprehensive AI coverage: ML research, products & business impact",
-      url: "https://www.unite.ai/feed/",
+      url: "https://www.unite.ai/category/news/feed/",
       tags: ["ai"]
     },
     {
@@ -403,7 +435,7 @@ var Data = (function() {
       category: "AI",
       badge: "AI",
       desc: "Critical, analyst-grade tech journalism on AI & enterprise software",
-      url: "https://www.theregister.com/offbeat/bits_and_bytes/atom/",
+      url: "https://api.theregister.com/api/v1/article?query=tag:%22ai%20and%20ml%22&orderBy=published&site_id=2&remapper=rss&limit=25",
       tags: ["ai","cloud"]
     },
     /* ── Cloud & Strategy ── */
@@ -448,19 +480,19 @@ var Data = (function() {
       tags: ["strategy"]
     },
     {
-      name: "Harvard Business Review – Management",
+      name: "Harvard Business Review",
       category: "Strategy",
       badge: "Strategy",
       desc: "Executive strategy, digital leadership & innovation management",
-      url: "https://feeds.hbr.org/harvardbusiness",
+      url: "https://feeds.harvardbusiness.org/harvardbusiness?format=xml",
       tags: ["strategy"]
     },
     {
-      name: "McKinsey Global Institute",
+      name: "McKinsey Insights",
       category: "Strategy",
       badge: "Strategy",
       desc: "Global research on technology, automation & economic transformation",
-      url: "https://www.mckinsey.com/mgi/rss",
+      url: "https://www.mckinsey.com/insights/rss",
       tags: ["strategy","ai"]
     },
     {
@@ -468,26 +500,34 @@ var Data = (function() {
       category: "Strategy",
       badge: "Strategy",
       desc: "Analyst commentary: hype cycles, tech trends & product strategy",
-      url: "https://blogs.gartner.com/feed/",
+      url: "https://www.gartner.com/en/blogs/rss",
+      tags: ["strategy","ai","iot"]
+    },
+    {
+      name: "Gartner Newsroom",
+      category: "Strategy",
+      badge: "Strategy",
+      desc: "Press releases, forecasts & analyst research from Gartner",
+      url: "https://www.gartner.com/en/newsroom/rss",
       tags: ["strategy","ai","iot"]
     }
   ];
 
-  /* --- Video Channels (YouTube) — all IDs verified --- */
+  /* --- Video Channels (YouTube) — all IDs verified June 2026 --- */
   var videoChannels = [
     {
       name: "Accenture",
       category: "Accenture",
       badge: "Accenture",
       desc: "Industry X, connected product innovation & SCPDD case stories",
-      channelId: "UCMNQiSRnr0YHFkfCsJFOzog"
+      channelId: "UCD8h3oTfr1CbanGIWnzIP_g"   /* Accenture Technology – main global channel */
     },
     {
       name: "McKinsey & Company",
       category: "Strategy",
       badge: "Strategy",
       desc: "Digital transformation, Industry 4.0 & connected product strategy",
-      channelId: "UCMqzRNSiJSFX9pBqeGzWmfA"
+      channelId: "UCQMqUlg362Hhar_iCZ9tcjQ"   /* @McKinsey official */
     },
     {
       name: "Gartner",
@@ -543,21 +583,21 @@ var Data = (function() {
       category: "Strategy",
       badge: "Strategy",
       desc: "C-suite perspectives on tech strategy, IoT & digital transformation",
-      channelId: "UCBkEHkRQYrcaOGUuLTMGPhw"
+      channelId: "UCBoQGulS_GYlTZ2QR4rdFug"   /* confirmed from youtube.com/channel/UCBoQGulS_GYlTZ2QR4rdFug */
     },
     {
       name: "Siemens Software",
       category: "Industry X",
       badge: "Industry X",
       desc: "PLM, digital twin, NX & connected product lifecycle tools",
-      channelId: "UCYR5Kgzn6suihs56iJ8_vfw"
+      channelId: "UCYR5Kgzn6suihs56iJ8_vfw"   /* confirmed from youtube.com/SiemensSoftware */
     },
     {
       name: "a16z",
       category: "AI",
       badge: "AI",
       desc: "Venture-grade AI, deep tech & connected product business models",
-      channelId: "UC9cn0TuPq4dnbTY-CBsm8sg"
+      channelId: "UC9cn0TuPq4dnbTY-CBsm8XA"   /* confirmed from youtube.com/channel/UC9cn0TuPq4dnbTY-CBsm8XA */
     }
   ];
 
@@ -1342,7 +1382,7 @@ var App = (function() {
   } catch(e){}
 
   var SW =
-    'const C="scpdd-v2";' +
+    'const C="scpdd-v4";' +
     'self.addEventListener("install",e=>{self.skipWaiting();e.waitUntil(caches.open(C).then(c=>c.addAll(["./"])))});' +
     'self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});' +
     'self.addEventListener("fetch",e=>{const u=e.request.url;' +
