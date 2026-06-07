@@ -5,7 +5,7 @@
 ║  Smart Connected Product Design & Development                        ║
 ║  Accenture Industry X — Consultant Research & Coaching Hub          ║
 ╠══════════════════════════════════════════════════════════════════════╣
-║  VERSION : 1.0.7  (SW cache: scpdd-v7)                              ║
+║  VERSION : 1.0.8  (SW cache: scpdd-v7)                              ║
 ║  LAST    : June 2026                                                 ║
 ╠══════════════════════════════════════════════════════════════════════╣
 ║  TABS                                                                ║
@@ -174,7 +174,7 @@ body {
 .tab-badge  { display:inline-block; background:#c0392b; color:#fff; font-size:9px; font-weight:900; border-radius:8px; padding:1px 5px; margin-left:3px; vertical-align:middle; letter-spacing:.05em; line-height:1.5; min-width:16px; text-align:center; }
 
 /* Main content area */
-.app-body          { max-width:960px; margin:0 auto; padding-bottom:80px; }
+.app-body          { max-width:960px; margin:0 auto; padding-bottom:100px; }
 .tab-panel         { display:none; }
 .tab-panel.active  { display:block; }
 
@@ -336,9 +336,14 @@ body {
 
 /* ═══════════════════════════════════════════════════════════════════
    [B5] DAILY AI COACH TAB
+   Coach panel uses a full-page flex column layout.
+   The app-body is removed from flow for this tab so the coach
+   can fill the viewport below the sticky header.
    ═══════════════════════════════════════════════════════════════════ */
-#panel-coach                { display:none; flex-direction:column; height:calc(100vh - 120px); }
+#panel-coach                { display:none; flex-direction:column; }
 #panel-coach.active         { display:flex; }
+/* When coach is active, the chat-wrap takes remaining space */
+#panel-coach .coach-chat-wrap { min-height:280px; }
 .coach-header               { padding:14px 16px 10px; border-bottom:2px solid rgba(0,0,0,.14); background:rgba(0,0,0,.07); flex-shrink:0; }
 .coach-header-top           { display:flex; align-items:center; gap:10px; }
 .coach-title                { font-family:'DM Serif Display',serif; font-size:26px; color:var(--coach-hl); flex:1; }
@@ -370,7 +375,7 @@ body {
 .chip                       { font-family:'DM Sans',sans-serif; font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:.07em; padding:5px 11px; border:1px solid var(--coach-hl); border-radius:14px; background:var(--lighter); color:var(--coach-hl); cursor:pointer; transition:background .15s, color .15s; }
 .chip:hover, .chip.used     { background:var(--coach-hl); color:#fff; }
 /* Input bar */
-.coach-input-bar            { padding:10px 12px; background:var(--surface); border-top:2px solid var(--accent); flex-shrink:0; display:flex; gap:8px; align-items:flex-end; }
+.coach-input-bar            { padding:10px 12px; background:var(--surface); border-top:2px solid var(--accent); border-bottom:3px solid rgba(0,0,0,.15); flex-shrink:0; display:flex; gap:8px; align-items:flex-end; margin-bottom:20px; }
 .coach-textarea             { flex:1; font-family:'DM Sans',sans-serif; font-size:14px; border:1px solid var(--border); border-radius:3px; padding:8px 11px; background:var(--lighter); color:var(--text); resize:none; min-height:42px; max-height:110px; line-height:1.5; }
 .coach-textarea:focus       { outline:2px solid var(--coach-hl); }
 .btn-coach-send             { width:42px; height:42px; background:var(--coach-hl); color:#fff; border:none; border-radius:3px; font-size:19px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:opacity .15s; }
@@ -512,6 +517,94 @@ body {
 .btn-ap-send        { padding:7px 12px; background:#1a3a5c; color:#fff; border:none; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:900; cursor:pointer; text-transform:uppercase; letter-spacing:.08em; transition:opacity .15s; }
 .btn-ap-send:hover  { opacity:.85; }
 .btn-ap-send:disabled{ opacity:.4; cursor:wait; }
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   [B-KEYMODAL] API KEY INPUT MODAL
+   Replaces window.prompt() — proper in-app overlay with styled inputs.
+   Used by GeminiAPI.promptForKeys()
+   ═══════════════════════════════════════════════════════════════════ */
+#key-modal-overlay {
+  position:fixed; inset:0; z-index:3000;
+  background:rgba(0,0,0,.65);
+  display:none; align-items:center; justify-content:center;
+  padding:20px;
+}
+#key-modal-overlay.open { display:flex; }
+#key-modal {
+  width:100%; max-width:440px;
+  background:var(--lighter);
+  border:3px solid var(--accent);
+  border-radius:6px;
+  overflow:hidden;
+  box-shadow:0 8px 40px rgba(0,0,0,.4);
+  animation:slideUp .2s ease;
+}
+.key-modal-hdr {
+  background:linear-gradient(135deg,#1a3a5c,#2d6fa8);
+  padding:14px 18px;
+  display:flex; align-items:center; gap:10px;
+}
+.key-modal-hdr-title {
+  font-family:'DM Serif Display',serif;
+  font-size:22px; color:#fff; flex:1;
+}
+.key-modal-hdr-sub {
+  font-size:11px; color:rgba(255,255,255,.75);
+  text-transform:uppercase; letter-spacing:.1em;
+}
+.key-modal-body    { padding:18px; display:flex; flex-direction:column; gap:14px; }
+.key-modal-field   { display:flex; flex-direction:column; gap:5px; }
+.key-modal-label {
+  font-size:11px; font-weight:900; text-transform:uppercase;
+  letter-spacing:.1em; color:var(--muted);
+}
+.key-modal-label span {
+  font-weight:400; text-transform:none; letter-spacing:0;
+  font-size:11px; color:var(--muted);
+}
+.key-modal-input {
+  font-family:'DM Sans',sans-serif; font-size:14px;
+  padding:10px 12px; border:1px solid var(--border);
+  border-radius:3px; background:var(--bg); color:var(--text);
+  width:100%; outline:none;
+  transition:border-color .2s, box-shadow .2s;
+}
+.key-modal-input:focus {
+  border-color:#1a3a5c;
+  box-shadow:0 0 0 2px rgba(26,58,92,.2);
+}
+.key-modal-input::placeholder { color:var(--border); font-size:12px; }
+.key-modal-hint {
+  font-size:11px; color:var(--muted); line-height:1.5;
+}
+.key-modal-hint a { color:#1a3a5c; font-weight:900; }
+.key-modal-status {
+  font-size:12px; font-weight:900; text-transform:uppercase;
+  letter-spacing:.08em; padding:6px 10px; border-radius:3px;
+  display:none;
+}
+.key-modal-status.saved { display:block; background:rgba(46,204,113,.15); color:#1a6b3a; border:1px solid #2ecc71; }
+.key-modal-status.error { display:block; background:rgba(231,76,60,.15); color:#7a1a1a; border:1px solid #e74c3c; }
+.key-modal-actions {
+  display:flex; gap:10px; padding:0 18px 18px;
+}
+.btn-key-save {
+  flex:1; padding:11px; background:#1a3a5c; color:#fff;
+  border:none; border-radius:3px;
+  font-family:'DM Sans',sans-serif; font-size:14px; font-weight:900;
+  text-transform:uppercase; letter-spacing:.1em;
+  cursor:pointer; transition:opacity .15s;
+}
+.btn-key-save:hover { opacity:.85; }
+.btn-key-cancel {
+  padding:11px 16px; background:var(--card); color:var(--muted);
+  border:1px solid var(--border); border-radius:3px;
+  font-family:'DM Sans',sans-serif; font-size:14px; font-weight:900;
+  text-transform:uppercase; letter-spacing:.1em;
+  cursor:pointer; transition:background .15s;
+}
+.btn-key-cancel:hover { background:var(--bg); }
 
 </style>
 
@@ -728,7 +821,7 @@ body {
 var CONFIG = {
   APP_NAME:    'SCPDD Research',
   APP_VERSION: '1.0.6',
-  SW_CACHE:    'scpdd-v7',
+  SW_CACHE:    'scpdd-v8',
   /* RSS proxy cascade — tried in order until one works */
   RSS_PROXY1:  'https://api.rss2json.com/v1/api.json?rss_url=',
   RSS_PROXY2:  'https://api.allorigins.win/get?url=',
@@ -2010,26 +2103,83 @@ var GeminiAPI = (function() {
     });
   }
 
-  /* ── Prompt key setup dialog ── */
+  /* ── In-app API Key modal (replaces window.prompt) ── */
   function promptForKeys(cb) {
     var k = getKeys();
-    var existing = (k.key1 ? 'Key 1 saved. ' : '') + (k.key2 ? 'Key 2 saved.' : '');
-    var key1 = window.prompt(
-      'Enter your Google Gemini API Key 1 (Primary):\n' +
-      'Get free keys at: https://aistudio.google.com/app/apikey\n' +
-      (existing || 'No keys saved yet.'),
-      k.key1 || ''
-    );
-    if (key1 === null) { cb && cb(null); return; }
-    var key2 = window.prompt(
-      'Enter Gemini API Key 2 (Fallback — leave blank if only one key):',
-      k.key2 || ''
-    );
-    k.key1 = key1.trim();
-    k.key2 = (key2||'').trim();
-    k.use2 = false; k.key1Exhausted = false; k.key2Exhausted = false;
-    saveKeys(k);
-    cb && cb(k.key1);
+    var overlay  = document.getElementById('key-modal-overlay');
+    var inp1     = document.getElementById('key-input-1');
+    var inp2     = document.getElementById('key-input-2');
+    var saveBtn  = document.getElementById('key-modal-save');
+    var cancelBtn= document.getElementById('key-modal-cancel');
+    var statusEl = document.getElementById('key-modal-status');
+
+    if (!overlay) {
+      /* Fallback to prompt if modal not in DOM yet */
+      var key1 = window.prompt('Enter Gemini API Key 1:', k.key1 || '');
+      if (!key1) { cb && cb(null); return; }
+      var key2 = window.prompt('Enter Gemini API Key 2 (optional):', k.key2 || '');
+      k.key1 = key1.trim(); k.key2 = (key2||'').trim();
+      k.use2 = false; k.key1Exhausted = false; k.key2Exhausted = false;
+      saveKeys(k); cb && cb(k.key1); return;
+    }
+
+    /* Pre-fill with existing keys (show only last 8 chars for security) */
+    inp1.value = k.key1 || '';
+    inp2.value = k.key2 || '';
+    inp1.type  = 'password';
+    inp2.type  = 'password';
+    statusEl.className = 'key-modal-status';
+    statusEl.textContent = '';
+
+    /* Show saved status if keys exist */
+    if (k.key1) {
+      statusEl.className = 'key-modal-status saved';
+      statusEl.textContent = '✓ Keys already saved — update below or Cancel to keep existing';
+    }
+
+    overlay.classList.add('open');
+    setTimeout(function(){ inp1.focus(); }, 120);
+
+    /* Clean up listeners each open */
+    var newSave   = saveBtn.cloneNode(true);
+    var newCancel = cancelBtn.cloneNode(true);
+    saveBtn.parentNode.replaceChild(newSave, saveBtn);
+    cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+
+    document.getElementById('key-modal-save').addEventListener('click', function() {
+      var v1 = (document.getElementById('key-input-1').value || '').trim();
+      var v2 = (document.getElementById('key-input-2').value || '').trim();
+      if (!v1) {
+        var st = document.getElementById('key-modal-status');
+        st.className = 'key-modal-status error';
+        st.textContent = '⚠ API Key 1 is required.';
+        document.getElementById('key-input-1').focus();
+        return;
+      }
+      k.key1 = v1; k.key2 = v2;
+      k.use2 = false; k.key1Exhausted = false; k.key2Exhausted = false;
+      saveKeys(k);
+      var st = document.getElementById('key-modal-status');
+      st.className = 'key-modal-status saved';
+      st.textContent = '✓ Keys saved!';
+      setTimeout(function(){
+        overlay.classList.remove('open');
+        cb && cb(k.key1);
+      }, 700);
+    });
+
+    document.getElementById('key-modal-cancel').addEventListener('click', function() {
+      overlay.classList.remove('open');
+      cb && cb(k.key1 || null);
+    });
+
+    /* Close on backdrop click */
+    overlay.onclick = function(e) {
+      if (e.target === overlay) {
+        overlay.classList.remove('open');
+        cb && cb(k.key1 || null);
+      }
+    };
   }
 
   /* ── Core fetch with cascade ── */
@@ -2913,5 +3063,48 @@ var VideoAnalysis = (function() {
 })();
 
 </script>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     API KEY INPUT MODAL
+     Shown when GeminiAPI.promptForKeys() is called.
+     Replaces native window.prompt() with a proper in-app dialog.
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="key-modal-overlay">
+  <div id="key-modal">
+    <div class="key-modal-hdr">
+      <div style="flex:1">
+        <div class="key-modal-hdr-title">🔑 Gemini API Keys</div>
+        <div class="key-modal-hdr-sub">Free keys · 2-key cascade · Daily quota tracking</div>
+      </div>
+    </div>
+    <div class="key-modal-body">
+      <div class="key-modal-field">
+        <div class="key-modal-label">API Key 1 — Primary <span>(required)</span></div>
+        <input class="key-modal-input" id="key-input-1" type="password"
+          placeholder="AIza…  (paste your Gemini key here)"
+          autocomplete="off" spellcheck="false">
+      </div>
+      <div class="key-modal-field">
+        <div class="key-modal-label">API Key 2 — Fallback <span>(optional, for quota backup)</span></div>
+        <input class="key-modal-input" id="key-input-2" type="password"
+          placeholder="Leave blank if using one key only"
+          autocomplete="off" spellcheck="false">
+      </div>
+      <div class="key-modal-hint">
+        Get free API keys at
+        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">
+          aistudio.google.com/app/apikey
+        </a>.<br>
+        Keys are stored locally on your device only — never sent anywhere except Google.
+      </div>
+      <div class="key-modal-status" id="key-modal-status"></div>
+    </div>
+    <div class="key-modal-actions">
+      <button class="btn-key-cancel" id="key-modal-cancel">Cancel</button>
+      <button class="btn-key-save"   id="key-modal-save">💾 Save Keys</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
