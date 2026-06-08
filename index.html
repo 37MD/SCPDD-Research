@@ -3128,17 +3128,17 @@ var BookAnalysis = (function() {
         parts: [{
           text:
             'You are a senior SCPDD consultant at Accenture Industry X.\n' +
-            'Analyse this book for an SCPDD consultant.\n\n' +
+            'Read this book carefully and analyse its ACTUAL content.\n' +
             'Title: ' + title + '\n' +
             'Author: ' + author + '\n' +
             (whytxt ? 'Context: ' + whytxt + '\n' : '') +
             '\nReturn a JSON object with these exact keys:\n' +
-            '"summary": 3-4 sentences covering what this book teaches and why it matters for SCPDD,\n' +
-            '"content_type": array e.g. ["Book","Strategy Guide","Framework"],\n' +
+            '"summary": 2-3 sentences on what this book specifically covers,\n' +
+            '"content_type": array e.g. ["Keynote","Product Demo","Tech Deep-Dive","Strategy Talk","Case Study","Tutorial","Book"],\n' +
             '"scpdd_themes": array from: IoT Architecture, Connected Product Strategy, AI/ML for Products, Cloud & Connectivity, Digital Twin & PLM, Executive Consulting, Workshop Facilitation, Business Case & ROI, Cyber-Physical Security, Industry 4.0, Edge Computing, Smart Manufacturing,\n' +
             '"key_insights": array of exactly 5 specific insights from this book,\n' +
             '"takeaways": array of 4 actionable takeaways for an Accenture SCPDD consultant,\n' +
-            '"how_to_apply": array of 5 practical steps to apply this book\'s lessons in a client meeting or proposal,\n' +
+            '"how_to_apply": array of 5 exact steps to apply these lessons in a client meeting or proposal,\n' +
             '"skill_domains": array of SCPDD skill domains this book strengthens.\n' +
             'Pure JSON only. No markdown. No generic advice.'
         }]
