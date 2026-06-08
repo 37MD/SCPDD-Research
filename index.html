@@ -1803,9 +1803,15 @@ var UI = (function() {
       hdr.textContent = section.section;
       container.appendChild(hdr);
 
-      section.books.forEach(function(book) {
+      section.books.forEach(function(book, idx) {
+        var panelId = 'bk-' + (book.title||'').replace(/[^a-zA-Z0-9]/g,'').slice(0,24) + '-' + idx;
+
+        var wrapper = document.createElement('div');
+        wrapper.style.cssText = 'border-bottom:1px solid rgba(0,0,0,.07)';
+
         var card = document.createElement('div');
         card.className = 'book-card';
+        card.style.borderBottom = 'none';
         var tagHTML = (book.tags||[]).map(function(t){
           var map = {iot:'tag-iot',ai:'tag-ai',cloud:'tag-cloud',strategy:'tag-strategy',accenture:'tag-accenture'};
           var labels = {iot:'IoT',ai:'AI',cloud:'Cloud',strategy:'Strategy',accenture:'Accenture'};
@@ -1822,9 +1828,42 @@ var UI = (function() {
             '<div class="book-links">' +
               '<a class="book-link" href="' + book.amazon + '" target="_blank" rel="noopener noreferrer">↗ Amazon</a>' +
               '<a class="book-link" href="' + book.goodreads + '" target="_blank" rel="noopener noreferrer">↗ Goodreads</a>' +
+              '<button class="btn-analyse" data-panel="' + panelId + '" title="AI analysis of this book">⚡ Analyse</button>' +
             '</div>' +
           '</div>';
-        container.appendChild(card);
+
+        wrapper.appendChild(card);
+
+        /* Analysis panel */
+        var panel = document.createElement('div');
+        panel.className = 'analysis-panel';
+        panel.id = panelId;
+        panel.setAttribute('data-title',  book.title);
+        panel.setAttribute('data-author', book.author);
+        panel.setAttribute('data-why',    book.why || '');
+        panel.innerHTML =
+          '<div class="ap-header">' +
+            '<span class="ap-header-title">⚡ AI Analysis</span>' +
+            '<span class="ap-phase-pill" id="' + panelId + '-phase">Ready</span>' +
+            '<button class="btn-ap-close" onclick="BookAnalysis.closePanel(\'' + panelId + '\')">✕</button>' +
+          '</div>' +
+          '<div class="ap-content" id="' + panelId + '-content">' +
+            '<div class="ap-loading-bar" id="' + panelId + '-loading" style="display:none">' +
+              '<span class="ap-spinner">⟳</span>' +
+              '<div><div>Analysing book…</div>' +
+              '<div class="ap-progress" id="' + panelId + '-progress"></div></div>' +
+            '</div>' +
+            '<div id="' + panelId + '-result"></div>' +
+          '</div>';
+
+        wrapper.appendChild(panel);
+        container.appendChild(wrapper);
+
+        /* Event listener */
+        card.querySelector('.btn-analyse').addEventListener('click', function(e) {
+          e.stopPropagation();
+          BookAnalysis.togglePanel(this.getAttribute('data-panel'), this);
+        });
       });
     });
   }
@@ -2700,6 +2739,100 @@ var Coach = (function() {
 
 
 /* ═══════════════════════════════════════════════════════════════════
+   [D-SHARED] Shared rendering: used by VideoAnalysis + BookAnalysis
+   ═══════════════════════════════════════════════════════════════════ */
+function renderAnalysisHtml(data, hasTranscript) {
+  var typeArr   = Array.isArray(data.content_type) ? data.content_type : [data.content_type||''];
+  var themeArr  = Array.isArray(data.scpdd_themes) ? data.scpdd_themes : [data.scpdd_themes||''];
+  var insights  = Array.isArray(data.key_insights) ? data.key_insights : [];
+  var takeaways = Array.isArray(data.takeaways) ? data.takeaways : [];
+  var howto     = Array.isArray(data.how_to_apply) ? data.how_to_apply : [];
+  var skillDoms = Array.isArray(data.skill_domains) ? data.skill_domains : [];
+  var badge = hasTranscript
+    ? '<div style="font-size:11px;color:#1a4a2e;font-weight:700;margin-bottom:8px;">✓ Based on actual video transcript</div>'
+    : '<div style="font-size:11px;color:#1a3a5c;font-weight:700;margin-bottom:8px;">✓ Analysed by Gemini AI</div>';
+  var out = badge;
+  out += '<div class="an-sec"><div class="an-hdr">📋 Summary</div><div class="an-body">' + (data.summary ? escH(data.summary) : '—') + '</div></div>';
+  if (typeArr.filter(Boolean).length) {
+    out += '<div class="an-sec"><div class="an-hdr">🎯 Content Type</div><div class="an-body">' +
+      typeArr.filter(Boolean).map(function(t){return '<span class="an-tag">'+escH(t)+'</span>';}).join('') +
+      '</div></div>';
+  }
+  if (themeArr.filter(Boolean).length) {
+    out += '<div class="an-sec"><div class="an-hdr">🔗 SCPDD Themes</div><div class="an-body">' +
+      themeArr.filter(Boolean).map(function(t){return '<span class="an-tag">'+escH(t)+'</span>';}).join('') +
+      '</div></div>';
+  }
+  if (insights.length) {
+    out += '<div class="an-sec"><div class="an-hdr">🔑 Key Insights</div><div class="an-body">' +
+      insights.map(function(k){return '<div class="an-li">'+escH(k)+'</div>';}).join('') +
+      '</div></div>';
+  }
+  if (takeaways.length) {
+    out += '<div class="an-sec"><div class="an-hdr">✅ Consultant Takeaways</div><div class="an-body">' +
+      takeaways.map(function(t){return '<div class="an-li">'+escH(t)+'</div>';}).join('') +
+      '</div></div>';
+  }
+  if (howto.length) {
+    out += '<div class="an-sec"><div class="an-hdr">🛠 How to Apply in Client Work</div><div class="an-body">' +
+      howto.map(function(s,i){return '<div class="an-li"><span class="an-num">'+(i+1)+'</span>'+escH(s)+'</div>';}).join('') +
+      '</div></div>';
+  }
+  if (skillDoms.filter(Boolean).length) {
+    out += '<div class="an-sec"><div class="an-hdr">🧠 Skill Domains Strengthened</div><div class="an-body">' +
+      skillDoms.filter(Boolean).map(function(t){return '<span class="an-tag">'+escH(t)+'</span>';}).join('') +
+      '</div></div>';
+  }
+  out += '<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(26,58,92,.2);font-size:11px;color:var(--muted);">Tap ⚡ to probe deeper in the AI chat.</div>';
+  return out;
+}
+function escH(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtRawToSections(raw) {
+  var html = '';
+  var lines = raw.split('\n');
+  var section = null;
+  var body = [];
+  function flush() {
+    if (section && body.length) {
+      html += '<div class="an-sec"><div class="an-hdr">' + escH(section) + '</div><div class="an-body">';
+      body.forEach(function(l){
+        l = l.trim();
+        if (!l) return;
+        if (/^[-*•]\s/.test(l) || /^\d+[.)]\s/.test(l)) {
+          html += '<div class="an-li">' + escH(l.replace(/^[-*•]\s+/, '').replace(/^\d+[.)]\s+/, '')) + '</div>';
+        } else {
+          html += escH(l) + '<br>';
+        }
+      });
+      html += '</div></div>';
+    }
+  }
+  var sectionHeaders = ['summary','content.type','scpdd.theme','key.insight','takeaway','how.to.apply','skill.domain','overview','conclusion','analysis'];
+  lines.forEach(function(line){
+    var trimmed = line.trim();
+    if (!trimmed) { return; }
+    var isHeader = false;
+    for (var h = 0; h < sectionHeaders.length; h++) {
+      var pat = new RegExp('^\\*{0,2}\\s*' + sectionHeaders[h].replace(/\./g, '[ .:\\-]') + '\\s*[:]?\\s*\\*{0,2}$', 'i');
+      if (pat.test(trimmed)) { isHeader = true; break; }
+    }
+    if (isHeader) { flush(); section = trimmed.replace(/[*:]/g,'').trim(); body = []; }
+    else if (!section && /^[A-Z][A-Za-z\s]{2,40}:$/.test(trimmed)) { flush(); section = trimmed.replace(/:$/,'').trim(); body = []; }
+    else { body.push(line); }
+  });
+  flush();
+  return html || '<div class="an-sec"><div class="an-body">' + escH(raw).replace(/\\n/g,'<br>') + '</div></div>';
+}
+
+function cleanAndParseGeminiJSON(text) {
+  var clean = text.replace(/```json|```/g,'').trim();
+  var s2 = clean.indexOf('{'), e2 = clean.lastIndexOf('}');
+  if (s2 !== -1 && e2 !== -1) clean = clean.substring(s2, e2+1);
+  clean = clean.replace(/,(\s*[}\]])/g, '$1');
+  return JSON.parse(clean);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    [D-ANALYSIS] VIDEO ANALYSIS — Transcript + Native Video
    ─────────────────────────────────────────────────────────────────
    TECHNIQUE: Fetches transcript via youtubetranscript.com / YT
@@ -2794,88 +2927,8 @@ var VideoAnalysis = (function() {
     return '';
   }
 
-  function renderHtml(data, hasTranscript) {
-    var typeArr   = Array.isArray(data.content_type) ? data.content_type : [data.content_type||''];
-    var themeArr  = Array.isArray(data.scpdd_themes) ? data.scpdd_themes : [data.scpdd_themes||''];
-    var insights  = Array.isArray(data.key_insights) ? data.key_insights : [];
-    var takeaways = Array.isArray(data.takeaways) ? data.takeaways : [];
-    var howto     = Array.isArray(data.how_to_apply) ? data.how_to_apply : [];
-    var skillDoms = Array.isArray(data.skill_domains) ? data.skill_domains : [];
-    var badge = hasTranscript
-      ? '<div style="font-size:11px;color:#1a4a2e;font-weight:700;margin-bottom:8px;">✓ Based on actual video transcript</div>'
-      : '<div style="font-size:11px;color:#1a3a5c;font-weight:700;margin-bottom:8px;">✓ Analysed by Gemini AI</div>';
-    var out = badge;
-    out += '<div class="an-sec"><div class="an-hdr">📋 Summary</div><div class="an-body">' + (data.summary ? esc(data.summary) : '—') + '</div></div>';
-    if (typeArr.filter(Boolean).length) {
-      out += '<div class="an-sec"><div class="an-hdr">🎯 Content Type</div><div class="an-body">' +
-        typeArr.filter(Boolean).map(function(t){return '<span class="an-tag">'+esc(t)+'</span>';}).join('') +
-        '</div></div>';
-    }
-    if (themeArr.filter(Boolean).length) {
-      out += '<div class="an-sec"><div class="an-hdr">🔗 SCPDD Themes</div><div class="an-body">' +
-        themeArr.filter(Boolean).map(function(t){return '<span class="an-tag">'+esc(t)+'</span>';}).join('') +
-        '</div></div>';
-    }
-    if (insights.length) {
-      out += '<div class="an-sec"><div class="an-hdr">🔑 Key Insights</div><div class="an-body">' +
-        insights.map(function(k){return '<div class="an-li">'+esc(k)+'</div>';}).join('') +
-        '</div></div>';
-    }
-    if (takeaways.length) {
-      out += '<div class="an-sec"><div class="an-hdr">✅ Consultant Takeaways</div><div class="an-body">' +
-        takeaways.map(function(t){return '<div class="an-li">'+esc(t)+'</div>';}).join('') +
-        '</div></div>';
-    }
-    if (howto.length) {
-      out += '<div class="an-sec"><div class="an-hdr">🛠 How to Apply in Client Work</div><div class="an-body">' +
-        howto.map(function(s,i){return '<div class="an-li"><span class="an-num">'+(i+1)+'</span>'+esc(s)+'</div>';}).join('') +
-        '</div></div>';
-    }
-    if (skillDoms.filter(Boolean).length) {
-      out += '<div class="an-sec"><div class="an-hdr">🧠 Skill Domains Strengthened</div><div class="an-body">' +
-        skillDoms.filter(Boolean).map(function(t){return '<span class="an-tag">'+esc(t)+'</span>';}).join('') +
-        '</div></div>';
-    }
-    out += '<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(26,58,92,.2);font-size:11px;color:var(--muted);">Tap ⚡ to probe deeper in the AI chat.</div>';
-    return out;
-  }
-
-  function fmtRawToSections(raw) {
-    var html = '';
-    var lines = raw.split('\n');
-    var section = null;
-    var body = [];
-    function flush() {
-      if (section && body.length) {
-        html += '<div class="an-sec"><div class="an-hdr">' + esc(section) + '</div><div class="an-body">';
-        body.forEach(function(l){
-          l = l.trim();
-          if (!l) return;
-          if (/^[-*•]\s/.test(l) || /^\d+[.)]\s/.test(l)) {
-            html += '<div class="an-li">' + esc(l.replace(/^[-*•]\s+/, '').replace(/^\d+[.)]\s+/, '')) + '</div>';
-          } else {
-            html += esc(l) + '<br>';
-          }
-        });
-        html += '</div></div>';
-      }
-    }
-    var sectionHeaders = ['summary','content.type','scpdd.theme','key.insight','takeaway','how.to.apply','skill.domain','overview','conclusion','analysis'];
-    lines.forEach(function(line){
-      var trimmed = line.trim();
-      if (!trimmed) { return; }
-      var isHeader = false;
-      for (var h = 0; h < sectionHeaders.length; h++) {
-        var pat = new RegExp('^\\*{0,2}\\s*' + sectionHeaders[h].replace(/\./g, '[ .:\\-]') + '\\s*[:]?\\s*\\*{0,2}$', 'i');
-        if (pat.test(trimmed)) { isHeader = true; break; }
-      }
-      if (isHeader) { flush(); section = trimmed.replace(/[*:]/g,'').trim(); body = []; }
-      else if (!section && /^[A-Z][A-Za-z\s]{2,40}:$/.test(trimmed)) { flush(); section = trimmed.replace(/:$/,'').trim(); body = []; }
-      else { body.push(line); }
-    });
-    flush();
-    return html || '<div class="an-sec"><div class="an-body">' + esc(raw).replace(/\\n/g,'<br>') + '</div></div>';
-  }
+  function renderHtml(d, h) { return renderAnalysisHtml(d, h); }
+  function fmtRawSec(r) { return fmtRawToSections(r); }
 
   async function run(panelId, btnEl) {
     var panel = document.getElementById(panelId);
@@ -3003,6 +3056,146 @@ var VideoAnalysis = (function() {
       if (window.GChat && GChat._setVideoContext) {
         GChat._setVideoContext(title + ' (' + feed + ')', finalResult);
       }
+    }
+  }
+
+  function closePanel(panelId) {
+    var panel = document.getElementById(panelId);
+    if (panel) panel.classList.remove('open');
+  }
+
+  return { togglePanel: run, closePanel: closePanel };
+})();
+
+/* ═══════════════════════════════════════════════════════════════════
+   [D-BOOKS] BOOK ANALYSIS — Gemini-powered book summariser
+   ─────────────────────────────────────────────────────────────────
+   Sends book title + author to Gemini, returns section-wise analysis.
+   No transcript fetch needed — Gemini knows these books from training.
+   ═══════════════════════════════════════════════════════════════════ */
+var BookAnalysis = (function() {
+
+  function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function chunkText(text, maxLength) {
+    var words = text.split(' '), chunks = [], cur = '';
+    words.forEach(function(w){
+      if ((cur + w).length > maxLength) { if (cur) chunks.push(cur.trim()); cur = ''; }
+      cur += w + ' ';
+    });
+    if (cur.trim()) chunks.push(cur.trim());
+    return chunks;
+  }
+
+  async function run(panelId, btnEl) {
+    var panel = document.getElementById(panelId);
+    if (!panel) return;
+
+    if (panel.classList.contains('open')) { panel.classList.remove('open'); return; }
+    panel.classList.add('open');
+
+    var title  = panel.getAttribute('data-title')  || 'SCPDD Book';
+    var author = panel.getAttribute('data-author') || '';
+    var whytxt = panel.getAttribute('data-why')    || '';
+
+    var resultEl  = document.getElementById(panelId + '-result');
+    var loadingEl = document.getElementById(panelId + '-loading');
+    var phaseEl   = document.getElementById(panelId + '-phase');
+
+    if (btnEl) { btnEl.classList.add('loading'); btnEl.textContent = '⟳ …'; }
+    if (phaseEl) phaseEl.textContent = 'Analysing…';
+    if (loadingEl) loadingEl.style.display = 'flex';
+
+    var keys = [];
+    try {
+      var stored = JSON.parse(localStorage.getItem('scpdd_gemini_keys_v1') || '{}');
+      if (stored.key1) keys.push(stored.key1);
+      if (stored.key2) keys.push(stored.key2);
+    } catch(e) {}
+    if (!keys.length) {
+      if (loadingEl) loadingEl.style.display = 'none';
+      if (phaseEl) phaseEl.textContent = 'No Key';
+      if (btnEl) { btnEl.textContent = '⚡ Analyse'; btnEl.classList.remove('loading'); }
+      if (resultEl) resultEl.innerHTML = '<div style="padding:10px;color:#7a4200;font-size:13px;font-weight:700;">⚠ No Gemini API key set.<br>Tap <b>🔑 Keys</b> in the chat header.</div>';
+      GeminiAPI.setupKeys();
+      return;
+    }
+
+    var apiKey = keys[0];
+
+    var payload = {
+      contents: [{
+        parts: [{
+          text:
+            'You are a senior SCPDD consultant at Accenture Industry X.\n' +
+            'Analyse this book for an SCPDD consultant.\n\n' +
+            'Title: ' + title + '\n' +
+            'Author: ' + author + '\n' +
+            (whytxt ? 'Context: ' + whytxt + '\n' : '') +
+            '\nReturn a JSON object with these exact keys:\n' +
+            '"summary": 3-4 sentences covering what this book teaches and why it matters for SCPDD,\n' +
+            '"content_type": array e.g. ["Book","Strategy Guide","Framework"],\n' +
+            '"scpdd_themes": array from: IoT Architecture, Connected Product Strategy, AI/ML for Products, Cloud & Connectivity, Digital Twin & PLM, Executive Consulting, Workshop Facilitation, Business Case & ROI, Cyber-Physical Security, Industry 4.0, Edge Computing, Smart Manufacturing,\n' +
+            '"key_insights": array of exactly 5 specific insights from this book,\n' +
+            '"takeaways": array of 4 actionable takeaways for an Accenture SCPDD consultant,\n' +
+            '"how_to_apply": array of 5 practical steps to apply this book\'s lessons in a client meeting or proposal,\n' +
+            '"skill_domains": array of SCPDD skill domains this book strengthens.\n' +
+            'Pure JSON only. No markdown. No generic advice.'
+        }]
+      }],
+      generationConfig: { temperature: 0.2, maxOutputTokens: 2048 }
+    };
+
+    var models = ['gemini-2.5-pro', 'gemini-3.5-flash', 'gemini-2.5-flash'];
+    var finalResult = null;
+    var usedModel = '';
+
+    for (var m = 0; m < models.length; m++) {
+      try {
+        if (phaseEl) phaseEl.textContent = 'Gemini ' + models[m] + '…';
+        var res = await fetch(
+          'https://generativelanguage.googleapis.com/v1beta/models/' + models[m] + ':generateContent?key=' + apiKey,
+          { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }
+        );
+        var data = await res.json();
+        if (res.ok) {
+          var text = data.candidates && data.candidates[0] &&
+                     data.candidates[0].content && data.candidates[0].content.parts &&
+                     data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+          if (text) { finalResult = text; usedModel = models[m]; break; }
+        } else {
+          console.warn('[Book] ' + models[m] + ' HTTP ' + res.status, data.error && data.error.message);
+        }
+      } catch(e) { console.warn('[Book] ' + models[m], e.message); }
+    }
+
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (phaseEl) phaseEl.textContent = usedModel;
+    if (btnEl) { btnEl.textContent = '✓ Done'; btnEl.classList.remove('loading'); btnEl.classList.add('done'); }
+
+    if (!finalResult) {
+      if (resultEl) resultEl.innerHTML = '<div style="padding:10px;color:#7a2020;font-size:13px;">⚠ Failed. Check API key.</div>';
+      return;
+    }
+
+    try {
+      var parsed = cleanAndParseGeminiJSON(finalResult);
+      if (resultEl) resultEl.innerHTML = renderAnalysisHtml(parsed, false);
+    } catch(err) {
+      try {
+        var clean = finalResult.replace(/```json|```/g,'').trim();
+        var s2 = clean.indexOf('{'), e2 = clean.lastIndexOf('}');
+        if (s2 !== -1 && e2 !== -1) clean = clean.substring(s2, e2+1);
+        clean = clean.replace(/,(\s*[}\]])/g, '$1');
+        var reparsed = JSON.parse(clean);
+        if (resultEl) resultEl.innerHTML = renderAnalysisHtml(reparsed, false);
+      } catch(e2) {
+        if (resultEl) resultEl.innerHTML = fmtRawToSections(finalResult);
+      }
+    }
+    var chunks = chunkText(finalResult, 500);
+    if (window.GChat && GChat._setVideoContext) {
+      GChat._setVideoContext(title + ' (' + author + ')', finalResult);
     }
   }
 
