@@ -614,7 +614,7 @@ body {
       <line x1="23" y1="18" x2="26.5" y2="18" stroke="#1a1a1a" stroke-width="1.5"/>
     </svg>
     <div class="app-title-wrap">
-      <div class="app-title">SCPDD Research</div>
+      <div class="app-title">SCPDD Research <span style="font-size:14px;font-weight:400;letter-spacing:.08em;color:var(--muted);">v1</span></div>
       <div class="app-subtitle">Smart Connected Product Design &amp; Development · Accenture Industry X</div>
     </div>
     <span class="acc-badge">Accenture</span>
@@ -2805,7 +2805,7 @@ var VideoAnalysis = (function() {
       ? '<div style="font-size:11px;color:#1a4a2e;font-weight:700;margin-bottom:8px;">✓ Based on actual video transcript</div>'
       : '<div style="font-size:11px;color:#1a3a5c;font-weight:700;margin-bottom:8px;">✓ Analysed by Gemini AI</div>';
     return badge +
-      '<strong>📋 Summary</strong><p>'+(data.summary||'')+'</p>'+
+      '<strong>📋 Summary</strong><p>'+esc(data.summary)+'</p>'+
       '<strong>🎯 Content Type</strong><p>'+typeArr.filter(Boolean).map(function(t){return '<span style="display:inline-block;background:linear-gradient(135deg,#1a3a5c,#2d6fa8);color:#fff;border-radius:3px;padding:2px 9px;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin:2px 3px 2px 0;">'+esc(t)+'</span>';}).join('')+'</p>'+
       '<strong>🔗 SCPDD Themes</strong><p>'+themeArr.filter(Boolean).map(function(t){return '<span style="display:inline-block;background:linear-gradient(135deg,#1a3a5c,#2d6fa8);color:#fff;border-radius:3px;padding:2px 9px;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin:2px 3px 2px 0;">'+esc(t)+'</span>';}).join('')+'</p>'+
       '<strong>🔑 Key Insights</strong>'+insights.map(function(k){return '<p>• '+esc(k)+'</p>';}).join('')+
@@ -2923,6 +2923,7 @@ var VideoAnalysis = (function() {
       var clean = finalResult.replace(/```json|```/g,'').trim();
       var s2 = clean.indexOf('{'), e2 = clean.lastIndexOf('}');
       if (s2 !== -1 && e2 !== -1) clean = clean.substring(s2, e2+1);
+      clean = clean.replace(/,([\s\r\n]*[}\]])/g, '$1');
       var parsed = JSON.parse(clean);
       if (resultEl) resultEl.innerHTML = renderHtml(parsed, hasTranscript);
       transcriptChunksGlobal = chunkText(clean, 500);
@@ -2931,7 +2932,14 @@ var VideoAnalysis = (function() {
         GChat._setVideoContext(title + ' (' + feed + ')', clean);
       }
     } catch(err) {
-      if (resultEl) resultEl.innerHTML = '<div style="white-space:pre-wrap;font-size:13px;">' + esc(finalResult) + '</div>';
+      var displayHtml;
+      try {
+        var reparsed = JSON.parse(clean);
+        displayHtml = renderHtml(reparsed, hasTranscript);
+      } catch(e2) {
+        displayHtml = '<pre style="white-space:pre-wrap;font-size:12px;line-height:1.6;color:var(--text);">' + esc(finalResult) + '</pre>';
+      }
+      if (resultEl) resultEl.innerHTML = displayHtml;
       transcriptChunksGlobal = [finalResult];
       if (window.GChat && GChat._setVideoContext) {
         GChat._setVideoContext(title + ' (' + feed + ')', finalResult);
