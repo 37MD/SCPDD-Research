@@ -5,7 +5,7 @@
 ║  Smart Connected Product Design & Development                        ║
 ║  Accenture Industry X — Consultant Research & Coaching Hub          ║
 ╠══════════════════════════════════════════════════════════════════════╣
-║  VERSION : 1.0.6  (SW cache: scpdd-v6)                              ║
+║  VERSION : 1.0.10  (SW cache: scpdd-v7)                              ║
 ║  LAST    : June 2026                                                 ║
 ╠══════════════════════════════════════════════════════════════════════╣
 ║  TABS                                                                ║
@@ -148,15 +148,15 @@ body {
 .acc-badge     { background:#A100FF; color:#fff; font-size:10px; font-weight:900; padding:2px 8px; border-radius:2px; letter-spacing:.1em; text-transform:uppercase; margin-left:auto; flex-shrink:0; }
 
 /* Tab bar */
-.tab-bar                   { display:flex; border-top:1px solid rgba(0,0,0,.18); overflow-x:auto; scrollbar-width:none; }
+.tab-bar                   { display:flex; border-top:1px solid rgba(0,0,0,.18); overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
 .tab-bar::-webkit-scrollbar{ display:none; }
 .tab-btn {
-  flex:1; min-width:80px; padding:9px 4px;
+  flex:0 0 auto; min-width:74px; padding:8px 6px;
   background:transparent; border:none;
   color:var(--muted); font-family:'DM Sans',sans-serif;
-  font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:.08em;
+  font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:.05em;
   cursor:pointer; position:relative; transition:color .2s, background .2s;
-  line-height:1.5; text-align:center; white-space:nowrap;
+  line-height:1.4; text-align:center; white-space:nowrap;
 }
 .tab-btn.active { background:rgba(0,0,0,.07); }
 .tab-btn.active::after {
@@ -174,7 +174,7 @@ body {
 .tab-badge  { display:inline-block; background:#c0392b; color:#fff; font-size:9px; font-weight:900; border-radius:8px; padding:1px 5px; margin-left:3px; vertical-align:middle; letter-spacing:.05em; line-height:1.5; min-width:16px; text-align:center; }
 
 /* Main content area */
-.app-body          { max-width:960px; margin:0 auto; padding-bottom:80px; }
+.app-body          { max-width:960px; margin:0 auto; padding-bottom:100px; }
 .tab-panel         { display:none; }
 .tab-panel.active  { display:block; }
 
@@ -336,9 +336,14 @@ body {
 
 /* ═══════════════════════════════════════════════════════════════════
    [B5] DAILY AI COACH TAB
+   Coach panel uses a full-page flex column layout.
+   The app-body is removed from flow for this tab so the coach
+   can fill the viewport below the sticky header.
    ═══════════════════════════════════════════════════════════════════ */
-#panel-coach                { display:none; flex-direction:column; height:calc(100vh - 120px); }
+#panel-coach                { display:none; flex-direction:column; }
 #panel-coach.active         { display:flex; }
+/* When coach is active, the chat-wrap takes remaining space */
+#panel-coach .coach-chat-wrap { min-height:280px; }
 .coach-header               { padding:14px 16px 10px; border-bottom:2px solid rgba(0,0,0,.14); background:rgba(0,0,0,.07); flex-shrink:0; }
 .coach-header-top           { display:flex; align-items:center; gap:10px; }
 .coach-title                { font-family:'DM Serif Display',serif; font-size:26px; color:var(--coach-hl); flex:1; }
@@ -370,7 +375,7 @@ body {
 .chip                       { font-family:'DM Sans',sans-serif; font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:.07em; padding:5px 11px; border:1px solid var(--coach-hl); border-radius:14px; background:var(--lighter); color:var(--coach-hl); cursor:pointer; transition:background .15s, color .15s; }
 .chip:hover, .chip.used     { background:var(--coach-hl); color:#fff; }
 /* Input bar */
-.coach-input-bar            { padding:10px 12px; background:var(--surface); border-top:2px solid var(--accent); flex-shrink:0; display:flex; gap:8px; align-items:flex-end; }
+.coach-input-bar            { padding:10px 12px; background:var(--surface); border-top:2px solid var(--accent); border-bottom:3px solid rgba(0,0,0,.15); flex-shrink:0; display:flex; gap:8px; align-items:flex-end; margin-bottom:20px; }
 .coach-textarea             { flex:1; font-family:'DM Sans',sans-serif; font-size:14px; border:1px solid var(--border); border-radius:3px; padding:8px 11px; background:var(--lighter); color:var(--text); resize:none; min-height:42px; max-height:110px; line-height:1.5; }
 .coach-textarea:focus       { outline:2px solid var(--coach-hl); }
 .btn-coach-send             { width:42px; height:42px; background:var(--coach-hl); color:#fff; border:none; border-radius:3px; font-size:19px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:opacity .15s; }
@@ -392,24 +397,26 @@ body {
 
 /* ⚡ Floating Action Button */
 #thunder-fab {
-  position:fixed; bottom:24px; right:20px; z-index:1200;
-  width:54px; height:54px; border-radius:50%;
+  position:fixed; bottom:22px; left:50%; transform:translateX(-50%);
+  z-index:1200;
+  width:50px; height:50px; border-radius:50%;
   background:linear-gradient(135deg, var(--coach-hl) 0%, #2d6fa8 100%);
-  box-shadow:0 4px 18px rgba(26,58,92,.45);
+  box-shadow:0 4px 18px rgba(26,58,92,.55);
   border:none; cursor:pointer;
   display:flex; align-items:center; justify-content:center;
-  transition:transform .2s, box-shadow .2s;
+  transition:opacity .2s, box-shadow .2s;
   -webkit-tap-highlight-color:transparent;
 }
-#thunder-fab:hover          { transform:scale(1.1); box-shadow:0 6px 24px rgba(26,58,92,.55); }
+#thunder-fab:hover          { opacity:.9; box-shadow:0 6px 24px rgba(26,58,92,.65); }
+#thunder-fab.hidden         { opacity:0; pointer-events:none; }
 #thunder-fab svg            { width:26px; height:26px; filter:drop-shadow(0 1px 2px rgba(0,0,0,.3)); }
 #thunder-fab .fab-pulse     { position:absolute; inset:0; border-radius:50%; background:rgba(45,111,168,.4); animation:fabpulse 2.4s ease-out infinite; }
 @keyframes fabpulse         { 0%{transform:scale(1);opacity:.7} 100%{transform:scale(1.8);opacity:0} }
 
 /* Global chatbox slide-up sheet */
-#gchat-overlay              { position:fixed; inset:0; z-index:1100; background:rgba(0,0,0,.45); display:none; align-items:flex-end; justify-content:center; }
+#gchat-overlay              { position:fixed; inset:0; z-index:1100; background:rgba(0,0,0,.5); display:none; align-items:flex-end; justify-content:center; }
 #gchat-overlay.open         { display:flex; }
-#gchat-box                  { width:100%; max-width:680px; height:72vh; background:var(--surface); border-radius:14px 14px 0 0; display:flex; flex-direction:column; box-shadow:0 -6px 32px rgba(0,0,0,.28); overflow:hidden; animation:slideUp .25s ease; }
+#gchat-box                  { width:100%; max-width:680px; max-height:80vh; min-height:340px; background:var(--surface); border-radius:14px 14px 0 0; display:flex; flex-direction:column; box-shadow:0 -6px 32px rgba(0,0,0,.35); overflow:hidden; animation:slideUp .25s ease; }
 @keyframes slideUp          { from{transform:translateY(60px);opacity:0} to{transform:translateY(0);opacity:1} }
 .gchat-topbar               { display:flex; align-items:center; padding:11px 14px; background:linear-gradient(135deg, var(--coach-hl), #2d6fa8); gap:10px; flex-shrink:0; }
 .gchat-topbar-title         { font-family:'DM Serif Display',serif; font-size:20px; color:#fff; flex:1; }
@@ -429,12 +436,158 @@ body {
 .gchat-typing .dot          { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--coach-hl); margin:0 2px; animation:typingdot 1.1s infinite; }
 .gchat-typing .dot:nth-child(2) { animation-delay:.18s; }
 .gchat-typing .dot:nth-child(3) { animation-delay:.36s; }
-.gchat-input-bar            { padding:9px 12px; background:var(--bg); border-top:2px solid var(--accent); display:flex; gap:8px; align-items:flex-end; flex-shrink:0; }
+.gchat-input-bar            { padding:9px 12px; background:var(--bg); border-top:2px solid var(--accent); display:flex; gap:8px; align-items:flex-end; flex-shrink:0; position:relative; z-index:1; }
 .gchat-textarea             { flex:1; font-family:'DM Sans',sans-serif; font-size:14px; border:1px solid var(--border); border-radius:3px; padding:8px 10px; background:var(--lighter); color:var(--text); resize:none; min-height:40px; max-height:100px; line-height:1.5; }
 .gchat-textarea:focus       { outline:2px solid var(--coach-hl); }
 .btn-gchat-send             { width:40px; height:40px; background:var(--coach-hl); color:#fff; border:none; border-radius:3px; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:opacity .15s; }
 .btn-gchat-send:hover       { opacity:.85; }
 .btn-gchat-send:disabled    { opacity:.35; cursor:not-allowed; }
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   [B3-ANALYSIS] VIDEO ANALYSIS PANEL
+   Triggered by ⚡ Analyse button on each video item.
+   Uses Gemini's native video understanding (fileData).
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Small analysis button next to each video */
+.btn-analyse {
+  display:inline-flex; align-items:center; gap:3px;
+  font-family:'DM Sans',sans-serif; font-size:10px; font-weight:900;
+  text-transform:uppercase; letter-spacing:.08em;
+  padding:3px 8px; border-radius:2px; cursor:pointer;
+  background:linear-gradient(135deg,#1a3a5c,#2d6fa8);
+  color:#fff; border:none;
+  transition:opacity .15s; white-space:nowrap; flex-shrink:0;
+}
+.btn-analyse:hover   { opacity:.85; }
+.btn-analyse.loading { opacity:.6; cursor:wait; }
+.btn-analyse.done    { background:linear-gradient(135deg,#1a4a2e,#2d7a4a); }
+
+/* Expandable analysis panel — sits below the video row */
+.analysis-panel {
+  display:none; margin:0 6px 10px;
+  border:1px solid rgba(26,58,92,.3);
+  border-radius:3px; overflow:hidden;
+  background:rgba(26,58,92,.06);
+  font-size:13px;
+}
+.analysis-panel.open { display:block; }
+
+/* Panel header bar */
+.ap-header {
+  display:flex; align-items:center; gap:8px;
+  padding:8px 12px;
+  background:linear-gradient(135deg,#1a3a5c,#2d6fa8);
+  color:#fff;
+}
+.ap-header-title { font-size:13px; font-weight:900; text-transform:uppercase; letter-spacing:.1em; flex:1; }
+.ap-phase-pill   { font-size:9px; font-weight:900; text-transform:uppercase; letter-spacing:.1em; padding:2px 7px; border-radius:8px; background:rgba(255,255,255,.2); border:1px solid rgba(255,255,255,.35); white-space:nowrap; }
+.btn-ap-close    { background:rgba(255,255,255,.18); border:none; color:#fff; width:22px; height:22px; border-radius:50%; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+
+/* Analysis content area */
+.ap-content {
+  padding:10px 12px; color:var(--text); line-height:1.6;
+  max-height:280px; overflow-y:auto;
+}
+.ap-content p       { margin-bottom:6px; }
+.ap-content strong  { color:#1a3a5c; }
+.ap-content ul      { padding-left:16px; margin:4px 0 8px; }
+.ap-content li      { margin-bottom:3px; }
+.ap-section-label   { font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.12em; color:#1a3a5c; margin:8px 0 3px; }
+.ap-loading-bar     { display:flex; align-items:center; gap:8px; padding:10px 12px; color:var(--muted); font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:.1em; }
+.ap-spinner         { display:inline-block; animation:spin .8s linear infinite; font-size:16px; }
+.ap-progress        { font-size:11px; color:var(--muted); margin-top:2px; }
+
+
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   [B-KEYMODAL] API KEY INPUT MODAL
+   Replaces window.prompt() — proper in-app overlay with styled inputs.
+   Used by GeminiAPI.promptForKeys()
+   ═══════════════════════════════════════════════════════════════════ */
+#key-modal-overlay {
+  position:fixed; inset:0; z-index:4000;
+  background:rgba(0,0,0,.72);
+  display:none; align-items:center; justify-content:center;
+  padding:16px;
+}
+#key-modal-overlay.open { display:flex; }
+#key-modal {
+  width:100%; max-width:440px;
+  background:var(--lighter);
+  border:3px solid var(--accent);
+  border-radius:6px;
+  overflow:hidden;
+  box-shadow:0 8px 40px rgba(0,0,0,.4);
+  animation:slideUp .2s ease;
+}
+.key-modal-hdr {
+  background:linear-gradient(135deg,#1a3a5c,#2d6fa8);
+  padding:14px 18px;
+  display:flex; align-items:center; gap:10px;
+}
+.key-modal-hdr-title {
+  font-family:'DM Serif Display',serif;
+  font-size:22px; color:#fff; flex:1;
+}
+.key-modal-hdr-sub {
+  font-size:11px; color:rgba(255,255,255,.75);
+  text-transform:uppercase; letter-spacing:.1em;
+}
+.key-modal-body    { padding:18px; display:flex; flex-direction:column; gap:14px; }
+.key-modal-field   { display:flex; flex-direction:column; gap:5px; }
+.key-modal-label {
+  font-size:11px; font-weight:900; text-transform:uppercase;
+  letter-spacing:.1em; color:var(--muted);
+}
+.key-modal-label span {
+  font-weight:400; text-transform:none; letter-spacing:0;
+  font-size:11px; color:var(--muted);
+}
+.key-modal-input {
+  font-family:'DM Sans',sans-serif; font-size:14px;
+  padding:10px 12px; border:1px solid var(--border);
+  border-radius:3px; background:var(--bg); color:var(--text);
+  width:100%; outline:none;
+  transition:border-color .2s, box-shadow .2s;
+}
+.key-modal-input:focus {
+  border-color:#1a3a5c;
+  box-shadow:0 0 0 2px rgba(26,58,92,.2);
+}
+.key-modal-input::placeholder { color:var(--border); font-size:12px; }
+.key-modal-hint {
+  font-size:11px; color:var(--muted); line-height:1.5;
+}
+.key-modal-hint a { color:#1a3a5c; font-weight:900; }
+.key-modal-status {
+  font-size:12px; font-weight:900; text-transform:uppercase;
+  letter-spacing:.08em; padding:6px 10px; border-radius:3px;
+  display:none;
+}
+.key-modal-status.saved { display:block; background:rgba(46,204,113,.15); color:#1a6b3a; border:1px solid #2ecc71; }
+.key-modal-status.error { display:block; background:rgba(231,76,60,.15); color:#7a1a1a; border:1px solid #e74c3c; }
+.key-modal-actions {
+  display:flex; gap:10px; padding:0 18px 18px;
+}
+.btn-key-save {
+  flex:1; padding:11px; background:#1a3a5c; color:#fff;
+  border:none; border-radius:3px;
+  font-family:'DM Sans',sans-serif; font-size:14px; font-weight:900;
+  text-transform:uppercase; letter-spacing:.1em;
+  cursor:pointer; transition:opacity .15s;
+}
+.btn-key-save:hover { opacity:.85; }
+.btn-key-cancel {
+  padding:11px 16px; background:var(--card); color:var(--muted);
+  border:1px solid var(--border); border-radius:3px;
+  font-family:'DM Sans',sans-serif; font-size:14px; font-weight:900;
+  text-transform:uppercase; letter-spacing:.1em;
+  cursor:pointer; transition:background .15s;
+}
+.btn-key-cancel:hover { background:var(--bg); }
 
 </style>
 
@@ -620,6 +773,8 @@ body {
         <div class="gchat-topbar-title">⚡ Ask SCPDD AI</div>
         <div class="gchat-topbar-sub">IoT · AI · Cloud · Strategy · Accenture</div>
       </div>
+      <!-- Tap to set/update API keys -->
+      <button onclick="GeminiAPI.setupKeys()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:900;padding:4px 9px;border-radius:3px;cursor:pointer;text-transform:uppercase;letter-spacing:.07em;flex-shrink:0;white-space:nowrap" title="Set Gemini API Keys">🔑 Keys</button>
       <!-- Live API model/quota pill — updated by D9-GeminiAPI.updateStatusUI() -->
       <span class="gchat-api-pill ok" id="gchat-api-pill">Gemini Ready</span>
       <button class="btn-gchat-close" onclick="GChat.close()">✕</button>
@@ -651,7 +806,7 @@ body {
 var CONFIG = {
   APP_NAME:    'SCPDD Research',
   APP_VERSION: '1.0.6',
-  SW_CACHE:    'scpdd-v6',
+  SW_CACHE:    'scpdd-v10',
   /* RSS proxy cascade — tried in order until one works */
   RSS_PROXY1:  'https://api.rss2json.com/v1/api.json?rss_url=',
   RSS_PROXY2:  'https://api.allorigins.win/get?url=',
@@ -1533,18 +1688,25 @@ var UI = (function() {
       var it   = items[i];
       var vid  = Feed.getVid(it.link);
       if (!vid) continue;
-      var thumb = Feed.thumbUrl(vid);
-      var title = it.title || 'Untitled';
-      var date  = Feed.fmtDate(it.pubDate || it.isoDate || '');
-      var link  = it.link;
+      var thumb   = Feed.thumbUrl(vid);
+      var title   = it.title || 'Untitled';
+      var date    = Feed.fmtDate(it.pubDate || it.isoDate || '');
+      var link    = it.link;
+      var panelId = 'ap-' + vid;
 
+      /* ── Wrapper holds video row + analysis panel stacked ── */
+      var wrapper = document.createElement('div');
+      wrapper.style.cssText = 'border-bottom:1px solid rgba(0,0,0,.07)';
+
+      /* ── Video row ── */
       var div = document.createElement('div');
       div.className = 'video-item';
-      div.setAttribute('data-vid', vid);
-      div.setAttribute('data-title', title);
-      div.setAttribute('data-date', date);
+      div.style.borderBottom = 'none';
+      div.setAttribute('data-vid',     vid);
+      div.setAttribute('data-title',   title);
+      div.setAttribute('data-date',    date);
       div.setAttribute('data-channel', channelName);
-      div.setAttribute('data-link', link);
+      div.setAttribute('data-link',    link);
 
       var thumbHtml = thumb
         ? '<img class="item-thumb" src="' + Feed.esc(thumb) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
@@ -1554,23 +1716,61 @@ var UI = (function() {
         thumbHtml +
         '<div class="item-info">' +
           '<div class="item-title">' + Feed.esc(title) + '</div>' +
-          '<div class="item-date">' + Feed.esc(date) + '</div>' +
+          '<div class="item-date">'  + Feed.esc(date)  + '</div>' +
         '</div>' +
         '<div class="item-actions">' +
           '<button class="btn-play">▶</button>' +
+          /* ⚡ Analysis button — small, next to play */
+          '<button class="btn-analyse" data-panel="' + panelId + '" title="AI analysis of this video">⚡ Analyse</button>' +
         '</div>';
 
+      /* ── Analysis panel (collapsed, injected below video row) ── */
+      var panel = document.createElement('div');
+      panel.className = 'analysis-panel';
+      panel.id = panelId;
+      panel.setAttribute('data-vid',     vid);
+      panel.setAttribute('data-title',   title);
+      panel.setAttribute('data-channel', channelName);
+      panel.innerHTML =
+        '<div class="ap-header">' +
+          '<span class="ap-header-title">⚡ AI Analysis</span>' +
+          '<span class="ap-phase-pill" id="' + panelId + '-phase">Ready</span>' +
+          '<button class="btn-ap-close" onclick="VideoAnalysis.closePanel(\'' + panelId + '\')">✕</button>' +
+        '</div>' +
+        '<div class="ap-content" id="' + panelId + '-content">' +
+          '<div class="ap-loading-bar" id="' + panelId + '-loading" style="display:none">' +
+            '<span class="ap-spinner">⟳</span>' +
+            '<div><div>Analysing video…</div>' +
+            '<div class="ap-progress" id="' + panelId + '-progress"></div></div>' +
+          '</div>' +
+          '<div id="' + panelId + '-result"></div>' +
+        '</div>';
+
+      /* Play button */
       div.querySelector('.btn-play').addEventListener('click', function(e) {
         e.stopPropagation();
         var p = this.closest('.video-item');
-        Player.open(p.getAttribute('data-vid'), p.getAttribute('data-title'), p.getAttribute('data-date'), p.getAttribute('data-channel'), p.getAttribute('data-link'));
+        Player.open(p.getAttribute('data-vid'), p.getAttribute('data-title'),
+                    p.getAttribute('data-date'), p.getAttribute('data-channel'),
+                    p.getAttribute('data-link'));
       });
+
+      /* ⚡ Analyse button */
+      div.querySelector('.btn-analyse').addEventListener('click', function(e) {
+        e.stopPropagation();
+        VideoAnalysis.togglePanel(this.getAttribute('data-panel'), this);
+      });
+
+      /* Click row → play */
       div.addEventListener('click', function(e) {
         if (!e.target.closest('.item-actions')) {
           var pb = this.querySelector('.btn-play'); if (pb) pb.click();
         }
       });
-      gridEl.appendChild(div);
+
+      wrapper.appendChild(div);
+      wrapper.appendChild(panel);
+      gridEl.appendChild(wrapper);
     }
     var old = gridEl.querySelector('.load-more-wrap');
     if (old) old.remove();
@@ -1879,26 +2079,92 @@ var GeminiAPI = (function() {
     });
   }
 
-  /* ── Prompt key setup dialog ── */
+  /* ── In-app API Key modal (replaces window.prompt) ── */
   function promptForKeys(cb) {
     var k = getKeys();
-    var existing = (k.key1 ? 'Key 1 saved. ' : '') + (k.key2 ? 'Key 2 saved.' : '');
-    var key1 = window.prompt(
-      'Enter your Google Gemini API Key 1 (Primary):\n' +
-      'Get free keys at: https://aistudio.google.com/app/apikey\n' +
-      (existing || 'No keys saved yet.'),
-      k.key1 || ''
-    );
-    if (key1 === null) { cb && cb(null); return; }
-    var key2 = window.prompt(
-      'Enter Gemini API Key 2 (Fallback — leave blank if only one key):',
-      k.key2 || ''
-    );
-    k.key1 = key1.trim();
-    k.key2 = (key2||'').trim();
-    k.use2 = false; k.key1Exhausted = false; k.key2Exhausted = false;
-    saveKeys(k);
-    cb && cb(k.key1);
+    var overlay  = document.getElementById('key-modal-overlay');
+    var inp1     = document.getElementById('key-input-1');
+    var inp2     = document.getElementById('key-input-2');
+    var saveBtn  = document.getElementById('key-modal-save');
+    var cancelBtn= document.getElementById('key-modal-cancel');
+    var statusEl = document.getElementById('key-modal-status');
+
+    if (!overlay) {
+      /* Fallback to prompt if modal not in DOM yet */
+      var key1 = window.prompt('Enter Gemini API Key 1:', k.key1 || '');
+      if (!key1) { cb && cb(null); return; }
+      var key2 = window.prompt('Enter Gemini API Key 2 (optional):', k.key2 || '');
+      k.key1 = key1.trim(); k.key2 = (key2||'').trim();
+      k.use2 = false; k.key1Exhausted = false; k.key2Exhausted = false;
+      saveKeys(k); cb && cb(k.key1); return;
+    }
+
+    /* Pre-fill with existing keys (show only last 8 chars for security) */
+    inp1.value = k.key1 || '';
+    inp2.value = k.key2 || '';
+    inp1.type  = 'password';
+    inp2.type  = 'password';
+    statusEl.className = 'key-modal-status';
+    statusEl.textContent = '';
+
+    /* Show saved status if keys exist */
+    if (k.key1) {
+      statusEl.className = 'key-modal-status saved';
+      statusEl.textContent = '✓ Keys already saved — update below or Cancel to keep existing';
+    }
+
+    overlay.classList.add('open');
+    /* Hide FAB while modal is open */
+    var fab = document.getElementById('thunder-fab');
+    if (fab) fab.classList.add('hidden');
+    setTimeout(function(){ inp1.focus(); }, 120);
+
+    /* Clean up listeners each open */
+    var newSave   = saveBtn.cloneNode(true);
+    var newCancel = cancelBtn.cloneNode(true);
+    saveBtn.parentNode.replaceChild(newSave, saveBtn);
+    cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+
+    document.getElementById('key-modal-save').addEventListener('click', function() {
+      var v1 = (document.getElementById('key-input-1').value || '').trim();
+      var v2 = (document.getElementById('key-input-2').value || '').trim();
+      if (!v1) {
+        var st = document.getElementById('key-modal-status');
+        st.className = 'key-modal-status error';
+        st.textContent = '⚠ API Key 1 is required.';
+        document.getElementById('key-input-1').focus();
+        return;
+      }
+      k.key1 = v1; k.key2 = v2;
+      k.use2 = false; k.key1Exhausted = false; k.key2Exhausted = false;
+      saveKeys(k);
+      var st = document.getElementById('key-modal-status');
+      st.className = 'key-modal-status saved';
+      st.textContent = '✓ Keys saved!';
+      setTimeout(function(){
+        overlay.classList.remove('open');
+        var fab = document.getElementById('thunder-fab');
+        if (fab) fab.classList.remove('hidden');
+        cb && cb(k.key1);
+      }, 700);
+    });
+
+    document.getElementById('key-modal-cancel').addEventListener('click', function() {
+      overlay.classList.remove('open');
+      var fab = document.getElementById('thunder-fab');
+      if (fab) fab.classList.remove('hidden');
+      cb && cb(k.key1 || null);
+    });
+
+    /* Close on backdrop click */
+    overlay.onclick = function(e) {
+      if (e.target === overlay) {
+        overlay.classList.remove('open');
+        var fab2 = document.getElementById('thunder-fab');
+        if (fab2) fab2.classList.remove('hidden');
+        cb && cb(k.key1 || null);
+      }
+    };
   }
 
   /* ── Core fetch with cascade ── */
@@ -2006,7 +2272,15 @@ var GeminiAPI = (function() {
   function setupKeys() { promptForKeys(function(){ updateStatusUI(); }); }
   function hasKey() { return !!getActiveKey(); }
 
-  return { call:call, setupKeys:setupKeys, hasKey:hasKey, updateStatusUI:updateStatusUI, getStatusLabel:getStatusLabel };
+  /* ── callAtModelIndex: start cascade from a specific model index ──
+     Used by VideoAnalysis for Map (lite model) and Reduce (pro model).
+     Parameters mirror call() but modelIdx sets the starting point. */
+  function callAtModelIndex(messages, systemPrompt, modelIdx, onSuccess, onError) {
+    updateStatusUI();
+    cascade(messages, systemPrompt, onSuccess, onError || function(){}, modelIdx || 0);
+  }
+
+  return { call:call, callAtModelIndex:callAtModelIndex, setupKeys:setupKeys, hasKey:hasKey, updateStatusUI:updateStatusUI, getStatusLabel:getStatusLabel };
 })();
 
 
@@ -2112,14 +2386,20 @@ var GChat = (function() {
     );
   }
 
+  var _greeted = false;   /* guard: only show welcome once ever */
+
   function open() {
     _open = true;
+    /* Hide FAB while chat is open */
+    var fab = document.getElementById('thunder-fab');
+    if (fab) fab.classList.add('hidden');
     var ov = document.getElementById('gchat-overlay');
     if (ov) ov.classList.add('open');
     var inp = getInputEl(); if(inp) { setTimeout(function(){inp.focus();},200); }
     GeminiAPI.updateStatusUI();
-    /* Show welcome if first open */
-    if (!msgs.length) {
+    /* Show welcome ONCE only */
+    if (!_greeted) {
+      _greeted = true;
       appendMsg('ai','👋 Hi! I\'m your SCPDD AI assistant. Ask me anything about IoT, AI, Cloud, Accenture methodology, connected product strategy — or anything else on your mind.\n\nTo set your Gemini API key, type **set key**.');
     }
   }
@@ -2128,6 +2408,9 @@ var GChat = (function() {
     _open = false;
     var ov = document.getElementById('gchat-overlay');
     if (ov) ov.classList.remove('open');
+    /* Restore FAB */
+    var fab = document.getElementById('thunder-fab');
+    if (fab) fab.classList.remove('hidden');
   }
 
   function toggle() { _open ? close() : open(); }
@@ -2142,7 +2425,13 @@ var GChat = (function() {
     if (inp) inp.addEventListener('input', autoResize);
   });
 
-  return { toggle:toggle, open:open, close:close, send:send, overlayClick:overlayClick };
+  /* Allow VideoAnalysis to push video context into GChat */
+  function _setVideoContext(title, ctx) {
+    if (!msgs.length) open();
+    appendMsg('ai','📹 Video loaded into context: <strong>' + title.replace(/</g,'&lt;') + '</strong><br>Ask me anything about this video\'s SCPDD insights!');
+  }
+
+  return { toggle:toggle, open:open, close:close, send:send, overlayClick:overlayClick, _setVideoContext:_setVideoContext };
 })();
 
 
@@ -2409,6 +2698,255 @@ var Coach = (function() {
 })();
 
 
+
+/* ═══════════════════════════════════════════════════════════════════
+   [D-ANALYSIS] VIDEO ANALYSIS — Transcript + Native Video
+   ─────────────────────────────────────────────────────────────────
+   TECHNIQUE: Fetches transcript via youtubetranscript.com / YT
+   timedtext. Fails clearly if none available. Sends fileData (YT
+   URL) + transcript text to Gemini. Ported from Trading.html
+   (AiAnalyze pattern), adapted for SCPDD prompt & GChat feed.
+   ═══════════════════════════════════════════════════════════════════ */
+var VideoAnalysis = (function() {
+  var transcriptChunksGlobal = [];
+
+  function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function optimizeTranscript(raw) {
+    var text = raw;
+    text = text.replace(/\[\d{2}:\d{2}:\d{2}\]/g, '');
+    text = text.replace(/\(\d{2}:\d{2}\)/g, '');
+    text = text.replace(/\d{1,2}:\d{2}:\d{2}/g, '');
+    ['uh','um','like','basically','तो','है ना','मतलब','ठीक है','देखिए','ना','हाँ'].forEach(function(w){
+      text = text.replace(new RegExp('\\b' + w + '\\b', 'gi'), '');
+    });
+    text = text.replace(/[A-Za-z0-9\s]+:/g, '');
+    return text.replace(/\n+/g,' ').replace(/\s{2,}/g,' ').trim();
+  }
+
+  function chunkText(text, maxLength) {
+    var words = text.split(' '), chunks = [], cur = '';
+    words.forEach(function(w){
+      if ((cur + w).length > maxLength) { if (cur) chunks.push(cur.trim()); cur = ''; }
+      cur += w + ' ';
+    });
+    if (cur.trim()) chunks.push(cur.trim());
+    return chunks;
+  }
+
+  async function fetchTranscript(vid, onProgress) {
+    var sources = [
+      async function() {
+        var r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://youtubetranscript.com/?server_vid2=' + vid));
+        var j = await r.json();
+        var raw = j.contents || '';
+        var text = raw.replace(/<text[^>]*>/gi,' ').replace(/<\/text>/gi,' ').replace(/<[^>]+>/g,'')
+          .replace(/&amp;/g,'&').replace(/&#39;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/\s+/g,' ').trim();
+        if (text.length > 200) { console.log('[Transcript] youtubetranscript.com: ' + text.length + ' chars'); return text; }
+        return '';
+      },
+      async function() {
+        var r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://www.youtube.com/api/timedtext?v=' + vid + '&lang=hi&fmt=json3'));
+        var j = await r.json();
+        var raw = j.contents || '';
+        var obj = JSON.parse(raw);
+        if (!obj.events) return '';
+        var text = obj.events.filter(function(e){ return e.segs; })
+          .map(function(e){ return e.segs.map(function(s){ return s.utf8||''; }).join(''); })
+          .join(' ').replace(/\n/g,' ').replace(/\s+/g,' ').trim();
+        if (text.length > 200) { console.log('[Transcript] YT timedtext hi: ' + text.length + ' chars'); return text; }
+        return '';
+      },
+      async function() {
+        var r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://www.youtube.com/api/timedtext?v=' + vid + '&lang=en&fmt=json3'));
+        var j = await r.json();
+        var raw = j.contents || '';
+        var obj = JSON.parse(raw);
+        if (!obj.events) return '';
+        var text = obj.events.filter(function(e){ return e.segs; })
+          .map(function(e){ return e.segs.map(function(s){ return s.utf8||''; }).join(''); })
+          .join(' ').replace(/\n/g,' ').replace(/\s+/g,' ').trim();
+        if (text.length > 200) { console.log('[Transcript] YT timedtext en: ' + text.length + ' chars'); return text; }
+        return '';
+      },
+      async function() {
+        var r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://www.youtube.com/api/timedtext?v=' + vid + '&lang=hi&kind=asr&fmt=json3'));
+        var j = await r.json();
+        var raw = j.contents || '';
+        var obj = JSON.parse(raw);
+        if (!obj.events) return '';
+        var text = obj.events.filter(function(e){ return e.segs; })
+          .map(function(e){ return e.segs.map(function(s){ return s.utf8||''; }).join(''); })
+          .join(' ').replace(/\n/g,' ').replace(/\s+/g,' ').trim();
+        if (text.length > 200) { console.log('[Transcript] YT auto-asr hi: ' + text.length + ' chars'); return text; }
+        return '';
+      }
+    ];
+    for (var i = 0; i < sources.length; i++) {
+      if (onProgress) onProgress(i, sources.length, '⟳');
+      try {
+        var result = await sources[i]();
+        if (result && result.length > 200) { if (onProgress) onProgress(i, sources.length, '✓'); return result; }
+        if (onProgress) onProgress(i, sources.length, '✕');
+      } catch(e) { console.log('[Transcript] Source ' + i + ' failed:', e.message); if (onProgress) onProgress(i, sources.length, '✕'); }
+    }
+    console.log('[Transcript] All sources failed for vid:', vid);
+    return '';
+  }
+
+  function renderHtml(data, hasTranscript) {
+    var typeArr   = Array.isArray(data.content_type) ? data.content_type : [data.content_type||''];
+    var themeArr  = Array.isArray(data.scpdd_themes) ? data.scpdd_themes : [data.scpdd_themes||''];
+    var insights  = Array.isArray(data.key_insights) ? data.key_insights : [];
+    var takeaways = Array.isArray(data.takeaways) ? data.takeaways : [];
+    var howto     = Array.isArray(data.how_to_apply) ? data.how_to_apply : [];
+    var skillDoms = Array.isArray(data.skill_domains) ? data.skill_domains : [];
+    var badge = hasTranscript
+      ? '<div style="font-size:11px;color:#1a4a2e;font-weight:700;margin-bottom:8px;">✓ Based on actual video transcript</div>'
+      : '<div style="font-size:11px;color:#1a3a5c;font-weight:700;margin-bottom:8px;">✓ Analysed by Gemini AI</div>';
+    return badge +
+      '<strong>📋 Summary</strong><p>'+(data.summary||'')+'</p>'+
+      '<strong>🎯 Content Type</strong><p>'+typeArr.filter(Boolean).map(function(t){return '<span style="display:inline-block;background:linear-gradient(135deg,#1a3a5c,#2d6fa8);color:#fff;border-radius:3px;padding:2px 9px;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin:2px 3px 2px 0;">'+esc(t)+'</span>';}).join('')+'</p>'+
+      '<strong>🔗 SCPDD Themes</strong><p>'+themeArr.filter(Boolean).map(function(t){return '<span style="display:inline-block;background:linear-gradient(135deg,#1a3a5c,#2d6fa8);color:#fff;border-radius:3px;padding:2px 9px;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin:2px 3px 2px 0;">'+esc(t)+'</span>';}).join('')+'</p>'+
+      '<strong>🔑 Key Insights</strong>'+insights.map(function(k){return '<p>• '+esc(k)+'</p>';}).join('')+
+      '<strong>✅ Consultant Takeaways</strong>'+takeaways.map(function(t){return '<p>• '+esc(t)+'</p>';}).join('')+
+      '<strong>🛠 How to Apply in Client Work</strong>'+howto.map(function(s,i){return '<p>'+(i+1)+'. '+esc(s)+'</p>';}).join('')+
+      (skillDoms.length ? '<strong>🧠 Skill Domains Strengthened</strong><p>'+skillDoms.filter(Boolean).map(function(t){return '<span style="display:inline-block;background:linear-gradient(135deg,#1a3a5c,#2d6fa8);color:#fff;border-radius:3px;padding:2px 9px;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin:2px 3px 2px 0;">'+esc(t)+'</span>';}).join('')+'</p>' : '')+
+      '<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(26,58,92,.2);font-size:11px;color:var(--muted);">Tap ⚡ to probe deeper in the AI chat.</div>';
+  }
+
+  async function run(panelId, btnEl) {
+    var panel = document.getElementById(panelId);
+    if (!panel) return;
+
+    if (panel.classList.contains('open')) { panel.classList.remove('open'); return; }
+    panel.classList.add('open');
+
+    var vid   = panel.getAttribute('data-vid')     || '';
+    var title = panel.getAttribute('data-title')   || 'SCPDD Video';
+    var feed  = panel.getAttribute('data-channel') || '';
+    var ytUrl = 'https://www.youtube.com/watch?v=' + vid;
+
+    var resultEl = document.getElementById(panelId + '-result');
+    var loadingEl = document.getElementById(panelId + '-loading');
+    var phaseEl = document.getElementById(panelId + '-phase');
+
+    if (btnEl) { btnEl.classList.add('loading'); btnEl.textContent = '⟳ …'; }
+    if (phaseEl) phaseEl.textContent = 'Fetching…';
+    if (loadingEl) loadingEl.style.display = 'flex';
+
+    var keys = [];
+    try {
+      var stored = JSON.parse(localStorage.getItem('scpdd_gemini_keys_v1') || '{}');
+      if (stored.key1) keys.push(stored.key1);
+      if (stored.key2) keys.push(stored.key2);
+    } catch(e) {}
+    if (!keys.length) {
+      if (loadingEl) loadingEl.style.display = 'none';
+      if (phaseEl) phaseEl.textContent = 'No Key';
+      if (btnEl) { btnEl.textContent = '⚡ Analyse'; btnEl.classList.remove('loading'); }
+      if (resultEl) resultEl.innerHTML = '<div style="padding:10px;color:#7a4200;font-size:13px;font-weight:700;">⚠ No Gemini API key set.<br>Tap <b>🔑 Keys</b> in the chat header.</div>';
+      GeminiAPI.setupKeys();
+      return;
+    }
+
+    var progressEl = document.getElementById(panelId + '-progress');
+    if (progressEl) progressEl.textContent = 'Fetching transcript…';
+
+    var rawTranscript = await fetchTranscript(vid, function(cur, total, sym) {
+      if (progressEl && sym) progressEl.textContent = 'Transcript ' + (cur+1) + '/' + total + ' ' + sym;
+    });
+    var hasTranscript = rawTranscript.length > 200;
+
+    if (progressEl) progressEl.textContent = hasTranscript ? '✓ Transcript' : 'No transcript — analysing video directly';
+    if (phaseEl) phaseEl.textContent = 'Analysing…';
+
+    var apiKey = keys[0];
+
+    var payload = {
+      contents: [{
+        parts: [
+          { fileData: { mimeType: 'video/*', fileUri: ytUrl } },
+          {
+            text:
+              'You are a senior SCPDD consultant at Accenture Industry X.\n' +
+              'Watch this video carefully and analyse its ACTUAL content.\n\n' +
+              'Return a JSON object with these exact keys:\n' +
+              '"summary": 2-3 sentences on what this video specifically covers,\n' +
+              '"content_type": array e.g. ["Keynote","Product Demo","Tech Deep-Dive","Strategy Talk","Case Study","Tutorial"],\n' +
+              '"scpdd_themes": array from: IoT Architecture, Connected Product Strategy, AI/ML for Products, Cloud & Connectivity, Digital Twin & PLM, Executive Consulting, Workshop Facilitation, Business Case & ROI, Cyber-Physical Security, Industry 4.0, Edge Computing, Smart Manufacturing,\n' +
+              '"key_insights": array of exactly 5 specific insights from this video,\n' +
+              '"takeaways": array of 4 actionable takeaways for an Accenture SCPDD consultant,\n' +
+              '"how_to_apply": array of 5 exact steps to apply these lessons in a client meeting or proposal,\n' +
+              '"skill_domains": array of SCPDD skill domains this video strengthens.\n' +
+              'Pure JSON only. No markdown. No generic advice.'
+          }
+        ]
+      }],
+      generationConfig: { temperature: 0.2, maxOutputTokens: 2048 }
+    };
+
+    /* gemini-2.0-flash supports native video URL understanding (as noted in Trading.html) */
+    var models = ['gemini-2.5-pro', 'gemini-3.5-flash', 'gemini-2.5-flash'];
+    var finalResult = null;
+    var usedModel = '';
+
+    for (var m = 0; m < models.length; m++) {
+      try {
+        if (progressEl) progressEl.textContent = 'Gemini ' + models[m] + '…';
+        var res = await fetch(
+          'https://generativelanguage.googleapis.com/v1beta/models/' + models[m] + ':generateContent?key=' + apiKey,
+          { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }
+        );
+        var data = await res.json();
+        if (res.ok) {
+          var text = data.candidates && data.candidates[0] &&
+                     data.candidates[0].content && data.candidates[0].content.parts &&
+                     data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+          if (text) { finalResult = text; usedModel = models[m]; break; }
+        } else {
+          console.warn('[Video] ' + models[m] + ' HTTP ' + res.status, data.error && data.error.message);
+        }
+      } catch(e) { console.warn('[Video] ' + models[m], e.message); }
+    }
+
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (phaseEl) phaseEl.textContent = usedModel;
+    if (btnEl) { btnEl.textContent = '✓ Done'; btnEl.classList.remove('loading'); btnEl.classList.add('done'); }
+
+    if (!finalResult) {
+      if (resultEl) resultEl.innerHTML = '<div style="padding:10px;color:#7a2020;font-size:13px;">⚠ Failed. Check API key.</div>';
+      return;
+    }
+
+    try {
+      var clean = finalResult.replace(/```json|```/g,'').trim();
+      var s2 = clean.indexOf('{'), e2 = clean.lastIndexOf('}');
+      if (s2 !== -1 && e2 !== -1) clean = clean.substring(s2, e2+1);
+      var parsed = JSON.parse(clean);
+      if (resultEl) resultEl.innerHTML = renderHtml(parsed, hasTranscript);
+      transcriptChunksGlobal = chunkText(clean, 500);
+
+      if (window.GChat && GChat._setVideoContext) {
+        GChat._setVideoContext(title + ' (' + feed + ')', clean);
+      }
+    } catch(err) {
+      if (resultEl) resultEl.innerHTML = '<div style="white-space:pre-wrap;font-size:13px;">' + esc(finalResult) + '</div>';
+      transcriptChunksGlobal = [finalResult];
+      if (window.GChat && GChat._setVideoContext) {
+        GChat._setVideoContext(title + ' (' + feed + ')', finalResult);
+      }
+    }
+  }
+
+  function closePanel(panelId) {
+    var panel = document.getElementById(panelId);
+    if (panel) panel.classList.remove('open');
+  }
+
+  return { togglePanel: run, closePanel: closePanel };
+})();
+
 /* ═══════════════════════════════════════════════════════════════════
    [D12] PWA — Progressive Web App: manifest + Service Worker
          Manifest is generated at runtime (no static file needed).
@@ -2461,5 +2999,54 @@ var Coach = (function() {
 })();
 
 </script>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     API KEY INPUT MODAL
+     Shown when GeminiAPI.promptForKeys() is called.
+     Replaces native window.prompt() with a proper in-app dialog.
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="key-modal-overlay">
+  <div id="key-modal">
+    <div class="key-modal-hdr">
+      <div style="flex:1">
+        <div class="key-modal-hdr-title">🔑 Gemini API Keys</div>
+        <div class="key-modal-hdr-sub">Free keys · 2-key cascade · Daily quota tracking</div>
+      </div>
+    </div>
+    <div class="key-modal-body">
+      <div class="key-modal-field">
+        <div class="key-modal-label" style="display:flex;justify-content:space-between;align-items:center">
+          <span>🔑 API Key 1 — Primary <span style="font-weight:400;text-transform:none;letter-spacing:0">(required)</span></span>
+          <button type="button" onclick="var i=document.getElementById('key-input-1');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'👁 Show':'🙈 Hide'" style="font-size:11px;background:none;border:1px solid var(--border);padding:2px 7px;border-radius:3px;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--muted)">👁 Show</button>
+        </div>
+        <input class="key-modal-input" id="key-input-1" type="password"
+          placeholder="Paste your Gemini API key here (AIza…)"
+          autocomplete="off" spellcheck="false">
+      </div>
+      <div class="key-modal-field">
+        <div class="key-modal-label" style="display:flex;justify-content:space-between;align-items:center">
+          <span>🔑 API Key 2 — Fallback <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></span>
+          <button type="button" onclick="var i=document.getElementById('key-input-2');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'👁 Show':'🙈 Hide'" style="font-size:11px;background:none;border:1px solid var(--border);padding:2px 7px;border-radius:3px;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--muted)">👁 Show</button>
+        </div>
+        <input class="key-modal-input" id="key-input-2" type="password"
+          placeholder="Second key for quota backup (leave blank if one key)"
+          autocomplete="off" spellcheck="false">
+      </div>
+      <div class="key-modal-hint">
+        Get free API keys at
+        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">
+          aistudio.google.com/app/apikey
+        </a>.<br>
+        Keys are stored locally on your device only — never sent anywhere except Google.
+      </div>
+      <div class="key-modal-status" id="key-modal-status"></div>
+    </div>
+    <div class="key-modal-actions">
+      <button class="btn-key-cancel" id="key-modal-cancel">Cancel</button>
+      <button class="btn-key-save"   id="key-modal-save">💾 Save Keys</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
