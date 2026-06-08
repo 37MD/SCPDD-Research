@@ -22,9 +22,8 @@
 ║    📲 PWA            — Installable, offline-capable                  ║
 ╠══════════════════════════════════════════════════════════════════════╣
 ║  AI ENGINE (Reusable across projects)                                ║
-║    GeminiAPI module  — 2 API keys + 5-model cascade                  ║
-║    Models: gemini-2.5-pro → 2.0-flash → 1.5-flash-8b                ║
-║            → 2.0-flash-lite → 2.5-flash                             ║
+║    GeminiAPI module  — 2 API keys + 3-model cascade                  ║
+║    Models: gemini-2.5-pro → 3.5-flash → 2.5-flash                   ║
 ║    Quota   : persistent localStorage tracking, daily reset           ║
 ║    Fallback: Key 1 → Key 2 → next model → error message             ║
 ╠══════════════════════════════════════════════════════════════════════╣
@@ -614,7 +613,7 @@ body {
       <line x1="23" y1="18" x2="26.5" y2="18" stroke="#1a1a1a" stroke-width="1.5"/>
     </svg>
     <div class="app-title-wrap">
-      <div class="app-title">SCPDD Research</div>
+      <div class="app-title">SCPDD Research <span style="font-size:14px;font-weight:400;letter-spacing:.08em;color:var(--muted);">v1</span></div>
       <div class="app-subtitle">Smart Connected Product Design &amp; Development · Accenture Industry X</div>
     </div>
     <span class="acc-badge">Accenture</span>
@@ -1946,14 +1945,12 @@ var App = (function() {
    ─────────────────────────────────────────────────────────────────
    DESIGNED FOR REPLICATION — copy this module into any project.
 
-   FEATURES:
-     • 2 API keys  — primary + fallback; switches automatically
-     • 5-model cascade — tries models in priority order:
-         1. gemini-2.5-pro      (best quality,  25 req/day free)
-         2. gemini-2.0-flash    (fast,          500/day)
-         3. gemini-1.5-flash-8b (lite fallback, 1000/day)
-         4. gemini-2.0-flash-lite (ultra-lite,  1000/day)
-         5. gemini-2.5-flash    (last resort,   500/day)
+    FEATURES:
+      • 2 API keys  — primary + fallback; switches automatically
+      • 3-model cascade — tries models in priority order:
+          1. gemini-2.5-pro      (best quality,  25 req/day free)
+          2. gemini-3.5-flash    (fast,          500/day)
+          3. gemini-2.5-flash    (last resort,   500/day)
      • Quota tracking — localStorage, daily reset, per-model counters
      • Auto key switch — if Key 1 hits quota/error → silently use Key 2
      • Status UI — live pill showing active model + usage (ok/warn/err)
@@ -1976,26 +1973,20 @@ var GeminiAPI = (function() {
   /* Cascade order — exactly as specified */
   var MODELS = [
     'gemini-2.5-pro',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash-8b',
-    'gemini-2.0-flash-lite',
+    'gemini-3.5-flash',
     'gemini-2.5-flash'
   ];
   var MODEL_LABELS = {
-    'gemini-2.5-pro':       '2.5 Pro',
-    'gemini-2.0-flash':     '2.0 Flash',
-    'gemini-1.5-flash-8b':  '1.5 Flash Lite',
-    'gemini-2.0-flash-lite':'2.0 Flash Lite',
-    'gemini-2.5-flash':     '2.5 Flash'
+    'gemini-2.5-pro':   '2.5 Pro',
+    'gemini-3.5-flash': '3.5 Flash',
+    'gemini-2.5-flash': '2.5 Flash'
   };
 
   /* Soft daily quota limits per free-tier model */
   var QUOTA_LIMITS = {
-    'gemini-2.5-pro':       25,
-    'gemini-2.0-flash':     500,
-    'gemini-1.5-flash-8b':  1000,
-    'gemini-2.0-flash-lite':1000,
-    'gemini-2.5-flash':     500
+    'gemini-2.5-pro':   25,
+    'gemini-3.5-flash': 500,
+    'gemini-2.5-flash': 500
   };
 
   /* ── Key management ── */
@@ -2805,7 +2796,7 @@ var VideoAnalysis = (function() {
       ? '<div style="font-size:11px;color:#1a4a2e;font-weight:700;margin-bottom:8px;">✓ Based on actual video transcript</div>'
       : '<div style="font-size:11px;color:#1a3a5c;font-weight:700;margin-bottom:8px;">✓ Analysed by Gemini AI</div>';
     return badge +
-      '<strong>📋 Summary</strong><p>'+(data.summary||'')+'</p>'+
+      '<strong>📋 Summary</strong><p>'+esc(data.summary)+'</p>'+
       '<strong>🎯 Content Type</strong><p>'+typeArr.filter(Boolean).map(function(t){return '<span style="display:inline-block;background:linear-gradient(135deg,#1a3a5c,#2d6fa8);color:#fff;border-radius:3px;padding:2px 9px;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin:2px 3px 2px 0;">'+esc(t)+'</span>';}).join('')+'</p>'+
       '<strong>🔗 SCPDD Themes</strong><p>'+themeArr.filter(Boolean).map(function(t){return '<span style="display:inline-block;background:linear-gradient(135deg,#1a3a5c,#2d6fa8);color:#fff;border-radius:3px;padding:2px 9px;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin:2px 3px 2px 0;">'+esc(t)+'</span>';}).join('')+'</p>'+
       '<strong>🔑 Key Insights</strong>'+insights.map(function(k){return '<p>• '+esc(k)+'</p>';}).join('')+
@@ -2923,15 +2914,22 @@ var VideoAnalysis = (function() {
       var clean = finalResult.replace(/```json|```/g,'').trim();
       var s2 = clean.indexOf('{'), e2 = clean.lastIndexOf('}');
       if (s2 !== -1 && e2 !== -1) clean = clean.substring(s2, e2+1);
+      clean = clean.replace(/,(\s*[}\]])/g, '$1');
       var parsed = JSON.parse(clean);
       if (resultEl) resultEl.innerHTML = renderHtml(parsed, hasTranscript);
       transcriptChunksGlobal = chunkText(clean, 500);
-
       if (window.GChat && GChat._setVideoContext) {
         GChat._setVideoContext(title + ' (' + feed + ')', clean);
       }
     } catch(err) {
-      if (resultEl) resultEl.innerHTML = '<div style="white-space:pre-wrap;font-size:13px;">' + esc(finalResult) + '</div>';
+      var fallbackHtml = '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#1a3a5c;margin-bottom:6px;">✓ Raw Analysis</div>';
+      try {
+        var reparsed = JSON.parse(clean);
+        fallbackHtml = renderHtml(reparsed, hasTranscript);
+      } catch(e2) {
+        fallbackHtml += '<div style="font-size:13px;line-height:1.7;color:var(--text);">' + esc(finalResult).replace(/\\n/g,'<br>') + '</div>';
+      }
+      if (resultEl) resultEl.innerHTML = fallbackHtml;
       transcriptChunksGlobal = [finalResult];
       if (window.GChat && GChat._setVideoContext) {
         GChat._setVideoContext(title + ' (' + feed + ')', finalResult);
