@@ -2794,14 +2794,17 @@ var VideoAnalysis = (function() {
     return '';
   }
 
-  function renderHtml(data) {
+  function renderHtml(data, hasTranscript) {
     var typeArr   = Array.isArray(data.content_type) ? data.content_type : [data.content_type||''];
     var themeArr  = Array.isArray(data.scpdd_themes) ? data.scpdd_themes : [data.scpdd_themes||''];
     var insights  = Array.isArray(data.key_insights) ? data.key_insights : [];
     var takeaways = Array.isArray(data.takeaways) ? data.takeaways : [];
     var howto     = Array.isArray(data.how_to_apply) ? data.how_to_apply : [];
     var skillDoms = Array.isArray(data.skill_domains) ? data.skill_domains : [];
-    return '<div style="font-size:11px;color:#1a4a2e;font-weight:700;margin-bottom:8px;">✓ Based on actual video transcript</div>' +
+    var badge = hasTranscript
+      ? '<div style="font-size:11px;color:#1a4a2e;font-weight:700;margin-bottom:8px;">✓ Based on actual video transcript</div>'
+      : '<div style="font-size:11px;color:#1a3a5c;font-weight:700;margin-bottom:8px;">✓ Analysed by Gemini AI</div>';
+    return badge +
       '<strong>📋 Summary</strong><p>'+(data.summary||'')+'</p>'+
       '<strong>🎯 Content Type</strong><p>'+typeArr.filter(Boolean).map(function(t){return '<span style="display:inline-block;background:linear-gradient(135deg,#1a3a5c,#2d6fa8);color:#fff;border-radius:3px;padding:2px 9px;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin:2px 3px 2px 0;">'+esc(t)+'</span>';}).join('')+'</p>'+
       '<strong>🔗 SCPDD Themes</strong><p>'+themeArr.filter(Boolean).map(function(t){return '<span style="display:inline-block;background:linear-gradient(135deg,#1a3a5c,#2d6fa8);color:#fff;border-radius:3px;padding:2px 9px;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin:2px 3px 2px 0;">'+esc(t)+'</span>';}).join('')+'</p>'+
@@ -2854,20 +2857,8 @@ var VideoAnalysis = (function() {
       if (progressEl && sym) progressEl.textContent = 'Transcript ' + (cur+1) + '/' + total + ' ' + sym;
     });
     var hasTranscript = rawTranscript.length > 200;
-    if (!hasTranscript) {
-      if (loadingEl) loadingEl.style.display = 'none';
-      if (phaseEl) phaseEl.textContent = 'No Transcript';
-      if (btnEl) { btnEl.textContent = '⚡ Analyse'; btnEl.classList.remove('loading'); }
-      if (resultEl) resultEl.innerHTML = '<div style="padding:10px;color:#7a2020;font-size:13px;">⚠ No transcript available for all videos.<br>Analysis requires captions.</div>';
-      return;
-    }
 
-    if (progressEl) progressEl.textContent = '✓ Transcript ' + rawTranscript.length + ' chars';
-    if (phaseEl) phaseEl.textContent = 'Compiling…';
-    await new Promise(function(r){ setTimeout(r, 300); });
-
-    var transcriptText = optimizeTranscript(rawTranscript);
-    var excerpt = transcriptText.substring(0, 6000);
+    if (progressEl) progressEl.textContent = hasTranscript ? '✓ Transcript' : 'No transcript — analysing video directly';
     if (phaseEl) phaseEl.textContent = 'Analysing…';
 
     var apiKey = keys[0];
@@ -2880,7 +2871,6 @@ var VideoAnalysis = (function() {
             text:
               'You are a senior SCPDD consultant at Accenture Industry X.\n' +
               'Watch this video carefully and analyse its ACTUAL content.\n\n' +
-              'TRANSCRIPT (for reference):\n' + excerpt + '\n\n' +
               'Return a JSON object with these exact keys:\n' +
               '"summary": 2-3 sentences on what this video specifically covers,\n' +
               '"content_type": array e.g. ["Keynote","Product Demo","Tech Deep-Dive","Strategy Talk","Case Study","Tutorial"],\n' +
@@ -2934,7 +2924,7 @@ var VideoAnalysis = (function() {
       var s2 = clean.indexOf('{'), e2 = clean.lastIndexOf('}');
       if (s2 !== -1 && e2 !== -1) clean = clean.substring(s2, e2+1);
       var parsed = JSON.parse(clean);
-      if (resultEl) resultEl.innerHTML = renderHtml(parsed);
+      if (resultEl) resultEl.innerHTML = renderHtml(parsed, hasTranscript);
       transcriptChunksGlobal = chunkText(clean, 500);
 
       if (window.GChat && GChat._setVideoContext) {
