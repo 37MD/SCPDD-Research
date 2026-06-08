@@ -2789,6 +2789,27 @@ function renderAnalysisHtml(data, hasTranscript) {
 function escH(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function fmtRawToSections(raw) {
   var html = '';
+  var cleaned = raw.replace(/```json|```/g,'').trim();
+  var s2 = cleaned.indexOf('{'), e2 = cleaned.lastIndexOf('}');
+  if (s2 !== -1 && e2 !== -1) cleaned = cleaned.substring(s2, e2+1);
+  if (cleaned.charAt(0) === '{' && cleaned.charAt(cleaned.length-1) === '}') {
+    try {
+      var obj = JSON.parse(cleaned);
+      var map = { summary:'📋 Summary', content_type:'🎯 Content Type', scpdd_themes:'🔗 SCPDD Themes', key_insights:'🔑 Key Insights', takeaways:'✅ Consultant Takeaways', how_to_apply:'🛠 How to Apply', skill_domains:'🧠 Skill Domains' };
+      for (var k in map) {
+        if (obj[k]) {
+          html += '<div class="an-sec"><div class="an-hdr">' + map[k] + '</div><div class="an-body">';
+          if (Array.isArray(obj[k])) {
+            obj[k].forEach(function(v){ html += '<div class="an-li">' + escH(v) + '</div>'; });
+          } else {
+            html += escH(obj[k]);
+          }
+          html += '</div></div>';
+        }
+      }
+      if (html) return html;
+    } catch(e) {}
+  }
   var lines = raw.split('\n');
   var section = null;
   var body = [];
@@ -2809,15 +2830,15 @@ function fmtRawToSections(raw) {
   }
   var sectionHeaders = ['summary','content.type','scpdd.theme','key.insight','takeaway','how.to.apply','skill.domain','overview','conclusion','analysis'];
   lines.forEach(function(line){
-    var trimmed = line.trim();
-    if (!trimmed) { return; }
+    var l = line.trim();
+    if (!l) return;
     var isHeader = false;
     for (var h = 0; h < sectionHeaders.length; h++) {
       var pat = new RegExp('^\\*{0,2}\\s*' + sectionHeaders[h].replace(/\./g, '[ .:\\-]') + '\\s*[:]?\\s*\\*{0,2}$', 'i');
-      if (pat.test(trimmed)) { isHeader = true; break; }
+      if (pat.test(l)) { isHeader = true; break; }
     }
-    if (isHeader) { flush(); section = trimmed.replace(/[*:]/g,'').trim(); body = []; }
-    else if (!section && /^[A-Z][A-Za-z\s]{2,40}:$/.test(trimmed)) { flush(); section = trimmed.replace(/:$/,'').trim(); body = []; }
+    if (isHeader) { flush(); section = l.replace(/[*:]/g,'').trim(); body = []; }
+    else if (!section && /^[A-Z][A-Za-z\s]{2,40}:$/.test(l)) { flush(); section = l.replace(/:$/,'').trim(); body = []; }
     else { body.push(line); }
   });
   flush();
@@ -3178,15 +3199,16 @@ var BookAnalysis = (function() {
       return;
     }
 
+    var clean = finalResult.replace(/```json|```/g,'').trim();
+    var s2 = clean.indexOf('{'), e2 = clean.lastIndexOf('}');
+    if (s2 !== -1 && e2 !== -1) clean = clean.substring(s2, e2+1);
+    clean = clean.replace(/,(\s*[}\]])/g, '$1');
+
     try {
-      var parsed = cleanAndParseGeminiJSON(finalResult);
+      var parsed = JSON.parse(clean);
       if (resultEl) resultEl.innerHTML = renderAnalysisHtml(parsed, false);
     } catch(err) {
       try {
-        var clean = finalResult.replace(/```json|```/g,'').trim();
-        var s2 = clean.indexOf('{'), e2 = clean.lastIndexOf('}');
-        if (s2 !== -1 && e2 !== -1) clean = clean.substring(s2, e2+1);
-        clean = clean.replace(/,(\s*[}\]])/g, '$1');
         var reparsed = JSON.parse(clean);
         if (resultEl) resultEl.innerHTML = renderAnalysisHtml(reparsed, false);
       } catch(e2) {
