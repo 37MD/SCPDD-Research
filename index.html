@@ -498,6 +498,15 @@ body {
 .ap-spinner         { display:inline-block; animation:spin .8s linear infinite; font-size:16px; }
 .ap-progress        { font-size:11px; color:var(--muted); margin-top:2px; }
 
+/* Analysis section blocks -- section-wise bullet output */
+.an-sec { margin-bottom:8px; }
+.an-hdr { font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.12em; color:#1a3a5c; margin-bottom:3px; }
+.an-body { line-height:1.6; }
+.an-li { padding:2px 0 2px 14px; position:relative; }
+.an-li::before { content:"\2022"; position:absolute; left:0; color:#1a3a5c; font-weight:700; }
+.an-num { display:inline-block; width:16px; font-weight:700; color:#1a3a5c; margin-left:-14px; }
+.an-tag { display:inline-block; background:linear-gradient(135deg,#1a3a5c,#2d6fa8); color:#fff; border-radius:3px; padding:2px 9px; font-size:10px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; margin:2px 3px 2px 0; }
+
 
 
 
@@ -2795,15 +2804,77 @@ var VideoAnalysis = (function() {
     var badge = hasTranscript
       ? '<div style="font-size:11px;color:#1a4a2e;font-weight:700;margin-bottom:8px;">✓ Based on actual video transcript</div>'
       : '<div style="font-size:11px;color:#1a3a5c;font-weight:700;margin-bottom:8px;">✓ Analysed by Gemini AI</div>';
-    return badge +
-      '<strong>📋 Summary</strong><p>'+esc(data.summary)+'</p>'+
-      '<strong>🎯 Content Type</strong><p>'+typeArr.filter(Boolean).map(function(t){return '<span style="display:inline-block;background:linear-gradient(135deg,#1a3a5c,#2d6fa8);color:#fff;border-radius:3px;padding:2px 9px;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin:2px 3px 2px 0;">'+esc(t)+'</span>';}).join('')+'</p>'+
-      '<strong>🔗 SCPDD Themes</strong><p>'+themeArr.filter(Boolean).map(function(t){return '<span style="display:inline-block;background:linear-gradient(135deg,#1a3a5c,#2d6fa8);color:#fff;border-radius:3px;padding:2px 9px;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin:2px 3px 2px 0;">'+esc(t)+'</span>';}).join('')+'</p>'+
-      '<strong>🔑 Key Insights</strong>'+insights.map(function(k){return '<p>• '+esc(k)+'</p>';}).join('')+
-      '<strong>✅ Consultant Takeaways</strong>'+takeaways.map(function(t){return '<p>• '+esc(t)+'</p>';}).join('')+
-      '<strong>🛠 How to Apply in Client Work</strong>'+howto.map(function(s,i){return '<p>'+(i+1)+'. '+esc(s)+'</p>';}).join('')+
-      (skillDoms.length ? '<strong>🧠 Skill Domains Strengthened</strong><p>'+skillDoms.filter(Boolean).map(function(t){return '<span style="display:inline-block;background:linear-gradient(135deg,#1a3a5c,#2d6fa8);color:#fff;border-radius:3px;padding:2px 9px;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin:2px 3px 2px 0;">'+esc(t)+'</span>';}).join('')+'</p>' : '')+
-      '<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(26,58,92,.2);font-size:11px;color:var(--muted);">Tap ⚡ to probe deeper in the AI chat.</div>';
+    var out = badge;
+    out += '<div class="an-sec"><div class="an-hdr">📋 Summary</div><div class="an-body">' + (data.summary ? esc(data.summary) : '—') + '</div></div>';
+    if (typeArr.filter(Boolean).length) {
+      out += '<div class="an-sec"><div class="an-hdr">🎯 Content Type</div><div class="an-body">' +
+        typeArr.filter(Boolean).map(function(t){return '<span class="an-tag">'+esc(t)+'</span>';}).join('') +
+        '</div></div>';
+    }
+    if (themeArr.filter(Boolean).length) {
+      out += '<div class="an-sec"><div class="an-hdr">🔗 SCPDD Themes</div><div class="an-body">' +
+        themeArr.filter(Boolean).map(function(t){return '<span class="an-tag">'+esc(t)+'</span>';}).join('') +
+        '</div></div>';
+    }
+    if (insights.length) {
+      out += '<div class="an-sec"><div class="an-hdr">🔑 Key Insights</div><div class="an-body">' +
+        insights.map(function(k){return '<div class="an-li">'+esc(k)+'</div>';}).join('') +
+        '</div></div>';
+    }
+    if (takeaways.length) {
+      out += '<div class="an-sec"><div class="an-hdr">✅ Consultant Takeaways</div><div class="an-body">' +
+        takeaways.map(function(t){return '<div class="an-li">'+esc(t)+'</div>';}).join('') +
+        '</div></div>';
+    }
+    if (howto.length) {
+      out += '<div class="an-sec"><div class="an-hdr">🛠 How to Apply in Client Work</div><div class="an-body">' +
+        howto.map(function(s,i){return '<div class="an-li"><span class="an-num">'+(i+1)+'</span>'+esc(s)+'</div>';}).join('') +
+        '</div></div>';
+    }
+    if (skillDoms.filter(Boolean).length) {
+      out += '<div class="an-sec"><div class="an-hdr">🧠 Skill Domains Strengthened</div><div class="an-body">' +
+        skillDoms.filter(Boolean).map(function(t){return '<span class="an-tag">'+esc(t)+'</span>';}).join('') +
+        '</div></div>';
+    }
+    out += '<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(26,58,92,.2);font-size:11px;color:var(--muted);">Tap ⚡ to probe deeper in the AI chat.</div>';
+    return out;
+  }
+
+  function fmtRawToSections(raw) {
+    var html = '';
+    var lines = raw.split('\n');
+    var section = null;
+    var body = [];
+    function flush() {
+      if (section && body.length) {
+        html += '<div class="an-sec"><div class="an-hdr">' + esc(section) + '</div><div class="an-body">';
+        body.forEach(function(l){
+          l = l.trim();
+          if (!l) return;
+          if (/^[-*•]\s/.test(l) || /^\d+[.)]\s/.test(l)) {
+            html += '<div class="an-li">' + esc(l.replace(/^[-*•]\s+/, '').replace(/^\d+[.)]\s+/, '')) + '</div>';
+          } else {
+            html += esc(l) + '<br>';
+          }
+        });
+        html += '</div></div>';
+      }
+    }
+    var sectionHeaders = ['summary','content.type','scpdd.theme','key.insight','takeaway','how.to.apply','skill.domain','overview','conclusion','analysis'];
+    lines.forEach(function(line){
+      var trimmed = line.trim();
+      if (!trimmed) { return; }
+      var isHeader = false;
+      for (var h = 0; h < sectionHeaders.length; h++) {
+        var pat = new RegExp('^\\*{0,2}\\s*' + sectionHeaders[h].replace(/\./g, '[ .:\\-]') + '\\s*[:]?\\s*\\*{0,2}$', 'i');
+        if (pat.test(trimmed)) { isHeader = true; break; }
+      }
+      if (isHeader) { flush(); section = trimmed.replace(/[*:]/g,'').trim(); body = []; }
+      else if (!section && /^[A-Z][A-Za-z\s]{2,40}:$/.test(trimmed)) { flush(); section = trimmed.replace(/:$/,'').trim(); body = []; }
+      else { body.push(line); }
+    });
+    flush();
+    return html || '<div class="an-sec"><div class="an-body">' + esc(raw).replace(/\\n/g,'<br>') + '</div></div>';
   }
 
   async function run(panelId, btnEl) {
@@ -2922,14 +2993,12 @@ var VideoAnalysis = (function() {
         GChat._setVideoContext(title + ' (' + feed + ')', clean);
       }
     } catch(err) {
-      var fallbackHtml = '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#1a3a5c;margin-bottom:6px;">✓ Raw Analysis</div>';
       try {
         var reparsed = JSON.parse(clean);
-        fallbackHtml = renderHtml(reparsed, hasTranscript);
+        if (resultEl) resultEl.innerHTML = renderHtml(reparsed, hasTranscript);
       } catch(e2) {
-        fallbackHtml += '<div style="font-size:13px;line-height:1.7;color:var(--text);">' + esc(finalResult).replace(/\\n/g,'<br>') + '</div>';
+        if (resultEl) resultEl.innerHTML = fmtRawToSections(finalResult);
       }
-      if (resultEl) resultEl.innerHTML = fallbackHtml;
       transcriptChunksGlobal = [finalResult];
       if (window.GChat && GChat._setVideoContext) {
         GChat._setVideoContext(title + ' (' + feed + ')', finalResult);
