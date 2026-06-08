@@ -5,7 +5,7 @@
 ║  Smart Connected Product Design & Development                        ║
 ║  Accenture Industry X — Consultant Research & Coaching Hub          ║
 ╠══════════════════════════════════════════════════════════════════════╣
-║  VERSION : 1.0.9  (SW cache: scpdd-v7)                              ║
+║  VERSION : 1.0.10  (SW cache: scpdd-v7)                              ║
 ║  LAST    : June 2026                                                 ║
 ╠══════════════════════════════════════════════════════════════════════╣
 ║  TABS                                                                ║
@@ -825,7 +825,7 @@ body {
 var CONFIG = {
   APP_NAME:    'SCPDD Research',
   APP_VERSION: '1.0.6',
-  SW_CACHE:    'scpdd-v9',
+  SW_CACHE:    'scpdd-v10',
   /* RSS proxy cascade — tried in order until one works */
   RSS_PROXY1:  'https://api.rss2json.com/v1/api.json?rss_url=',
   RSS_PROXY2:  'https://api.allorigins.win/get?url=',
@@ -2453,7 +2453,13 @@ var GChat = (function() {
     if (inp) inp.addEventListener('input', autoResize);
   });
 
-  return { toggle:toggle, open:open, close:close, send:send, overlayClick:overlayClick };
+  /* Allow VideoAnalysis to push video context into GChat */
+  function _setVideoContext(title, ctx) {
+    if (!msgs.length) open();
+    appendMsg('ai','📹 Video loaded into context: <strong>' + title.replace(/</g,'&lt;') + '</strong><br>Ask me anything about this video\'s SCPDD insights!');
+  }
+
+  return { toggle:toggle, open:open, close:close, send:send, overlayClick:overlayClick, _setVideoContext:_setVideoContext };
 })();
 
 
@@ -2722,268 +2728,272 @@ var Coach = (function() {
 
 
 /* ═══════════════════════════════════════════════════════════════════
-   [D-ANALYSIS] VIDEO ANALYSIS — Map-Reduce + RAG Chat per video
+   [D-ANALYSIS] VIDEO ANALYSIS — Real Gemini Video Understanding
    ─────────────────────────────────────────────────────────────────
-   PATTERN: (from Trading_Analysis.txt reference implementation)
-     MAP phase  : break title+context into chunks → lite model
-                  extracts key points per chunk
-     REDUCE phase: pro model synthesises chunks into structured
-                   SCPDD-relevant analysis
-     RAG chat   : user follow-ups answered using keyword-scored
-                  context retrieval (no vector DB needed)
+   IMPLEMENTATION: Ported from Interview-1 app (IVAnalyze module).
+   TECHNIQUE: Sends the actual YouTube URL to Gemini as a fileData
+   part with mimeType:'video/*'. Gemini watches the real video and
+   returns structured JSON analysis of actual content.
+   No transcript fetch, no Map-Reduce of fake context — Gemini
+   analyses the video directly.
 
-   ANALYSIS STRUCTURE (SCPDD lens):
-     • Type of Content   — product demo / strategy / tech deep-dive
-     • Key SCPDD Themes  — IoT / AI / Cloud / Connected Product / etc.
-     • Consultant Takeaways — 3 actionable points for client work
-     • Skill Gaps Triggered — which SCPDD domains this touches
-     • Suggested Next Steps — what to read/watch/ask next
+   PAYLOAD STRUCTURE (from Interview-1 reference):
+     contents: [{
+       parts: [
+         { fileData: { mimeType: 'video/*', fileUri: ytUrl } },
+         { text: '<structured JSON prompt>' }
+       ]
+     }]
 
-   STORAGE: analysisCache{panelId → {result, chunks}} in memory
-            (no localStorage — results are cheap to regenerate)
+   CASCADE: Uses GeminiAPI key rotation (same keys as Coach/GChat).
+   CACHE:   Analysis result stored in memory per video (panelId).
+   RAG CHAT: After analysis, follow-up questions are answered using
+             the structured JSON result as grounding context.
+
+   OUTPUT SECTIONS (SCPDD lens):
+     • Summary           — what this video specifically covers
+     • Content Type      — keynote / product demo / tech deep-dive / strategy talk
+     • SCPDD Themes      — IoT / AI / Cloud / Connected Product / Consulting
+     • Key Insights      — 5 specific points from actual video content
+     • Consultant Takeaways — 4 actionable points for SCPDD client work
+     • How to Apply      — 5 exact steps for next client meeting / proposal
+     • Skill Domains     — which SCPDD domains this video strengthens
    ═══════════════════════════════════════════════════════════════════ */
 var VideoAnalysis = (function() {
 
-  /* ── In-memory cache: panelId → {result:string, chunks:[string]} ── */
-  var cache = {};
+  /* In-memory cache: panelId → {result:string, parsed:object} */
+  var _cache = {};
 
-  /* ── helpers ── */
-  function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  /* ── Helpers ── */
+  function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-  function fmt(t) {
-    if (!t) return '';
-    t = t.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    t = t.replace(/###\s?/g, '');
-    /* Section labels: lines starting with ALL CAPS or emoji followed by colon */
-    t = t.replace(/^([A-Z⚡🔍📌🎯][^\n:]{2,40}):\s*/gm, '<div class="ap-section-label">$1</div>');
-    t = t.replace(/\n- /g, '<br>• ').replace(/^- /gm, '• ');
-    t = t.replace(/\n{2,}/g, '</p><p>').replace(/\n/g, '<br>');
-    return '<p>' + t + '</p>';
-  }
+  function arr(v) { return Array.isArray(v) ? v : (v ? [v] : []); }
 
-  function setPhase(panelId, label) {
-    var el = document.getElementById(panelId + '-phase');
-    if (el) el.textContent = label;
-  }
+  /* ── Render structured JSON into panel HTML (SCPDD-themed) ── */
+  function renderHtml(d) {
+    var typeArr    = arr(d.content_type   || d.interview_type);
+    var themeArr   = arr(d.scpdd_themes   || d.skills_covered);
+    var insights   = arr(d.key_insights   || d.key_points);
+    var takeaways  = arr(d.takeaways);
+    var howto      = arr(d.how_to_apply);
+    var skillDoms  = arr(d.skill_domains);
 
-  function setProgress(panelId, text) {
-    var el = document.getElementById(panelId + '-progress');
-    if (el) el.textContent = text;
-  }
-
-  function showLoading(panelId, show) {
-    var el = document.getElementById(panelId + '-loading');
-    if (el) el.style.display = show ? 'flex' : 'none';
-  }
-
-  /* ── Transcript cleaning (Strategy 2 from Trading_Analysis.txt) ── */
-  function cleanText(raw) {
-    return raw
-      .replace(/\[\d{2}:\d{2}:\d{2}\]/g, '')   /* remove timestamps    */
-      .replace(/\(\d{2}:\d{2}\)/g, '')
-      .replace(/[A-Za-z0-9\s]+:\s/g, '')         /* remove speaker tags  */
-      .replace(/\n+/g, ' ')
-      .replace(/\s{2,}/g, ' ')
-      .trim();
-  }
-
-  /* ── Chunk text into segments for Map phase ── */
-  function chunkText(text, maxLen) {
-    maxLen = maxLen || 400;
-    var words = text.split(' '), chunks = [], cur = '';
-    for (var i = 0; i < words.length; i++) {
-      if (cur.length + words[i].length > maxLen) { chunks.push(cur.trim()); cur = ''; }
-      cur += words[i] + ' ';
+    function tags(a) {
+      return a.filter(Boolean).map(function(t){
+        return '<span style="display:inline-block;background:linear-gradient(135deg,#1a3a5c,#2d6fa8);color:#fff;border-radius:3px;padding:2px 9px;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin:2px 3px 2px 0;">' + esc(t) + '</span>';
+      }).join('');
     }
-    if (cur.trim()) chunks.push(cur.trim());
-    return chunks.length ? chunks : [text];
-  }
-
-  /* ── RAG: keyword-scored context retrieval ── */
-  function findRelevantChunk(query, chunks) {
-    if (!chunks || !chunks.length) return '';
-    var qWords = query.toLowerCase().split(/\W+/).filter(function(w){ return w.length > 3; });
-    if (!qWords.length) return chunks[0];
-    var best = chunks[0], maxScore = -1;
-    chunks.forEach(function(chunk) {
-      var score = 0, lc = chunk.toLowerCase();
-      qWords.forEach(function(kw){ if (lc.includes(kw)) score++; });
-      if (score > maxScore) { maxScore = score; best = chunk; }
-    });
-    return best;
-  }
-
-  /* ── Build context string from video metadata ──
-     Since we don't have a real transcript (YouTube doesn't expose one
-     without auth), we build a rich descriptive context from:
-       - video title (most signal-rich)
-       - channel name (implies domain)
-       - SCPDD domain context we know from the app
-     This is chunked and processed like a transcript. ── */
-  function buildVideoContext(title, channel) {
-    var scpddContext = [
-      'SCPDD stands for Smart Connected Product Design and Development under Accenture Industry X.',
-      'Key domains: IoT architecture, AI in products, Cloud connectivity, Digital Twin, PLM,',
-      'Edge computing, Product lifecycle management, Connected device strategy, OTA updates,',
-      'Device management platforms, Embedded AI, 5G connectivity, ESim, MQTT protocols,',
-      'Executive consulting, Workshop facilitation, Business case modelling, MVP slicing,',
-      'Connected product go-to-market strategy, Platform economics, IEC 62443 security.',
-      'Channel: ' + channel + '.',
-      'Video title: ' + title + '.',
-      'The video is relevant to Accenture consultants working in IoT product strategy,',
-      'digital transformation, Industry 4.0, smart manufacturing, and connected product design.'
-    ].join(' ');
-    return scpddContext;
-  }
-
-  /* ── MAP phase: extract key points from each chunk ── */
-  function mapChunks(chunks, panelId, onDone) {
-    var summaries = [];
-    var idx = 0;
-
-    function processNext() {
-      if (idx >= chunks.length) { onDone(summaries); return; }
-      var chunk = chunks[idx];
-      var i = idx; idx++;
-      setProgress(panelId, 'Extracting insights from segment ' + idx + ' of ' + chunks.length + '…');
-
-      var mapPrompt =
-        'You are an SCPDD (Smart Connected Product Design & Development) expert at Accenture Industry X.\n' +
-        'Extract the key SCPDD-relevant points, technologies, frameworks, and consultant insights from this text.\n' +
-        'Output concise bullet points only. Focus on IoT, AI, Cloud, connected products, strategy.\n' +
-        'Text: ' + chunk;
-
-      /* Use lite/flash model for MAP (index 2 = 1.5-flash-8b) */
-      GeminiAPI.callAtModelIndex(
-        [{role:'user', content: mapPrompt}], null, 2,
-        function(text) { summaries.push(text); processNext(); },
-        function()     { summaries.push('(segment ' + (i+1) + ' could not be processed)'); processNext(); }
-      );
+    function bullets(a) {
+      return a.filter(Boolean).map(function(x){ return '<p style="margin:3px 0 3px 8px;">• ' + esc(x) + '</p>'; }).join('');
     }
-    processNext();
-  }
+    function lbl(icon, text) {
+      return '<strong style="display:block;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;color:#1a3a5c;margin:10px 0 4px;">' + icon + ' ' + text + '</strong>';
+    }
 
-  /* ── REDUCE phase: synthesise all summaries → structured analysis ── */
-  function reduce(summaries, title, channel, panelId, onDone) {
-    setProgress(panelId, 'Synthesising final SCPDD analysis…');
-    setPhase(panelId, 'Synthesising');
-
-    var combined = summaries.join('\n');
-    var reducePrompt =
-      'You are a senior SCPDD consultant at Accenture Industry X analysing a video for professional development.\n' +
-      'Video: "' + title + '" from channel: ' + channel + '\n\n' +
-      'Extracted insights:\n' + combined + '\n\n' +
-      'Produce a structured SCPDD analysis with these exact sections:\n' +
-      '**Content Type**: (product demo / strategy talk / tech deep-dive / case study / keynote)\n' +
-      '**Key SCPDD Themes**: list 3-5 themes from IoT / AI / Cloud / Digital Twin / Connected Product Strategy / Consulting\n' +
-      '**Consultant Takeaways**: 3 specific, actionable insights for an Accenture SCPDD consultant\n' +
-      '**Skill Domains Touched**: which of these: IoT Architecture, Connected Product Strategy, AI/ML for Products, Cloud & Connectivity, Digital Twin & PLM, Executive Consulting, Workshop Facilitation, Business Case & ROI, Cyber-Physical Security\n' +
-      '**Suggested Next Steps**: 1 book, 1 Accenture resource, 1 question to raise in next client meeting\n\n' +
-      'Be specific, practical and concise. Format clearly with bold section headers.';
-
-    /* Use pro model for REDUCE (index 0 = gemini-2.5-pro) */
-    GeminiAPI.callAtModelIndex(
-      [{role:'user', content: reducePrompt}], null, 0,
-      function(text) { onDone(text); },
-      function(err)  { onDone('⚠ Could not synthesise analysis: ' + (err||'API error')); }
+    return (
+      lbl('📋','Summary') + '<p style="margin:0 0 4px;">' + esc(d.summary||'') + '</p>' +
+      lbl('🎯','Content Type') + '<p>' + tags(typeArr) + '</p>' +
+      lbl('🔗','SCPDD Themes') + '<p>' + tags(themeArr) + '</p>' +
+      lbl('🔑','Key Insights') + bullets(insights) +
+      lbl('✅','Consultant Takeaways') + bullets(takeaways) +
+      (howto.length ? lbl('📌','How to Apply in Client Work') + bullets(howto) : '') +
+      (skillDoms.length ? lbl('🧠','Skill Domains Strengthened') + '<p>' + tags(skillDoms) + '</p>' : '') +
+      '<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(26,58,92,.2);font-size:11px;color:var(--muted);">✓ Analysed by Gemini AI · Watching actual video content · Tap ⚡ to probe deeper</div>'
     );
   }
 
-  /* ── Full Map-Reduce pipeline ── */
-  function runAnalysis(panelId, title, channel) {
-    showLoading(panelId, true);
-    setPhase(panelId, 'Mapping');
-
-    var context = buildVideoContext(title, channel);
-    var cleaned = cleanText(context);
-    var chunks  = chunkText(cleaned, 400);
-
-    /* Store chunks for RAG chat */
-    if (!cache[panelId]) cache[panelId] = {};
-    cache[panelId].chunks = chunks;
-
-    mapChunks(chunks, panelId, function(summaries) {
-      reduce(summaries, title, channel, panelId, function(result) {
-        showLoading(panelId, false);
-        setPhase(panelId, 'Done ✓');
-
-        /* Store result for RAG */
-        cache[panelId].result = result;
-        /* Also add result as a rich chunk for RAG */
-        cache[panelId].chunks = chunks.concat([result]);
-
-        /* Render result */
-        var resultEl = document.getElementById(panelId + '-result');
-        if (resultEl) resultEl.innerHTML = fmt(result);
-
-        /* Show RAG chat */
-        var chatWrap = document.getElementById(panelId + '-chat');
-        if (chatWrap) chatWrap.style.display = 'block';
-
-        /* Wire up chat */
-        wireChat(panelId);
-
-        /* Mark analyse button as done */
-        var btn = document.querySelector('.btn-analyse[data-panel="' + panelId + '"]');
-        if (btn) { btn.textContent = '✓ Done'; btn.classList.remove('loading'); btn.classList.add('done'); }
-      });
-    });
+  /* ── Phase / progress helpers ── */
+  function setPhase(panelId, text) {
+    var el = document.getElementById(panelId + '-phase'); if (el) el.textContent = text;
+  }
+  function setProgress(panelId, text) {
+    var el = document.getElementById(panelId + '-progress'); if (el) el.textContent = text;
+  }
+  function showLoading(panelId, show) {
+    var el = document.getElementById(panelId + '-loading'); if (el) el.style.display = show ? 'flex' : 'none';
   }
 
-  /* ── Wire RAG chat for a panel ── */
-  function wireChat(panelId) {
+  /* ── Core: send YouTube URL to Gemini as fileData ──
+     Gemini watches the actual video. No transcript fetch needed.
+     Payload mirrors Interview-1 IVAnalyze.run() exactly.         ── */
+  function runGeminiVideoAnalysis(vid, title, channel, panelId, onDone, onError) {
+    var ytUrl   = 'https://www.youtube.com/watch?v=' + vid;
+    var keys    = [];
+
+    /* Collect keys from GeminiAPI's localStorage store */
+    try {
+      var stored = JSON.parse(localStorage.getItem('scpdd_gemini_keys_v1') || '{}');
+      if (stored.key1) keys.push(stored.key1);
+      if (stored.key2) keys.push(stored.key2);
+    } catch(e) {}
+
+    if (!keys.length) {
+      onError('No API key set. Tap 🔑 Keys to add your Gemini API key.');
+      return;
+    }
+
+    /* Model cascade — try each model × each key */
+    var MODELS = [
+      'gemini-2.5-pro',
+      'gemini-2.0-flash',
+      'gemini-1.5-flash-8b',
+      'gemini-2.0-flash-lite',
+      'gemini-2.5-flash'
+    ];
+    var API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/';
+
+    /* SCPDD-specific analysis prompt */
+    var prompt =
+      'You are a senior SCPDD (Smart Connected Product Design & Development) consultant at Accenture Industry X.\n' +
+      'Watch this video carefully and analyse its ACTUAL content.\n\n' +
+      'Return a JSON object with these EXACT keys (no markdown, pure JSON):\n' +
+      '"summary": 2-3 sentences on what this video specifically teaches,\n' +
+      '"content_type": array — e.g. ["Keynote","Product Demo","Tech Deep-Dive","Strategy Talk","Case Study","Tutorial"],\n' +
+      '"scpdd_themes": array of specific SCPDD themes from: IoT Architecture, Connected Product Strategy, AI/ML for Products, Cloud & Connectivity, Digital Twin & PLM, Executive Consulting, Workshop Facilitation, Business Case & ROI, Cyber-Physical Security, Industry 4.0, Edge Computing, Smart Manufacturing,\n' +
+      '"key_insights": array of exactly 5 specific insights from the actual video content,\n' +
+      '"takeaways": array of 4 actionable takeaways an Accenture SCPDD consultant should implement,\n' +
+      '"how_to_apply": array of 5 exact steps to apply these lessons in a client meeting or proposal,\n' +
+      '"skill_domains": array of SCPDD skill domains this video strengthens.\n' +
+      'Base EVERYTHING on the actual video content you watch. Pure JSON only. No markdown fences.';
+
+    /* Payload with fileData — Gemini watches the actual YouTube video */
+    var payload = {
+      contents: [{
+        parts: [
+          { fileData: { mimeType: 'video/*', fileUri: ytUrl } },
+          { text: prompt }
+        ]
+      }],
+      generationConfig: { temperature: 0.2, maxOutputTokens: 2048 }
+    };
+
+    var modelIdx = 0;
+    var keyIdx   = 0;
+
+    function tryNext() {
+      if (modelIdx >= MODELS.length) {
+        onError('All Gemini models tried — analysis failed. Check API key and quota.');
+        return;
+      }
+
+      var model  = MODELS[modelIdx];
+      var apiKey = keys[keyIdx % keys.length];
+      keyIdx++;
+
+      setProgress(panelId, 'Gemini ' + model + ' watching video…');
+
+      fetch(API_BASE + model + ':generateContent?key=' + apiKey, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(function(res) { return res.json().then(function(d){ return {status:res.status, data:d}; }); })
+      .then(function(r) {
+        if (r.status === 200) {
+          var t = r.data.candidates &&
+                  r.data.candidates[0] &&
+                  r.data.candidates[0].content &&
+                  r.data.candidates[0].content.parts &&
+                  r.data.candidates[0].content.parts[0] &&
+                  r.data.candidates[0].content.parts[0].text;
+          if (t) { onDone(t, model); return; }
+          /* empty response — try next model */
+          modelIdx++; tryNext();
+        } else if (r.status === 429 || r.status === 403) {
+          /* quota/auth — try next key, then next model */
+          if (keyIdx < keys.length) { tryNext(); }
+          else { modelIdx++; keyIdx = 0; tryNext(); }
+        } else {
+          /* other error — try next model */
+          console.warn('[VideoAnalysis]', model, 'HTTP', r.status, r.data.error && r.data.error.message);
+          modelIdx++; tryNext();
+        }
+      })
+      .catch(function(e) {
+        console.warn('[VideoAnalysis] network error', e.message);
+        modelIdx++; tryNext();
+      });
+    }
+
+    tryNext();
+  }
+
+  /* ── Wire RAG follow-up chat after analysis completes ── */
+  function wireChat(panelId, analysisContext) {
     var inputEl = document.getElementById(panelId + '-input');
     var sendBtn = document.getElementById(panelId + '-send');
     var msgsEl  = document.getElementById(panelId + '-msgs');
-    if (!inputEl || !sendBtn) return;
-
-    /* Prevent double-binding */
-    if (sendBtn.getAttribute('data-wired')) return;
+    if (!inputEl || !sendBtn || sendBtn.getAttribute('data-wired')) return;
     sendBtn.setAttribute('data-wired', '1');
+
+    function esc2(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    function fmtChat(t) {
+      t = t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+      t = t.replace(/\n{2,}/g,'</p><p style="margin-top:6px">').replace(/\n/g,'<br>');
+      return '<p>' + t + '</p>';
+    }
 
     function appendMsg(role, text) {
       var d = document.createElement('div');
       d.className = 'ap-msg ' + role;
-      d.innerHTML = '<div class="ap-lbl">' + (role==='user'?'You':'⚡ AI') + '</div><div>' + fmt(esc(text)) + '</div>';
-      msgsEl.appendChild(d);
-      msgsEl.scrollTop = msgsEl.scrollHeight;
-      return d;
+      d.innerHTML = '<div class="ap-lbl">'+(role==='user'?'You':'⚡ AI')+'</div><div>'+fmtChat(esc2(text))+'</div>';
+      msgsEl.appendChild(d); msgsEl.scrollTop = msgsEl.scrollHeight;
     }
 
     function doChat() {
-      var q = inputEl.value.trim(); if (!q) return;
-      inputEl.value = '';
+      var q = (inputEl.value||'').trim(); if (!q) return;
+      inputEl.value = ''; sendBtn.disabled = true;
       appendMsg('user', q);
-      sendBtn.disabled = true;
 
-      /* RAG: find most relevant chunk */
-      var chunks = (cache[panelId] && cache[panelId].chunks) || [];
-      var ctx = findRelevantChunk(q, chunks);
+      /* Typing indicator */
+      var typ = document.createElement('div');
+      typ.className = 'ap-msg ai typing';
+      typ.innerHTML = '<div class="ap-lbl">⚡ AI</div><div><span></span><span></span><span></span></div>';
+      msgsEl.appendChild(typ); msgsEl.scrollTop = msgsEl.scrollHeight;
 
-      var prompt =
-        'You are an SCPDD expert at Accenture Industry X.\n' +
-        'Context from video analysis:\n' + ctx + '\n\n' +
-        'User question: ' + q + '\n\n' +
-        'Answer concisely and practically, focused on SCPDD consulting relevance.';
+      /* Keys */
+      var keys = [];
+      try {
+        var stored = JSON.parse(localStorage.getItem('scpdd_gemini_keys_v1')||'{}');
+        if (stored.key1) keys.push(stored.key1);
+        if (stored.key2) keys.push(stored.key2);
+      } catch(e){}
 
-      /* Show typing indicator */
-      var typingDiv = document.createElement('div');
-      typingDiv.className = 'ap-msg ai typing';
-      typingDiv.innerHTML = '<div class="ap-lbl">⚡ AI</div><div><span></span><span></span><span></span></div>';
-      msgsEl.appendChild(typingDiv); msgsEl.scrollTop = msgsEl.scrollHeight;
+      var sysPrompt =
+        'You are an SCPDD expert at Accenture Industry X. ' +
+        'Answer concisely and practically based on this video analysis:\n\n' +
+        analysisContext + '\n\nFocus on SCPDD consulting relevance. Max 200 words.';
 
-      /* Use flash for chat (index 1 = gemini-2.0-flash) */
-      GeminiAPI.callAtModelIndex(
-        [{role:'user', content: prompt}], null, 1,
-        function(text) {
-          typingDiv.remove(); sendBtn.disabled = false;
-          appendMsg('ai', text);
-        },
-        function(err) {
-          typingDiv.remove(); sendBtn.disabled = false;
-          appendMsg('ai', '⚠ ' + (err || 'Error. Please try again.'));
+      var payload = {
+        systemInstruction: { parts: [{ text: sysPrompt }] },
+        contents: [{ parts: [{ text: q }] }],
+        generationConfig: { temperature: 0.3, maxOutputTokens: 600 }
+      };
+
+      var models = ['gemini-2.5-pro','gemini-2.0-flash','gemini-1.5-flash-8b','gemini-2.0-flash-lite','gemini-2.5-flash'];
+      var mi = 0;
+
+      function tryModel() {
+        if (mi >= models.length) {
+          typ.remove(); sendBtn.disabled = false;
+          appendMsg('ai','⚠ All models tried. Check your API key.'); return;
         }
-      );
+        var key = keys[(mi) % (keys.length||1)];
+        if (!key) { appendMsg('ai','⚠ No API key. Tap 🔑 Keys.'); typ.remove(); sendBtn.disabled=false; return; }
+        fetch('https://generativelanguage.googleapis.com/v1beta/models/'+models[mi]+':generateContent?key='+key,
+          {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+        .then(function(r){return r.json().then(function(d){return{s:r.status,d:d};});})
+        .then(function(r){
+          if(r.s===200){
+            var t=r.d.candidates&&r.d.candidates[0]&&r.d.candidates[0].content&&r.d.candidates[0].content.parts&&r.d.candidates[0].content.parts[0]&&r.d.candidates[0].content.parts[0].text;
+            typ.remove(); sendBtn.disabled=false;
+            appendMsg('ai', t||'No response. Try again.');
+          } else { mi++; tryModel(); }
+        })
+        .catch(function(){ mi++; tryModel(); });
+      }
+      tryModel();
     }
 
     sendBtn.addEventListener('click', doChat);
@@ -2995,39 +3005,95 @@ var VideoAnalysis = (function() {
     var panel = document.getElementById(panelId);
     if (!panel) return;
 
+    /* Already open — collapse */
     if (panel.classList.contains('open')) {
       panel.classList.remove('open');
-      if (btnEl) { btnEl.textContent = cache[panelId] && cache[panelId].result ? '✓ Done' : '⚡ Analyse'; }
       return;
     }
 
+    /* Open panel */
     panel.classList.add('open');
 
-    /* Already analysed — just show */
-    if (cache[panelId] && cache[panelId].result) {
-      if (btnEl) { btnEl.classList.add('done'); btnEl.textContent = '✓ Done'; }
+    /* Already analysed — restore from cache, show result */
+    if (_cache[panelId]) {
+      if (btnEl) { btnEl.textContent = '✓ Done'; btnEl.classList.add('done'); }
       return;
     }
 
-    /* Check API key */
-    if (!GeminiAPI.hasKey()) {
+    /* Check key */
+    var stored = {};
+    try { stored = JSON.parse(localStorage.getItem('scpdd_gemini_keys_v1')||'{}'); } catch(e){}
+    if (!stored.key1) {
+      var resultEl = document.getElementById(panelId + '-result');
+      if (resultEl) resultEl.innerHTML = '<div style="padding:10px;color:#7a4200;font-size:13px;font-weight:700;">⚠ No Gemini API key set.<br>Tap <b>🔑 Keys</b> in the chat header to add your free Google AI key.</div>';
       GeminiAPI.setupKeys();
-      if (btnEl) btnEl.textContent = '⚡ Analyse';
       return;
     }
 
-    /* Run analysis */
+    /* Kick off analysis */
     if (btnEl) { btnEl.classList.add('loading'); btnEl.textContent = '⟳ …'; }
-    var title   = panel.getAttribute('data-title');
-    var channel = panel.getAttribute('data-channel');
-    runAnalysis(panelId, title, channel);
+
+    var title   = panel.getAttribute('data-title')   || 'SCPDD Video';
+    var channel = panel.getAttribute('data-channel') || '';
+    var vid     = panel.getAttribute('data-vid')     || '';
+
+    showLoading(panelId, true);
+    setPhase(panelId, 'Watching…');
+
+    runGeminiVideoAnalysis(vid, title, channel, panelId,
+      /* onDone */
+      function(rawText, usedModel) {
+        showLoading(panelId, false);
+        setPhase(panelId, '✓ Done · ' + usedModel);
+
+        if (btnEl) { btnEl.textContent = '✓ Done'; btnEl.classList.remove('loading'); btnEl.classList.add('done'); }
+
+        var resultEl = document.getElementById(panelId + '-result');
+        var chatWrap = document.getElementById(panelId + '-chat');
+
+        /* Parse JSON */
+        var analysisCtx = rawText;
+        try {
+          var clean = rawText.replace(/```json|```/g,'').trim();
+          var s2 = clean.indexOf('{'), e2 = clean.lastIndexOf('}');
+          if (s2 !== -1 && e2 !== -1) clean = clean.substring(s2, e2+1);
+          var parsed = JSON.parse(clean);
+          _cache[panelId] = { result: rawText, parsed: parsed };
+          if (resultEl) resultEl.innerHTML = renderHtml(parsed);
+          analysisCtx = clean;
+        } catch(err) {
+          /* Not valid JSON — show raw text */
+          _cache[panelId] = { result: rawText };
+          if (resultEl) resultEl.innerHTML =
+            '<div style="white-space:pre-wrap;font-size:12px;padding:6px">' + esc(rawText) + '</div>';
+        }
+
+        /* Show follow-up RAG chat */
+        if (chatWrap) chatWrap.style.display = 'block';
+        wireChat(panelId, analysisCtx);
+
+        /* Feed result into GChat as context (mirrors Thunder.setVideoContext) */
+        if (window.GChat && GChat._setVideoContext) {
+          GChat._setVideoContext(title + ' (' + channel + ')', analysisCtx);
+        }
+
+        GeminiAPI.updateStatusUI();
+      },
+      /* onError */
+      function(errMsg) {
+        showLoading(panelId, false);
+        setPhase(panelId, 'Error');
+        if (btnEl) { btnEl.textContent = '⚡ Analyse'; btnEl.classList.remove('loading'); }
+        var resultEl = document.getElementById(panelId + '-result');
+        if (resultEl) resultEl.innerHTML =
+          '<div style="padding:10px;color:#7a2020;font-size:13px;">⚠ ' + esc(errMsg) + '</div>';
+      }
+    );
   }
 
   function closePanel(panelId) {
     var panel = document.getElementById(panelId);
     if (panel) panel.classList.remove('open');
-    var btn = document.querySelector('.btn-analyse[data-panel="' + panelId + '"]');
-    if (btn && !(cache[panelId] && cache[panelId].result)) btn.textContent = '⚡ Analyse';
   }
 
   return { togglePanel:togglePanel, closePanel:closePanel };
