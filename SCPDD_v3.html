@@ -1,0 +1,3620 @@
+<!DOCTYPE html>
+<!--
+╔══════════════════════════════════════════════════════════════════════╗
+║  SCPDD RESEARCH APP                                                  ║
+║  Smart Connected Product Design & Development                        ║
+║  Accenture Industry X — Consultant Research & Coaching Hub          ║
+╠══════════════════════════════════════════════════════════════════════╣
+║  VERSION : 2.0.0  (SW cache: scpdd-v7)                              ║
+║  LAST    : June 2026                                                 ║
+╠══════════════════════════════════════════════════════════════════════╣
+║  TABS                                                                ║
+║    1. RSS Feeds      — IoT, AI, Cloud, Strategy live feeds           ║
+║    2. Videos         — YouTube channels for SCPDD learning           ║
+║    3. Books          — Curated reading list with rationale           ║
+║    4. Accenture News — Live + curated Accenture/Industry X content   ║
+║    5. AI Coach       — Gemini-powered daily skill development coach  ║
+╠══════════════════════════════════════════════════════════════════════╣
+║  GLOBAL FEATURES                                                     ║
+║    ⚡ Thunder FAB    — Floating AI chatbox on every tab              ║
+║    🔖 Read/Watch Later — localStorage bookmark system               ║
+║    📺 Video Player   — In-app YouTube overlay with fullscreen        ║
+║    📲 PWA            — Installable, offline-capable                  ║
+╠══════════════════════════════════════════════════════════════════════╣
+║  AI ENGINE (Reusable across projects)                                ║
+║    GeminiAPI module  — 2 API keys + 3-model cascade                  ║
+║    Models: gemini-2.5-pro → 3.5-flash → 2.5-flash                   ║
+║    Quota   : persistent localStorage tracking, daily reset           ║
+║    Fallback: Key 1 → Key 2 → next model → error message             ║
+╠══════════════════════════════════════════════════════════════════════╣
+║  SECTION MAP (this file)                                             ║
+║    [A] HEAD        — Meta, fonts, PWA manifest link                  ║
+║    [B] CSS         — Design tokens, layout, per-tab styles           ║
+║       B1 — Base & tokens         B2 — Header & tabs                  ║
+║       B3 — RSS/Video/Book/News   B4 — Read/Watch Later               ║
+║       B5 — Daily AI Coach        B6 — Thunder FAB & Global Chat      ║
+║    [C] HTML BODY                                                      ║
+║       C1 — App header            C2 — Tab panels (5)                 ║
+║       C3 — Overlays (Player, GChat, FAB)                             ║
+║    [D] JAVASCRIPT                                                     ║
+║       D1 — CONFIG       App-wide constants & colour tokens           ║
+║       D2 — DATA         RSS feeds, video channels (inline data)      ║
+║       D3 — BOOKSDATA    Curated book list (static)                   ║
+║       D4 — NEWSDATA     Accenture news sources + curated items       ║
+║       D5 — FEED         RSS fetch engine (3-proxy cascade)           ║
+║       D6 — PLAYER       YouTube in-app player module                 ║
+║       D7 — UI           Rendering: groups, cards, items              ║
+║       D8 — APP          Initialization & tab switching               ║
+║       D9 — GEMINIAPI ★  Reusable Gemini engine (2 keys, 5 models)   ║
+║       D10— GCHAT        Thunder FAB global chatbox                   ║
+║       D11— COACH        Daily AI Coach (phases, skills, export)      ║
+║       D12— PWA          Service Worker + install prompt              ║
+╚══════════════════════════════════════════════════════════════════════╝
+-->
+<html lang="en">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     [A] HEAD — Meta tags, fonts, PWA manifest placeholder
+     ═══════════════════════════════════════════════════════════════ -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>SCPDD Research</title>
+
+<!-- PWA / Mobile meta -->
+<meta name="theme-color" content="#dec09a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="SCPDD Research">
+<meta name="application-name" content="SCPDD Research">
+<meta name="description" content="Smart Connected Product Design & Development — Research Hub for Accenture Consultants">
+
+<!-- Manifest injected at runtime by D12-PWA (avoids static file dependency) -->
+<link rel="manifest" href="#" id="pwa-manifest-link">
+
+<!-- App icon (inline SVG — no external file dependency) -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='28' fill='%23b8925f'/%3E%3Ccircle cx='96' cy='80' r='32' fill='none' stroke='%231a1a1a' stroke-width='6'/%3E%3Crect x='72' y='110' width='48' height='6' rx='3' fill='%231a1a1a'/%3E%3Crect x='80' y='124' width='32' height='6' rx='3' fill='%231a1a1a'/%3E%3Crect x='88' y='138' width='16' height='6' rx='3' fill='%231a1a1a'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='28' fill='%23b8925f'/%3E%3Ccircle cx='96' cy='80' r='32' fill='none' stroke='%231a1a1a' stroke-width='6'/%3E%3Crect x='72' y='110' width='48' height='6' rx='3' fill='%231a1a1a'/%3E%3C/svg%3E">
+
+<!-- Fonts: DM Serif Display (headings) + DM Sans (body) -->
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700;900&family=DM+Serif+Display&display=swap" rel="stylesheet">
+
+<!-- PDF.js for book PDF upload parsing -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>if(window.pdfjsLib){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}</script>
+
+<style>
+/* ═══════════════════════════════════════════════════════════════════
+   [B1] BASE — Motion, design tokens, body, scrollbar
+   ═══════════════════════════════════════════════════════════════════ */
+@media(prefers-reduced-motion){*{animation:none!important;transition:none!important}}
+
+:root {
+  /* ── Warm parchment palette ── */
+  --bg:       #dec09a;   /* page background                */
+  --surface:  #b8925f;   /* header, card surface           */
+  --card:     #d4b896;   /* card hover, lighter surface    */
+  --lighter:  #f0e6d0;   /* input fields, button fills     */
+  --light:    #e8d5b8;   /* borders, dividers              */
+  --border:   #9e7a52;   /* general border                 */
+  --accent:   #1a1a1a;   /* primary text, dark elements    */
+  --text:     #0d0d0d;   /* body text                      */
+  --muted:    #4a3828;   /* secondary text, labels         */
+
+  /* ── Tab accent colours ── */
+  --rss-hl:    #1a4a2e;  /* RSS Feeds tab    — forest green  */
+  --videos-hl: #1a2e4a;  /* Videos tab       — navy          */
+  --books-hl:  #4a1a2e;  /* Books tab        — burgundy      */
+  --news-hl:   #4a3800;  /* Accenture News   — dark amber    */
+  --coach-hl:  #1a3a5c;  /* AI Coach tab     — deep blue     */
+  --saved-hl:  #7a4a00;  /* Read Later tab   — warm brown    */
+
+  /* ── Brand ── */
+  --acc-purple: #7B2EDE; /* Accenture violet                */
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  /* Subtle grid texture */
+  background-image:
+    repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(0,0,0,.016) 3px, rgba(0,0,0,.016) 4px),
+    repeating-linear-gradient(0deg,  transparent, transparent 3px, rgba(0,0,0,.016) 3px, rgba(0,0,0,.016) 4px);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar (webkit) */
+::-webkit-scrollbar       { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   [B2] HEADER & TABS
+   ═══════════════════════════════════════════════════════════════════ */
+.app-header {
+  background: var(--surface);
+  border-bottom: 3px solid var(--accent);
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 3px 14px rgba(0,0,0,.22);
+}
+.header-top    { display:flex; align-items:center; padding:13px 16px 9px; gap:12px; }
+.brand-icon    { width:36px; height:36px; flex-shrink:0; }
+.app-title-wrap{ flex:1; }
+.app-title     { font-family:'DM Serif Display',serif; font-size:34px; letter-spacing:.5px; color:var(--text); line-height:1; }
+.app-subtitle  { font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); margin-top:3px; }
+.acc-badge     { background:#A100FF; color:#fff; font-size:10px; font-weight:900; padding:2px 8px; border-radius:2px; letter-spacing:.1em; text-transform:uppercase; margin-left:auto; flex-shrink:0; }
+
+/* Tab bar */
+.tab-bar                   { display:flex; border-top:1px solid rgba(0,0,0,.18); overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+.tab-bar::-webkit-scrollbar{ display:none; }
+.tab-btn {
+  flex:0 0 auto; min-width:74px; padding:8px 6px;
+  background:transparent; border:none;
+  color:var(--muted); font-family:'DM Sans',sans-serif;
+  font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:.05em;
+  cursor:pointer; position:relative; transition:color .2s, background .2s;
+  line-height:1.4; text-align:center; white-space:nowrap;
+}
+.tab-btn.active { background:rgba(0,0,0,.07); }
+.tab-btn.active::after {
+  content:''; position:absolute; bottom:0; left:10%; width:80%; height:3px;
+  border-radius:2px 2px 0 0;
+}
+/* Per-tab active colours */
+.tab-btn.tab-rss.active    { color:var(--rss-hl);    } .tab-btn.tab-rss.active::after    { background:var(--rss-hl);    }
+.tab-btn.tab-videos.active { color:var(--videos-hl); } .tab-btn.tab-videos.active::after { background:var(--videos-hl); }
+.tab-btn.tab-books.active  { color:var(--books-hl);  } .tab-btn.tab-books.active::after  { background:var(--books-hl);  }
+.tab-btn.tab-news.active   { color:var(--news-hl);   } .tab-btn.tab-news.active::after   { background:var(--news-hl);   }
+.tab-btn.tab-coach.active  { color:var(--coach-hl);  } .tab-btn.tab-coach.active::after  { background:var(--coach-hl);  }
+.tab-btn.tab-saved.active  { color:var(--saved-hl);  } .tab-btn.tab-saved.active::after  { background:var(--saved-hl);  }
+.tab-icon   { font-size:20px; display:block; margin-bottom:2px; }
+.tab-badge  { display:inline-block; background:#c0392b; color:#fff; font-size:9px; font-weight:900; border-radius:8px; padding:1px 5px; margin-left:3px; vertical-align:middle; letter-spacing:.05em; line-height:1.5; min-width:16px; text-align:center; }
+
+/* Main content area */
+.app-body          { max-width:960px; margin:0 auto; padding-bottom:100px; }
+.tab-panel         { display:none; }
+.tab-panel.active  { display:block; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   [B3] CONTENT COMPONENTS — Feeds, Videos, Books, News, Shared
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Section banners */
+.section-banner  { padding:14px 16px 10px; border-bottom:2px solid rgba(0,0,0,.14); display:flex; align-items:center; gap:10px; background:rgba(0,0,0,.07); }
+.banner-title    { font-family:'DM Serif Display',serif; font-size:28px; letter-spacing:.3px; }
+.banner-title.rss{ color:var(--rss-hl); } .banner-title.vid{ color:var(--videos-hl); }
+.banner-title.bk { color:var(--books-hl);} .banner-title.nws{ color:var(--news-hl); }
+.banner-sub      { font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.1em; margin-top:2px; }
+
+/* Consultant tip box */
+.tip-box         { margin:12px 12px 0; padding:10px 14px; background:rgba(26,46,74,.07); border-left:3px solid var(--videos-hl); border-radius:2px; font-size:13px; color:var(--muted); line-height:1.5; }
+.tip-box strong  { color:var(--text); }
+
+/* Collapsible channel/source groups */
+.channel-group              { border-bottom:1px solid rgba(0,0,0,.11); }
+.ch-header                  { display:flex; align-items:center; padding:11px 16px; cursor:pointer; user-select:none; gap:10px; transition:background .15s; }
+.ch-header:hover            { background:rgba(0,0,0,.06); }
+.ch-badge                   { font-size:11px; font-weight:900; text-transform:uppercase; padding:3px 7px; border-radius:2px; letter-spacing:.1em; flex-shrink:0; }
+.badge-rss                  { background:rgba(26,74,46,.12);  color:var(--rss-hl);    border:1px solid var(--rss-hl);    }
+.badge-vid                  { background:rgba(26,46,74,.12);  color:var(--videos-hl); border:1px solid var(--videos-hl); }
+.badge-bk                   { background:rgba(74,26,46,.12);  color:var(--books-hl);  border:1px solid var(--books-hl);  }
+.badge-news                 { background:rgba(74,56,0,.12);   color:var(--news-hl);   border:1px solid var(--news-hl);   }
+.ch-name                    { font-size:18px; flex:1; color:var(--text); }
+.ch-desc                    { font-size:13px; color:var(--muted); margin-top:1px; }
+.ch-arrow                   { color:var(--muted); font-size:15px; transition:transform .25s; flex-shrink:0; }
+.channel-group.open .ch-arrow { transform:rotate(180deg); }
+.feed-grid                  { display:none; padding:0 10px 10px; flex-direction:column; background:rgba(0,0,0,.04); }
+.channel-group.open .feed-grid { display:flex; }
+
+/* RSS article items */
+.feed-item                  { padding:10px 6px; border-bottom:1px solid rgba(0,0,0,.07); cursor:pointer; transition:background .15s; border-radius:3px; }
+.feed-item:last-of-type     { border-bottom:none; }
+.feed-item:hover            { background:rgba(0,0,0,.05); }
+.feed-item-inner            { display:flex; align-items:flex-start; gap:10px; }
+.item-info                  { flex:1; min-width:0; }
+.item-title                 { font-size:16px; line-height:1.45; color:var(--text); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-weight:700; }
+.item-summary               { font-size:13px; color:var(--muted); margin-top:4px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; line-height:1.5; }
+.item-date                  { font-size:12px; color:var(--muted); margin-top:5px; letter-spacing:.07em; text-transform:uppercase; }
+.item-tag                   { display:inline-block; font-size:10px; font-weight:900; text-transform:uppercase; padding:2px 6px; border-radius:2px; margin-right:4px; margin-top:4px; letter-spacing:.08em; }
+.tag-iot                    { background:rgba(26,74,46,.15);  color:var(--rss-hl);    border:1px solid var(--rss-hl);    }
+.tag-ai                     { background:rgba(26,46,74,.15);  color:var(--videos-hl); border:1px solid var(--videos-hl); }
+.tag-cloud                  { background:rgba(74,56,0,.15);   color:var(--news-hl);   border:1px solid var(--news-hl);   }
+.tag-strategy               { background:rgba(74,26,46,.15);  color:var(--books-hl);  border:1px solid var(--books-hl);  }
+.tag-accenture              { background:rgba(123,46,222,.12);color:#5b1ea8;          border:1px solid #7B2EDE;          }
+.ext-link-btn               { display:inline-flex; align-items:center; gap:4px; margin-top:7px; font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:.08em; color:var(--accent); text-decoration:none; padding:4px 10px; border:1px solid var(--border); border-radius:2px; background:var(--lighter); transition:background .15s; }
+.ext-link-btn:hover         { background:var(--card); }
+
+/* Video items */
+.video-item                 { padding:10px 6px; border-bottom:1px solid rgba(0,0,0,.07); display:flex; align-items:flex-start; gap:10px; cursor:pointer; transition:background .15s; border-radius:3px; }
+.video-item:last-of-type    { border-bottom:none; }
+.video-item:hover           { background:rgba(0,0,0,.05); }
+.item-thumb                 { width:148px; height:83px; object-fit:cover; flex-shrink:0; border-radius:3px; border:1px solid rgba(0,0,0,.18); background:var(--card); }
+.thumb-placeholder          { width:148px; height:83px; flex-shrink:0; border-radius:3px; border:1px solid rgba(0,0,0,.18); background:var(--card); display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:27px; }
+.item-actions               { display:flex; flex-direction:column; gap:5px; align-items:center; flex-shrink:0; }
+.btn-play                   { width:36px; height:36px; background:var(--accent); color:#fff; border:none; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px; transition:transform .15s, opacity .15s; }
+.btn-play:hover             { transform:scale(1.1); opacity:.85; }
+.btn-save                   { width:36px; height:36px; background:var(--lighter); color:var(--books-hl); border:1px solid var(--books-hl); border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; transition:background .15s; }
+.btn-save:hover             { background:#f0d8e8; }
+.btn-save.saved             { background:var(--books-hl); color:#fff; }
+
+/* Books */
+.book-card                  { padding:14px 16px; border-bottom:1px solid rgba(0,0,0,.10); display:flex; gap:14px; align-items:flex-start; transition:background .15s; }
+.book-card:hover            { background:rgba(0,0,0,.04); }
+.book-cover                 { width:64px; height:88px; flex-shrink:0; border-radius:3px; border:1px solid rgba(0,0,0,.18); background:var(--card); display:flex; align-items:center; justify-content:center; font-size:28px; overflow:hidden; }
+.book-cover img             { width:100%; height:100%; object-fit:cover; }
+.book-info                  { flex:1; min-width:0; }
+.book-title                 { font-size:17px; font-weight:900; line-height:1.3; color:var(--text); }
+.book-author                { font-size:13px; color:var(--muted); margin-top:3px; font-style:italic; }
+.book-why                   { font-size:13px; color:var(--text); margin-top:7px; line-height:1.5; }
+.book-tags                  { margin-top:7px; }
+.book-links                 { margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; }
+.book-link                  { display:inline-flex; align-items:center; font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:.08em; color:var(--accent); text-decoration:none; padding:3px 9px; border:1px solid var(--border); border-radius:2px; background:var(--lighter); transition:background .15s; }
+.book-link:hover            { background:var(--card); }
+.book-section-hdr           { padding:12px 16px 8px; background:rgba(0,0,0,.07); border-bottom:1px solid rgba(0,0,0,.10); font-size:11px; font-weight:900; letter-spacing:.15em; text-transform:uppercase; color:var(--muted); }
+
+/* Book PDF upload bar */
+.book-upload-bar { display:flex; align-items:center; gap:8px; padding:8px 12px; background:rgba(26,58,92,.06); border:1px solid rgba(26,58,92,.2); border-radius:3px; margin:6px; flex-wrap:wrap; }
+.book-upload-label { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; flex:1; }
+.book-upload-status { font-size:10px; color:var(--muted); }
+#book-pdf-btn { font-family:'DM Sans',sans-serif; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.08em; padding:4px 11px; border-radius:2px; cursor:pointer; background:linear-gradient(135deg,#1a3a5c,#2d6fa8); color:#fff; border:none; transition:opacity .15s; }
+#book-pdf-btn:hover { opacity:.85; }
+#book-pdf-btn.loading { opacity:.6; cursor:wait; }
+
+/* Chapter summary items — 2-box layout */
+.chapter-item { margin-bottom:14px; border:1px solid rgba(26,58,92,.25); border-radius:3px; overflow:hidden; background:rgba(26,58,92,.04); }
+.chapter-hdr { padding:7px 12px; background:linear-gradient(135deg,#1a3a5c,#2d6fa8); color:#fff; font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:.1em; }
+.chapter-body { padding:0; }
+.chapter-row { padding:9px 12px; border-bottom:1px solid rgba(26,58,92,.1); }
+.chapter-row:last-child { border-bottom:none; }
+.chapter-row-label { font-size:9px; font-weight:900; text-transform:uppercase; letter-spacing:.12em; color:#1a3a5c; margin-bottom:4px; }
+.chapter-row-content { font-size:13px; line-height:1.6; color:var(--text); }
+.chapter-row-content li { margin-bottom:3px; }
+/* News tab */
+.news-item                  { padding:12px 14px; border-bottom:1px solid rgba(0,0,0,.09); }
+.news-item:last-of-type     { border-bottom:none; }
+.news-item:hover            { background:rgba(0,0,0,.04); }
+.news-title                 { font-size:16px; font-weight:700; line-height:1.4; color:var(--text); }
+.news-meta                  { font-size:12px; color:var(--muted); margin-top:4px; text-transform:uppercase; letter-spacing:.07em; }
+.news-excerpt               { font-size:13px; color:var(--muted); margin-top:5px; line-height:1.5; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+
+/* Shared UI — loading, errors, load-more */
+.loading-row    { padding:18px 16px; text-align:center; font-size:14px; color:var(--muted); letter-spacing:.1em; text-transform:uppercase; }
+.spin           { display:inline-block; animation:spin .8s linear infinite; margin-right:5px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.error-row      { padding:12px 16px; font-size:14px; color:#7a2020; text-align:center; letter-spacing:.08em; }
+.load-more-wrap { text-align:center; padding:14px; }
+.btn-load-more  { background:var(--lighter); border:2px solid var(--accent); color:var(--text); font-family:'DM Sans',sans-serif; font-size:14px; font-weight:900; text-transform:uppercase; letter-spacing:.1em; padding:8px 20px; cursor:pointer; border-radius:3px; transition:background .2s; }
+.btn-load-more:hover { background:var(--card); }
+
+/* ── In-app YouTube video player overlay ── */
+#player-overlay             { position:fixed; inset:0; background:rgba(0,0,0,.9); z-index:500; display:none; flex-direction:column; }
+#player-overlay.active      { display:flex; }
+#player-overlay.portrait  .player-wrap  { padding-bottom:56.25%; flex-shrink:0; position:relative; width:100%; background:#000; }
+#player-overlay.portrait  .player-info  { flex:1; overflow-y:auto; }
+#player-overlay.landscape .player-wrap  { flex:1; position:relative; padding-bottom:0; background:#000; }
+#player-overlay.landscape .player-info  { display:none; }
+.btn-orientation            { background:var(--lighter); border:1px solid var(--border); color:var(--text); font-family:'DM Sans',sans-serif; font-size:13px; padding:5px 9px; cursor:pointer; border-radius:3px; flex-shrink:0; text-transform:uppercase; letter-spacing:.07em; white-space:nowrap; }
+.player-topbar              { display:flex; align-items:center; padding:11px 14px; background:var(--surface); border-bottom:3px solid var(--accent); gap:10px; flex-shrink:0; }
+.btn-close                  { background:var(--accent); border:none; color:#fff; padding:7px 14px; font-family:'DM Sans',sans-serif; font-size:16px; font-weight:900; cursor:pointer; border-radius:3px; text-transform:uppercase; letter-spacing:.06em; flex-shrink:0; }
+.player-ttl                 { font-size:16px; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text); }
+.btn-yt-open                { background:var(--lighter); border:1px solid var(--border); color:var(--text); font-family:'DM Sans',sans-serif; font-size:13px; padding:5px 9px; cursor:pointer; border-radius:3px; text-decoration:none; display:inline-flex; align-items:center; gap:3px; flex-shrink:0; text-transform:uppercase; letter-spacing:.07em; }
+.player-wrap                { position:relative; width:100%; padding-bottom:56.25%; background:#000; flex-shrink:0; }
+.player-iframe              { position:absolute; inset:0; width:100%; height:100%; border:none; }
+.player-info                { padding:14px 16px; overflow-y:auto; flex:1; background:var(--surface); }
+.player-info-title          { font-family:'DM Serif Display',serif; font-size:24px; line-height:1.35; color:var(--text); margin-bottom:6px; }
+.player-info-meta           { font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:.11em; }
+
+/* PWA install badge */
+#pwa-badge { position:fixed; bottom:20px; left:16px; z-index:1300; background:var(--accent); color:#fff; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:900; padding:9px 18px; border-radius:20px; cursor:pointer; box-shadow:0 4px 18px rgba(0,0,0,.3); display:none; letter-spacing:.1em; text-transform:uppercase; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   [B4] READ / WATCH LATER — Bookmark & saved items system
+   ═══════════════════════════════════════════════════════════════════ */
+.btn-bookmark               { display:inline-flex; align-items:center; gap:4px; margin-top:7px; margin-left:6px; font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); text-decoration:none; padding:4px 10px; border:1px solid var(--border); border-radius:2px; background:var(--lighter); cursor:pointer; font-family:'DM Sans',sans-serif; transition:background .15s, color .15s, border-color .15s; }
+.btn-bookmark:hover         { background:var(--card); color:var(--saved-hl); border-color:var(--saved-hl); }
+.btn-bookmark.is-saved      { background:var(--saved-hl); color:#fff; border-color:var(--saved-hl); }
+.btn-vid-save               { width:34px; height:34px; background:var(--lighter); color:var(--muted); border:1px solid var(--border); border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:15px; transition:background .15s, color .15s; flex-shrink:0; }
+.btn-vid-save:hover         { background:var(--card); color:var(--saved-hl); }
+.btn-vid-save.is-saved      { background:var(--saved-hl); color:#fff; border-color:var(--saved-hl); }
+.saved-section-hdr          { padding:10px 16px 6px; background:rgba(0,0,0,.07); border-bottom:1px solid rgba(0,0,0,.10); font-size:11px; font-weight:900; letter-spacing:.15em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; justify-content:space-between; }
+.btn-clear-section          { font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:.08em; background:none; border:1px solid var(--border); color:var(--muted); padding:2px 8px; border-radius:2px; cursor:pointer; font-family:'DM Sans',sans-serif; }
+.btn-clear-section:hover    { color:#c0392b; border-color:#c0392b; }
+.saved-item                 { padding:11px 14px; border-bottom:1px solid rgba(0,0,0,.08); display:flex; align-items:flex-start; gap:10px; background:transparent; transition:background .15s; }
+.saved-item:hover           { background:rgba(0,0,0,.04); }
+.saved-item-thumb           { width:80px; height:45px; object-fit:cover; flex-shrink:0; border-radius:3px; border:1px solid rgba(0,0,0,.14); background:var(--card); }
+.saved-item-thumb-ph        { width:80px; height:45px; flex-shrink:0; border-radius:3px; border:1px solid rgba(0,0,0,.14); background:var(--card); display:flex; align-items:center; justify-content:center; font-size:18px; color:var(--muted); }
+.saved-item-info            { flex:1; min-width:0; }
+.saved-item-title           { font-size:15px; font-weight:700; line-height:1.4; color:var(--text); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.saved-item-meta            { font-size:11px; color:var(--muted); margin-top:3px; text-transform:uppercase; letter-spacing:.07em; }
+.saved-item-actions         { display:flex; gap:6px; margin-top:7px; flex-wrap:wrap; align-items:center; }
+.saved-open-btn             { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:.08em; color:var(--accent); text-decoration:none; padding:3px 9px; border:1px solid var(--border); border-radius:2px; background:var(--lighter); transition:background .15s; }
+.saved-open-btn:hover       { background:var(--card); }
+.saved-remove-btn           { display:inline-flex; align-items:center; font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:.08em; color:#c0392b; background:none; border:1px solid #c0392b; padding:3px 9px; border-radius:2px; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background .15s; }
+.saved-remove-btn:hover     { background:#fdecea; }
+.saved-note                 { font-size:12px; border:1px solid var(--border); border-radius:2px; padding:4px 7px; width:100%; background:var(--lighter); color:var(--text); font-family:'DM Sans',sans-serif; resize:vertical; min-height:36px; margin-top:5px; display:block; }
+.saved-note:focus           { outline:2px solid var(--saved-hl); }
+.saved-empty                { padding:44px 20px; text-align:center; color:var(--muted); font-size:14px; line-height:1.8; }
+.saved-empty-icon           { font-size:40px; display:block; margin-bottom:10px; }
+/* Toast notification */
+#save-toast {
+  position:fixed; bottom:28px; right:16px; z-index:2000;
+  background:var(--accent); color:#fff;
+  font-family:'DM Sans',sans-serif; font-size:13px; font-weight:900;
+  padding:9px 16px; border-radius:20px;
+  box-shadow:0 4px 18px rgba(0,0,0,.28);
+  opacity:0; transform:translateY(10px);
+  transition:opacity .25s, transform .25s;
+  pointer-events:none; letter-spacing:.07em; text-transform:uppercase;
+}
+#save-toast.show { opacity:1; transform:translateY(0); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   [B5] DAILY AI COACH TAB
+   Coach panel uses a full-page flex column layout.
+   The app-body is removed from flow for this tab so the coach
+   can fill the viewport below the sticky header.
+   ═══════════════════════════════════════════════════════════════════ */
+#panel-coach                { display:none; flex-direction:column; }
+#panel-coach.active         { display:flex; }
+/* When coach is active, the chat-wrap takes remaining space */
+#panel-coach .coach-chat-wrap { min-height:280px; }
+.coach-header               { padding:14px 16px 10px; border-bottom:2px solid rgba(0,0,0,.14); background:rgba(0,0,0,.07); flex-shrink:0; }
+.coach-header-top           { display:flex; align-items:center; gap:10px; }
+.coach-title                { font-family:'DM Serif Display',serif; font-size:26px; color:var(--coach-hl); flex:1; }
+.coach-subtitle             { font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.1em; margin-top:2px; }
+.coach-controls             { display:flex; gap:6px; align-items:center; flex-shrink:0; }
+.btn-coach-ctrl             { font-family:'DM Sans',sans-serif; font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:.08em; padding:4px 10px; border-radius:2px; cursor:pointer; border:1px solid var(--border); background:var(--lighter); color:var(--muted); transition:background .15s, color .15s; }
+.btn-coach-ctrl:hover       { background:var(--card); color:var(--text); }
+.btn-coach-reset            { border-color:#c0392b; color:#c0392b; }
+.btn-coach-reset:hover      { background:#fdecea; }
+/* Skill progress bars */
+.skill-bar-wrap             { margin:8px 0 2px; }
+.skill-bar-label            { display:flex; justify-content:space-between; font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:3px; }
+.skill-bar-track            { height:6px; background:rgba(0,0,0,.12); border-radius:3px; overflow:hidden; }
+.skill-bar-fill             { height:100%; border-radius:3px; transition:width .6s ease; background:linear-gradient(90deg, var(--coach-hl), #2d6fa8); }
+/* Chat messages */
+.coach-chat-wrap            { flex:1; overflow-y:auto; padding:12px 14px; display:flex; flex-direction:column; gap:10px; }
+.chat-msg                   { max-width:88%; border-radius:4px; padding:10px 13px; font-size:14px; line-height:1.6; word-break:break-word; }
+.chat-msg.ai                { background:rgba(26,58,92,.10); border-left:3px solid var(--coach-hl); align-self:flex-start; color:var(--text); }
+.chat-msg.user              { background:rgba(0,0,0,.07); border-right:3px solid var(--border); align-self:flex-end; color:var(--text); text-align:right; }
+.chat-msg.ai   .msg-label   { font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.12em; color:var(--coach-hl); margin-bottom:4px; }
+.chat-msg.user .msg-label   { font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); margin-bottom:4px; text-align:right; }
+/* Typing indicator dots */
+.chat-msg.typing .dot       { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--coach-hl); margin:0 2px; animation:typingdot 1.1s infinite; }
+.chat-msg.typing .dot:nth-child(2) { animation-delay:.18s; }
+.chat-msg.typing .dot:nth-child(3) { animation-delay:.36s; }
+@keyframes typingdot { 0%,80%,100%{transform:scale(1);opacity:.4} 40%{transform:scale(1.3);opacity:1} }
+/* Quick-reply chips */
+.chip-wrap                  { display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
+.chip                       { font-family:'DM Sans',sans-serif; font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:.07em; padding:5px 11px; border:1px solid var(--coach-hl); border-radius:14px; background:var(--lighter); color:var(--coach-hl); cursor:pointer; transition:background .15s, color .15s; }
+.chip:hover, .chip.used     { background:var(--coach-hl); color:#fff; }
+/* Input bar */
+.coach-input-bar            { padding:10px 12px; background:var(--surface); border-top:2px solid var(--accent); border-bottom:3px solid rgba(0,0,0,.15); flex-shrink:0; display:flex; gap:8px; align-items:flex-end; margin-bottom:20px; }
+.coach-textarea             { flex:1; font-family:'DM Sans',sans-serif; font-size:14px; border:1px solid var(--border); border-radius:3px; padding:8px 11px; background:var(--lighter); color:var(--text); resize:none; min-height:42px; max-height:110px; line-height:1.5; }
+.coach-textarea:focus       { outline:2px solid var(--coach-hl); }
+.btn-coach-send             { width:42px; height:42px; background:var(--coach-hl); color:#fff; border:none; border-radius:3px; font-size:19px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:opacity .15s; }
+.btn-coach-send:hover       { opacity:.85; }
+.btn-coach-send:disabled    { opacity:.4; cursor:not-allowed; }
+/* Profile strip */
+.coach-profile-panel        { padding:10px 14px 6px; background:rgba(26,58,92,.06); border-bottom:1px solid rgba(0,0,0,.09); flex-shrink:0; font-size:12px; color:var(--muted); display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+/* API status indicator (shared by Coach and GChat topbar) */
+#coach-api-status           { font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.1em; padding:3px 10px; border-radius:2px; margin-left:8px; display:inline-block; }
+#coach-api-status.ok        { background:rgba(46,204,113,.18); color:#1a6b3a; border:1px solid #2ecc71; }
+#coach-api-status.warn      { background:rgba(230,126,34,.15); color:#7a4200; border:1px solid #e67e22; }
+#coach-api-status.err       { background:rgba(231,76,60,.15);  color:#7a1a1a; border:1px solid #e74c3c; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   [B6] THUNDER FAB ⚡ & GLOBAL AI CHATBOX
+        — These two components are designed to be REUSABLE.
+          Copy B6 CSS + C3 HTML + D9-D10 JS into any project.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ⚡ Floating Action Button */
+#thunder-fab {
+  position:fixed; bottom:22px; left:50%; transform:translateX(-50%);
+  z-index:1200;
+  width:50px; height:50px; border-radius:50%;
+  background:linear-gradient(135deg, var(--coach-hl) 0%, #2d6fa8 100%);
+  box-shadow:0 4px 18px rgba(26,58,92,.55);
+  border:none; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:opacity .2s, box-shadow .2s;
+  -webkit-tap-highlight-color:transparent;
+}
+#thunder-fab:hover          { opacity:.9; box-shadow:0 6px 24px rgba(26,58,92,.65); }
+#thunder-fab.hidden         { opacity:0; pointer-events:none; }
+#thunder-fab svg            { width:26px; height:26px; filter:drop-shadow(0 1px 2px rgba(0,0,0,.3)); }
+#thunder-fab .fab-pulse     { position:absolute; inset:0; border-radius:50%; background:rgba(45,111,168,.4); animation:fabpulse 2.4s ease-out infinite; }
+@keyframes fabpulse         { 0%{transform:scale(1);opacity:.7} 100%{transform:scale(1.8);opacity:0} }
+
+/* Global chatbox slide-up sheet */
+#gchat-overlay              { position:fixed; inset:0; z-index:1100; background:rgba(0,0,0,.5); display:none; align-items:flex-end; justify-content:center; }
+#gchat-overlay.open         { display:flex; }
+#gchat-box                  { width:100%; max-width:680px; max-height:80vh; min-height:340px; background:var(--surface); border-radius:14px 14px 0 0; display:flex; flex-direction:column; box-shadow:0 -6px 32px rgba(0,0,0,.35); overflow:hidden; animation:slideUp .25s ease; }
+@keyframes slideUp          { from{transform:translateY(60px);opacity:0} to{transform:translateY(0);opacity:1} }
+.gchat-topbar               { display:flex; align-items:center; padding:11px 14px; background:linear-gradient(135deg, var(--coach-hl), #2d6fa8); gap:10px; flex-shrink:0; }
+.gchat-topbar-title         { font-family:'DM Serif Display',serif; font-size:20px; color:#fff; flex:1; }
+.gchat-topbar-sub           { font-size:10px; color:rgba(255,255,255,.75); text-transform:uppercase; letter-spacing:.1em; }
+.gchat-api-pill             { font-size:9px; font-weight:900; text-transform:uppercase; letter-spacing:.08em; padding:2px 7px; border-radius:8px; background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.3); flex-shrink:0; white-space:nowrap; }
+.gchat-api-pill.ok          { background:rgba(46,204,113,.25); border-color:rgba(46,204,113,.6); }
+.gchat-api-pill.warn        { background:rgba(230,126,34,.25); border-color:rgba(230,126,34,.6); }
+.gchat-api-pill.err         { background:rgba(231,76,60,.25);  border-color:rgba(231,76,60,.6);  }
+.btn-gchat-close            { background:rgba(255,255,255,.18); border:none; color:#fff; width:30px; height:30px; border-radius:50%; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.gchat-msgs                 { flex:1; overflow-y:auto; padding:12px 14px; display:flex; flex-direction:column; gap:9px; }
+.gchat-msg                  { max-width:86%; border-radius:4px; padding:9px 12px; font-size:14px; line-height:1.55; word-break:break-word; }
+.gchat-msg.ai               { background:rgba(26,58,92,.10); border-left:3px solid var(--coach-hl); align-self:flex-start; color:var(--text); }
+.gchat-msg.user             { background:rgba(0,0,0,.07); border-right:3px solid var(--border); align-self:flex-end; color:var(--text); }
+.gchat-msg .glabel          { font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.1em; margin-bottom:3px; }
+.gchat-msg.ai .glabel       { color:var(--coach-hl); }
+.gchat-msg.user .glabel     { color:var(--muted); text-align:right; }
+.gchat-typing .dot          { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--coach-hl); margin:0 2px; animation:typingdot 1.1s infinite; }
+.gchat-typing .dot:nth-child(2) { animation-delay:.18s; }
+.gchat-typing .dot:nth-child(3) { animation-delay:.36s; }
+.gchat-input-bar            { padding:9px 12px; background:var(--bg); border-top:2px solid var(--accent); display:flex; gap:8px; align-items:flex-end; flex-shrink:0; position:relative; z-index:1; }
+.gchat-textarea             { flex:1; font-family:'DM Sans',sans-serif; font-size:14px; border:1px solid var(--border); border-radius:3px; padding:8px 10px; background:var(--lighter); color:var(--text); resize:none; min-height:40px; max-height:100px; line-height:1.5; }
+.gchat-textarea:focus       { outline:2px solid var(--coach-hl); }
+.btn-gchat-send             { width:40px; height:40px; background:var(--coach-hl); color:#fff; border:none; border-radius:3px; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:opacity .15s; }
+.btn-gchat-send:hover       { opacity:.85; }
+.btn-gchat-send:disabled    { opacity:.35; cursor:not-allowed; }
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   [B3-ANALYSIS] VIDEO ANALYSIS PANEL
+   Triggered by ⚡ Analyse button on each video item.
+   Uses Gemini's native video understanding (fileData).
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Small analysis button next to each video */
+.btn-analyse {
+  display:inline-flex; align-items:center; gap:3px;
+  font-family:'DM Sans',sans-serif; font-size:10px; font-weight:900;
+  text-transform:uppercase; letter-spacing:.08em;
+  padding:3px 8px; border-radius:2px; cursor:pointer;
+  background:linear-gradient(135deg,#1a3a5c,#2d6fa8);
+  color:#fff; border:none;
+  transition:opacity .15s; white-space:nowrap; flex-shrink:0;
+}
+.btn-analyse:hover   { opacity:.85; }
+.btn-analyse.loading { opacity:.6; cursor:wait; }
+.btn-analyse.done    { background:linear-gradient(135deg,#1a4a2e,#2d7a4a); }
+
+/* Generic outline button (used in book PDF upload) */
+.btn-outline { display:inline-flex; align-items:center; gap:3px; font-family:'DM Sans',sans-serif; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.08em; padding:4px 11px; border-radius:2px; cursor:pointer; background:var(--lighter); color:var(--accent); border:1px solid var(--border); transition:background .15s; white-space:nowrap; }
+.btn-outline:hover { background:var(--card); }
+
+/* Expandable analysis panel — sits below the video row */
+.analysis-panel {
+  display:none; margin:0 6px 10px;
+  border:1px solid rgba(26,58,92,.3);
+  border-radius:3px; overflow:hidden;
+  background:rgba(26,58,92,.06);
+  font-size:13px;
+}
+.analysis-panel.open { display:block; }
+
+/* Panel header bar */
+.ap-header {
+  display:flex; align-items:center; gap:8px;
+  padding:8px 12px;
+  background:linear-gradient(135deg,#1a3a5c,#2d6fa8);
+  color:#fff;
+}
+.ap-header-title { font-size:13px; font-weight:900; text-transform:uppercase; letter-spacing:.1em; flex:1; }
+.ap-phase-pill   { font-size:9px; font-weight:900; text-transform:uppercase; letter-spacing:.1em; padding:2px 7px; border-radius:8px; background:rgba(255,255,255,.2); border:1px solid rgba(255,255,255,.35); white-space:nowrap; }
+.btn-ap-close    { background:rgba(255,255,255,.18); border:none; color:#fff; width:22px; height:22px; border-radius:50%; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+
+/* Analysis content area */
+.ap-content {
+  padding:10px 12px; color:var(--text); line-height:1.6;
+  max-height:280px; overflow-y:auto;
+}
+.ap-content p       { margin-bottom:6px; }
+.ap-content strong  { color:#1a3a5c; }
+.ap-content ul      { padding-left:16px; margin:4px 0 8px; }
+.ap-content li      { margin-bottom:3px; }
+.ap-section-label   { font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.12em; color:#1a3a5c; margin:8px 0 3px; }
+.ap-loading-bar     { display:flex; align-items:center; gap:8px; padding:10px 12px; color:var(--muted); font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:.1em; }
+.ap-spinner         { display:inline-block; animation:spin .8s linear infinite; font-size:16px; }
+.ap-progress        { font-size:11px; color:var(--muted); margin-top:2px; }
+
+/* Analysis section blocks -- section-wise bullet output */
+.an-sec { margin-bottom:8px; }
+.an-hdr { font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.12em; color:#1a3a5c; margin-bottom:3px; }
+.an-body { line-height:1.6; }
+.an-li { padding:2px 0 2px 14px; position:relative; }
+.an-li::before { content:"\2022"; position:absolute; left:0; color:#1a3a5c; font-weight:700; }
+.an-num { display:inline-block; width:16px; font-weight:700; color:#1a3a5c; margin-left:-14px; }
+.an-tag { display:inline-block; background:linear-gradient(135deg,#1a3a5c,#2d6fa8); color:#fff; border-radius:3px; padding:2px 9px; font-size:10px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; margin:2px 3px 2px 0; }
+
+
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   [B-KEYMODAL] API KEY INPUT MODAL
+   Replaces window.prompt() — proper in-app overlay with styled inputs.
+   Used by GeminiAPI.promptForKeys()
+   ═══════════════════════════════════════════════════════════════════ */
+#key-modal-overlay {
+  position:fixed; inset:0; z-index:4000;
+  background:rgba(0,0,0,.72);
+  display:none; align-items:center; justify-content:center;
+  padding:16px;
+}
+#key-modal-overlay.open { display:flex; }
+#key-modal {
+  width:100%; max-width:440px;
+  background:var(--lighter);
+  border:3px solid var(--accent);
+  border-radius:6px;
+  overflow:hidden;
+  box-shadow:0 8px 40px rgba(0,0,0,.4);
+  animation:slideUp .2s ease;
+}
+.key-modal-hdr {
+  background:linear-gradient(135deg,#1a3a5c,#2d6fa8);
+  padding:14px 18px;
+  display:flex; align-items:center; gap:10px;
+}
+.key-modal-hdr-title {
+  font-family:'DM Serif Display',serif;
+  font-size:22px; color:#fff; flex:1;
+}
+.key-modal-hdr-sub {
+  font-size:11px; color:rgba(255,255,255,.75);
+  text-transform:uppercase; letter-spacing:.1em;
+}
+.key-modal-body    { padding:18px; display:flex; flex-direction:column; gap:14px; }
+.key-modal-field   { display:flex; flex-direction:column; gap:5px; }
+.key-modal-label {
+  font-size:11px; font-weight:900; text-transform:uppercase;
+  letter-spacing:.1em; color:var(--muted);
+}
+.key-modal-label span {
+  font-weight:400; text-transform:none; letter-spacing:0;
+  font-size:11px; color:var(--muted);
+}
+.key-modal-input {
+  font-family:'DM Sans',sans-serif; font-size:14px;
+  padding:10px 12px; border:1px solid var(--border);
+  border-radius:3px; background:var(--bg); color:var(--text);
+  width:100%; outline:none;
+  transition:border-color .2s, box-shadow .2s;
+}
+.key-modal-input:focus {
+  border-color:#1a3a5c;
+  box-shadow:0 0 0 2px rgba(26,58,92,.2);
+}
+.key-modal-input::placeholder { color:var(--border); font-size:12px; }
+.key-modal-hint {
+  font-size:11px; color:var(--muted); line-height:1.5;
+}
+.key-modal-hint a { color:#1a3a5c; font-weight:900; }
+.key-modal-status {
+  font-size:12px; font-weight:900; text-transform:uppercase;
+  letter-spacing:.08em; padding:6px 10px; border-radius:3px;
+  display:none;
+}
+.key-modal-status.saved { display:block; background:rgba(46,204,113,.15); color:#1a6b3a; border:1px solid #2ecc71; }
+.key-modal-status.error { display:block; background:rgba(231,76,60,.15); color:#7a1a1a; border:1px solid #e74c3c; }
+.key-modal-actions {
+  display:flex; gap:10px; padding:0 18px 18px;
+}
+.btn-key-save {
+  flex:1; padding:11px; background:#1a3a5c; color:#fff;
+  border:none; border-radius:3px;
+  font-family:'DM Sans',sans-serif; font-size:14px; font-weight:900;
+  text-transform:uppercase; letter-spacing:.1em;
+  cursor:pointer; transition:opacity .15s;
+}
+.btn-key-save:hover { opacity:.85; }
+.btn-key-cancel {
+  padding:11px 16px; background:var(--card); color:var(--muted);
+  border:1px solid var(--border); border-radius:3px;
+  font-family:'DM Sans',sans-serif; font-size:14px; font-weight:900;
+  text-transform:uppercase; letter-spacing:.1em;
+  cursor:pointer; transition:background .15s;
+}
+.btn-key-cancel:hover { background:var(--bg); }
+
+</style>
+
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     [C1] APP HEADER — Logo, title, tab navigation bar
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="app-header">
+  <div class="header-top">
+    <!-- Brand icon: IoT node / circuit motif -->
+    <svg class="brand-icon" viewBox="0 0 36 36" fill="none">
+      <circle cx="18" cy="18" r="17" fill="rgba(0,0,0,0.10)"/>
+      <circle cx="18" cy="18" r="17" stroke="#1a1a1a" stroke-width="1.5"/>
+      <circle cx="18" cy="18" r="5" fill="#1a1a1a"/>
+      <circle cx="18" cy="7"  r="2.5" fill="#1a1a1a"/>
+      <circle cx="18" cy="29" r="2.5" fill="#1a1a1a"/>
+      <circle cx="7"  cy="18" r="2.5" fill="#1a1a1a"/>
+      <circle cx="29" cy="18" r="2.5" fill="#1a1a1a"/>
+      <line x1="18" y1="13" x2="18" y2="9.5"  stroke="#1a1a1a" stroke-width="1.5"/>
+      <line x1="18" y1="23" x2="18" y2="26.5" stroke="#1a1a1a" stroke-width="1.5"/>
+      <line x1="13" y1="18" x2="9.5" y2="18"  stroke="#1a1a1a" stroke-width="1.5"/>
+      <line x1="23" y1="18" x2="26.5" y2="18" stroke="#1a1a1a" stroke-width="1.5"/>
+    </svg>
+    <div class="app-title-wrap">
+      <div class="app-title">SCPDD Research <span style="font-size:14px;font-weight:400;letter-spacing:.08em;color:var(--muted);">v2</span></div>
+      <div class="app-subtitle">Smart Connected Product Design &amp; Development · Accenture Industry X</div>
+    </div>
+    <span class="acc-badge">Accenture</span>
+  </div>
+
+  <!-- Tab bar — 5 tabs, horizontally scrollable on mobile -->
+  <div class="tab-bar">
+    <button class="tab-btn tab-rss active" data-tab="rss">
+      <span class="tab-icon">📡</span>RSS Feeds
+    </button>
+    <button class="tab-btn tab-videos" data-tab="videos">
+      <span class="tab-icon">🎥</span>Videos
+    </button>
+    <button class="tab-btn tab-books" data-tab="books">
+      <span class="tab-icon">📚</span>Books
+    </button>
+    <button class="tab-btn tab-news" data-tab="news">
+      <span class="tab-icon">🏢</span>Accenture News
+    </button>
+    <button class="tab-btn tab-coach" data-tab="coach">
+      <span class="tab-icon">🧠</span>AI Coach
+    </button>
+  </div>
+</div><!-- end .app-header -->
+
+<!-- ═══════════════════════════════════════════════════════════════
+     [C2] TAB PANELS — One div per tab, shown/hidden via JS
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="app-body">
+
+  <!-- ── TAB 1: RSS FEEDS ── -->
+  <div id="panel-rss" class="tab-panel active">
+    <div class="section-banner">
+      <span style="font-size:20px">📡</span>
+      <div>
+        <div class="banner-title rss">Industry RSS Feeds</div>
+        <div class="banner-sub">IoT · AI · Cloud · Connectivity · Product Strategy</div>
+      </div>
+    </div>
+    <div class="tip-box"><strong>Consultant Tip:</strong> Scan these feeds daily. Look for client-relevant signals on IoT adoption, cloud shifts, and AI-in-product trends before client meetings.</div>
+    <div id="rss-channels"></div><!-- populated by D7-UI.buildGroup() -->
+  </div>
+
+  <!-- ── TAB 2: VIDEOS ── -->
+  <div id="panel-videos" class="tab-panel">
+    <div class="section-banner">
+      <span style="font-size:20px">🎥</span>
+      <div>
+        <div class="banner-title vid">Learning Videos</div>
+        <div class="banner-sub">IoT · Product Strategy · Connected Devices · AI/Cloud · Consulting</div>
+      </div>
+    </div>
+    <div class="tip-box"><strong>Consultant Tip:</strong> Watch keynotes and case studies. These build your ability to narrate digital transformation stories to C-suite clients.</div>
+    <div id="video-channels"></div><!-- populated by D7-UI.buildGroup() -->
+  </div>
+
+  <!-- ── TAB 3: BOOKS ── -->
+  <div id="panel-books" class="tab-panel">
+    <div class="section-banner">
+      <span style="font-size:20px">📚</span>
+      <div>
+        <div class="banner-title bk">Essential Reading</div>
+        <div class="banner-sub">Strategy · IoT · Product Management · Connected Business Models</div>
+      </div>
+    </div>
+
+    <!-- Book PDF upload bar -->
+    <div class="book-upload-bar">
+      <span class="book-upload-label">📄 Upload a Book PDF</span>
+      <button class="btn-outline" id="book-pdf-btn" onclick="document.getElementById('book-pdf-input').click()">📤 Choose PDF</button>
+      <input type="file" id="book-pdf-input" accept=".pdf,application/pdf" style="display:none">
+      <span class="book-upload-status" id="book-pdf-status"></span>
+    </div>
+
+    <!-- Chapter summaries container (hidden until PDF loaded) -->
+    <div id="book-chapters" style="display:none;margin:0 6px 10px;"></div>
+
+    <!-- Save button (hidden until summaries ready) -->
+    <div id="book-save-bar" style="display:none;margin:0 6px 10px;">
+      <button class="btn-outline" id="book-save-btn" style="background:linear-gradient(135deg,#1a4a2e,#2d7a4a);color:#fff;border:none;">💾 Save All Summaries</button>
+    </div>
+
+    <div class="tip-box"><strong>Consultant Tip:</strong> These books form the intellectual bedrock of SCPDD consulting. Use the frameworks from these during client workshops and proposals.</div>
+    <div id="books-list"></div><!-- populated by D7-UI.renderBooks() -->
+  </div>
+
+  <!-- ── TAB 4: ACCENTURE NEWS ── -->
+  <div id="panel-news" class="tab-panel">
+    <div class="section-banner">
+      <span style="font-size:20px">🏢</span>
+      <div>
+        <div class="banner-title nws">Accenture News</div>
+        <div class="banner-sub">Industry X · Research · Press Releases · Thought Leadership</div>
+      </div>
+    </div>
+    <div class="tip-box"><strong>Consultant Tip:</strong> Stay current on Accenture's own publications. Citing internal case studies and analyst reports in client decks builds credibility.</div>
+    <div id="news-channels"></div><!-- populated by D7-UI.renderNews() -->
+  </div>
+
+  <!-- ── TAB 5: DAILY AI COACH ── -->
+  <div id="panel-coach" class="tab-panel">
+    <!-- Profile strip: shown after user details are known -->
+    <div class="coach-profile-panel" id="coach-profile-strip" style="display:none"></div>
+    <!-- Header: title, controls, skill bars -->
+    <div class="coach-header">
+      <div class="coach-header-top">
+        <div style="flex:1">
+          <div class="coach-title">🧠 Daily AI Coach</div>
+          <div class="coach-subtitle">
+            SCPDD Skill Development · Powered by Gemini AI
+            <!-- Live model/quota status — updated by D9-GeminiAPI.updateStatusUI() -->
+            <span id="coach-api-status" class="ok">Ready</span>
+          </div>
+        </div>
+        <div class="coach-controls">
+          <button class="btn-coach-ctrl" onclick="Coach.exportSession()">↓ Export</button>
+          <button class="btn-coach-ctrl btn-coach-reset" onclick="Coach.resetSession()">↺ New Session</button>
+        </div>
+      </div>
+      <!-- Skill progress bars — hidden until D11-Coach identifies gaps -->
+      <div id="coach-skill-bars" style="margin-top:8px;display:none"></div>
+    </div>
+    <!-- Chat message window — scrollable -->
+    <div class="coach-chat-wrap" id="coach-chat"></div>
+    <!-- Fixed input bar at bottom -->
+    <div class="coach-input-bar">
+      <textarea class="coach-textarea" id="coach-input" rows="1"
+        placeholder="Describe a task or activity you worked on today…"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();Coach.send()}"></textarea>
+      <button class="btn-coach-send" id="coach-send-btn" onclick="Coach.send()">➤</button>
+    </div>
+  </div>
+
+</div><!-- end .app-body -->
+
+<!-- ═══════════════════════════════════════════════════════════════
+     [C3] OVERLAYS — Video player, Global chatbox, FAB, Toast, Badge
+     ═══════════════════════════════════════════════════════════════ -->
+
+<!-- Video Player: full-screen overlay for in-app YouTube playback -->
+<div id="player-overlay">
+  <div class="player-topbar">
+    <button class="btn-close" onclick="Player.close()">✕ Close</button>
+    <span class="player-ttl" id="p-title">Loading…</span>
+    <button class="btn-orientation" id="p-orient-btn" onclick="Player.toggleOrientation()">↻ Landscape</button>
+    <a class="btn-yt-open" id="p-yt-link" href="#" target="_blank" rel="noopener noreferrer">↗ YouTube</a>
+  </div>
+  <div class="player-wrap">
+    <iframe class="player-iframe" id="player-iframe"
+      allow="autoplay; fullscreen; encrypted-media" allowfullscreen></iframe>
+  </div>
+  <div class="player-info">
+    <div class="player-info-title" id="p-info-title"></div>
+    <div class="player-info-meta"  id="p-info-meta"></div>
+  </div>
+</div>
+
+<!-- ⚡ Thunder FAB — opens global AI chatbox; visible on all tabs -->
+<button id="thunder-fab" onclick="GChat.toggle()" title="Ask SCPDD AI anything">
+  <span class="fab-pulse"></span>
+  <svg viewBox="0 0 24 24" fill="none">
+    <!-- Lightning bolt icon -->
+    <polygon points="13,2 3,14 12,14 11,22 21,10 12,10"
+      fill="#fff" stroke="#fff" stroke-width=".5" stroke-linejoin="round"/>
+  </svg>
+</button>
+
+<!-- ⚡ Global AI Chatbox — slide-up sheet; powered by D9-GeminiAPI -->
+<div id="gchat-overlay" onclick="GChat.overlayClick(event)">
+  <div id="gchat-box">
+    <div class="gchat-topbar">
+      <div style="flex:1">
+        <div class="gchat-topbar-title">⚡ Ask SCPDD AI</div>
+        <div class="gchat-topbar-sub">IoT · AI · Cloud · Strategy · Accenture</div>
+      </div>
+      <!-- Tap to set/update API keys -->
+      <button onclick="GeminiAPI.setupKeys()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:900;padding:4px 9px;border-radius:3px;cursor:pointer;text-transform:uppercase;letter-spacing:.07em;flex-shrink:0;white-space:nowrap" title="Set Gemini API Keys">🔑 Keys</button>
+      <!-- Live API model/quota pill — updated by D9-GeminiAPI.updateStatusUI() -->
+      <span class="gchat-api-pill ok" id="gchat-api-pill">Gemini Ready</span>
+      <button class="btn-gchat-close" onclick="GChat.close()">✕</button>
+    </div>
+    <div class="gchat-msgs" id="gchat-msgs"></div>
+    <div class="gchat-input-bar">
+      <textarea class="gchat-textarea" id="gchat-input" rows="1"
+        placeholder="Ask anything about SCPDD, IoT, AI, Accenture..."
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();GChat.send()}"></textarea>
+      <button class="btn-gchat-send" id="gchat-send-btn" onclick="GChat.send()">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- PWA install prompt badge (bottom-left, shown by browser beforeinstallprompt event) -->
+<div id="pwa-badge" onclick="App.pwaTriggerInstall()">⬇ Install App</div>
+
+<!-- Save toast notification (auto-hides after 2s) -->
+<div id="save-toast"></div>
+
+
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════════════════════════════
+   [D1] CONFIG — App-wide constants
+        Change these to rebrand or fork the app.
+   ═══════════════════════════════════════════════════════════════════ */
+var CONFIG = {
+  APP_NAME:    'SCPDD Research',
+  APP_VERSION: '2.0.0',
+  SW_CACHE:    'scpdd-v10',
+  /* RSS proxy cascade — tried in order until one works */
+  RSS_PROXY1:  'https://api.rss2json.com/v1/api.json?rss_url=',
+  RSS_PROXY2:  'https://api.allorigins.win/get?url=',
+  RSS_PROXY3:  'https://corsproxy.io/?url=',
+  /* Items shown before "Show More" button */
+  FEED_BATCH:  6
+};
+
+/* ═══════════════════════════════════════════════════════════════════
+   [D2] DATA — RSS feed sources and YouTube video channels
+        To add a feed: push a new object into rssFeeds[].
+        To add a channel: push a new object into videoChannels[].
+        YouTube channelId: find at youtube.com/channel/<ID>
+   ═══════════════════════════════════════════════════════════════════ */
+
+var Data = (function() {
+
+  /* --- RSS Feed Sources --- */
+  var rssFeeds = [
+    /* ── IoT ── */
+    {
+      name: "IoT Analytics Blog",
+      category: "IoT",
+      badge: "IoT",
+      desc: "Enterprise IoT research, market forecasts & in-depth analysis",
+      url: "https://iot-analytics.com/feed/",
+      tags: ["iot","strategy"]
+    },
+    {
+      name: "IoT Now",
+      category: "IoT",
+      badge: "IoT",
+      desc: "Connected device news, enterprise IoT deployments & M2M coverage",
+      url: "https://www.iot-now.com/feed/"
+    },
+    {
+      name: "IoT Tech News",
+      category: "IoT",
+      badge: "IoT",
+      desc: "Latest IoT product launches, platform updates & industry news",
+      url: "https://www.iottechnews.com/feed/",
+      tags: ["iot"]
+    },
+    {
+      name: "IIoT World",
+      category: "IoT",
+      badge: "IoT",
+      desc: "Industrial IoT strategies, edge computing & smart manufacturing",
+      url: "https://iiot-world.com/feed/",
+      tags: ["iot","strategy"]
+    },
+    {
+      name: "RTInsights – IoT",
+      category: "IoT",
+      badge: "IoT",
+      desc: "Real-time analytics, edge AI & industrial IoT case studies",
+      url: "https://www.rtinsights.com/feed/",
+      tags: ["iot","ai"]
+    },
+    {
+      name: "TechTarget – IoT Agenda",
+      category: "IoT",
+      badge: "IoT",
+      desc: "Enterprise IoT architecture, device management & security",
+      url: "https://internetofthingsagenda.techtarget.com/rss/IoT-Agenda.xml",
+      tags: ["iot","cloud"]
+    },
+    /* ── AI ── */
+    {
+      name: "VentureBeat – AI",
+      category: "AI",
+      badge: "AI",
+      desc: "Breaking AI business news, generative AI & enterprise AI strategy",
+      url: "https://venturebeat.com/category/ai/feed/",
+      tags: ["ai","strategy"]
+    },
+    {
+      name: "Unite.AI",
+      category: "AI",
+      badge: "AI",
+      desc: "Comprehensive AI coverage: ML research, products & business impact",
+      url: "https://www.unite.ai/category/news/feed/",
+      tags: ["ai"]
+    },
+    {
+      name: "Daily AI",
+      category: "AI",
+      badge: "AI",
+      desc: "Daily AI news digest — models, tools, policy & product launches",
+      url: "https://dailyai.com/feed/",
+      tags: ["ai"]
+    },
+    {
+      name: "AI Trends",
+      category: "AI",
+      badge: "AI",
+      desc: "Executive-focused AI intelligence for business leaders & consultants",
+      url: "https://aitrends.com/feed/",
+      tags: ["ai","strategy"]
+    },
+    {
+      name: "MIT Technology Review",
+      category: "AI",
+      badge: "AI",
+      desc: "Deep analysis on AI, computing & tech policy from MIT",
+      url: "https://www.technologyreview.com/feed/",
+      tags: ["ai","strategy"]
+    },
+    {
+      name: "The Register – AI & ML",
+      category: "AI",
+      badge: "AI",
+      desc: "Critical, analyst-grade tech journalism on AI & enterprise software",
+      url: "https://api.theregister.com/api/v1/article?query=tag:%22ai%20and%20ml%22&orderBy=published&site_id=2&remapper=rss&limit=25",
+      tags: ["ai","cloud"]
+    },
+    /* ── Cloud & Strategy ── */
+    {
+      name: "SiliconANGLE",
+      category: "Cloud",
+      badge: "Cloud",
+      desc: "Enterprise tech news covering AI, cloud & digital transformation",
+      url: "https://siliconangle.com/feed/",
+      tags: ["cloud","ai","strategy"]
+    },
+    {
+      name: "AWS Machine Learning Blog",
+      category: "Cloud",
+      badge: "Cloud",
+      desc: "AWS AI/ML services, IoT integrations & cloud-native architectures",
+      url: "https://aws.amazon.com/blogs/machine-learning/feed/",
+      tags: ["cloud","ai","iot"]
+    },
+    {
+      name: "Google Cloud Blog",
+      category: "Cloud",
+      badge: "Cloud",
+      desc: "Cloud AI, IoT Core, Vertex AI & digital product engineering",
+      url: "https://cloudblog.withgoogle.com/rss/",
+      tags: ["cloud","ai"]
+    },
+    {
+      name: "Microsoft Azure Blog",
+      category: "Cloud",
+      badge: "Cloud",
+      desc: "Azure IoT, AI services, digital twins & edge computing updates",
+      url: "https://azure.microsoft.com/en-us/blog/feed/",
+      tags: ["cloud","iot","ai"]
+    },
+    {
+      name: "Product Coalition",
+      category: "Strategy",
+      badge: "Strategy",
+      desc: "Product management frameworks, roadmaps & real-world case studies",
+      url: "https://productcoalition.com/feed",
+      tags: ["strategy"]
+    },
+    {
+      name: "Harvard Business Review",
+      category: "Strategy",
+      badge: "Strategy",
+      desc: "Executive strategy, digital leadership & innovation management",
+      url: "https://feeds.harvardbusiness.org/harvardbusiness?format=xml",
+      tags: ["strategy"]
+    },
+    {
+      name: "McKinsey Insights",
+      category: "Strategy",
+      badge: "Strategy",
+      desc: "Global research on technology, automation & economic transformation",
+      url: "https://www.mckinsey.com/insights/rss",
+      tags: ["strategy","ai"]
+    },
+    {
+      name: "Gartner Blog Network",
+      category: "Strategy",
+      badge: "Strategy",
+      desc: "Analyst commentary: hype cycles, tech trends & product strategy",
+      url: "https://www.gartner.com/en/blogs/rss",
+      tags: ["strategy","ai","iot"]
+    },
+    {
+      name: "Gartner Newsroom",
+      category: "Strategy",
+      badge: "Strategy",
+      desc: "Press releases, forecasts & analyst research from Gartner",
+      url: "https://www.gartner.com/en/newsroom/rss",
+      tags: ["strategy","ai","iot"]
+    }
+  ];
+
+  /* --- Video Channels (YouTube) — all IDs verified June 2026 --- */
+  var videoChannels = [
+    {
+      name: "Accenture",
+      category: "Accenture",
+      badge: "Accenture",
+      desc: "Industry X, connected product innovation & SCPDD case stories",
+      channelId: "UCD8h3oTfr1CbanGIWnzIP_g"   /* Accenture Technology – main global channel */
+    },
+    {
+      name: "McKinsey & Company",
+      category: "Strategy",
+      badge: "Strategy",
+      desc: "Digital transformation, Industry 4.0 & connected product strategy",
+      channelId: "UCQMqUlg362Hhar_iCZ9tcjQ"   /* @McKinsey official */
+    },
+    {
+      name: "Gartner",
+      category: "Strategy",
+      badge: "Strategy",
+      desc: "IT leadership, emerging tech hype cycles & analyst insights",
+      channelId: "UCSNX50LYGXWV_e5UWZGPGbw"
+    },
+    {
+      name: "World Economic Forum",
+      category: "Strategy",
+      badge: "Strategy",
+      desc: "Tech policy, AI governance, Industry 4.0 & connected economy",
+      channelId: "UCw-kH-Od73XDAt7qtH9uBYA"
+    },
+    {
+      name: "AWS Events",
+      category: "Cloud",
+      badge: "Cloud",
+      desc: "re:Invent IoT sessions, cloud architecture & edge computing talks",
+      channelId: "UCdoadna9HFHsxXWhafhNvKw"
+    },
+    {
+      name: "SAP",
+      category: "Industry X",
+      badge: "Industry X",
+      desc: "Digital manufacturing, connected supply chain & Industry 4.0",
+      channelId: "UCVnIv2xF2wyMMCSKv1qF3pA"
+    },
+    {
+      name: "Siemens",
+      category: "Industry X",
+      badge: "Industry X",
+      desc: "Smart connected products, digital twin & industrial automation",
+      channelId: "UCmyYOpZrHRh7v934X9cjBOw"
+    },
+    {
+      name: "MIT OpenCourseWare",
+      category: "Learning",
+      badge: "Learning",
+      desc: "Systems thinking, product design engineering & MBA-level content",
+      channelId: "UCEBb1b_L6zDS3xTUrIALZOw"
+    },
+    {
+      name: "TED Talks – Technology",
+      category: "Inspiration",
+      badge: "Inspiration",
+      desc: "Big ideas on connectivity, AI futures & design thinking",
+      channelId: "UCsooa4yRKGN_zEE8iknghZA"
+    },
+    {
+      name: "Deloitte Insights",
+      category: "Strategy",
+      badge: "Strategy",
+      desc: "C-suite perspectives on tech strategy, IoT & digital transformation",
+      channelId: "UCBoQGulS_GYlTZ2QR4rdFug"   /* confirmed from youtube.com/channel/UCBoQGulS_GYlTZ2QR4rdFug */
+    },
+    {
+      name: "Siemens Software",
+      category: "Industry X",
+      badge: "Industry X",
+      desc: "PLM, digital twin, NX & connected product lifecycle tools",
+      channelId: "UCYR5Kgzn6suihs56iJ8_vfw"   /* confirmed from youtube.com/SiemensSoftware */
+    },
+    {
+      name: "a16z",
+      category: "AI",
+      badge: "AI",
+      desc: "Venture-grade AI, deep tech & connected product business models",
+      channelId: "UC9cn0TuPq4dnbTY-CBsm8XA"   /* confirmed from youtube.com/channel/UC9cn0TuPq4dnbTY-CBsm8XA */
+    }
+  ];
+
+  function feedUrl(ch) {
+    return 'https://www.youtube.com/feeds/videos.xml?channel_id=' + ch.channelId;
+  }
+
+  return { rssFeeds: rssFeeds, videoChannels: videoChannels, feedUrl: feedUrl };
+})();
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   [D3] BOOKSDATA — Curated book list for SCPDD MBA consultants
+        Each entry: title, author, emoji, why (consultant rationale),
+        tags, amazon link, goodreads link.
+        Sections: IoT & Connected Products | Product Strategy |
+                  Digital Transformation | AI/Cloud/Data | Consulting
+   ═══════════════════════════════════════════════════════════════════ */
+
+var BooksData = [
+  {
+    section: "IoT & Connected Products",
+    books: [
+      {
+        title: "The Internet of Things",
+        author: "Samuel Greengard",
+        emoji: "🌐",
+        why: "Foundational primer on IoT architecture, business implications, and connected product strategy. Essential for explaining IoT value to clients.",
+        tags: ["iot","strategy"],
+        amazon: "https://www.amazon.com/s?k=The+Internet+of+Things+Greengard",
+        goodreads: "https://www.goodreads.com/book/show/23168213"
+      },
+      {
+        title: "Building the Internet of Things",
+        author: "Maciej Kranz",
+        emoji: "🔧",
+        why: "Practical guide from a Cisco executive on building IoT strategy and driving organizational adoption. Great for client engagement narratives.",
+        tags: ["iot","strategy"],
+        amazon: "https://www.amazon.com/s?k=Building+Internet+of+Things+Kranz",
+        goodreads: "https://www.goodreads.com/book/show/30280867"
+      },
+      {
+        title: "Designing Connected Products",
+        author: "Claire Rowland et al.",
+        emoji: "🔗",
+        why: "Covers UX for smart, connected devices — essential for client workshops on digital product design. Bridges engineering and business.",
+        tags: ["iot","strategy"],
+        amazon: "https://www.amazon.com/s?k=Designing+Connected+Products+Rowland",
+        goodreads: "https://www.goodreads.com/book/show/23259922"
+      }
+    ]
+  },
+  {
+    section: "Product Strategy & Management",
+    books: [
+      {
+        title: "Competing Against Luck",
+        author: "Clayton Christensen",
+        emoji: "🎯",
+        why: "The 'Jobs to Be Done' theory is a must for client discovery workshops. Reshapes how you think about connected product value propositions.",
+        tags: ["strategy"],
+        amazon: "https://www.amazon.com/s?k=Competing+Against+Luck+Christensen",
+        goodreads: "https://www.goodreads.com/book/show/28820024"
+      },
+      {
+        title: "Continuous Discovery Habits",
+        author: "Teresa Torres",
+        emoji: "🔁",
+        why: "Modern product discovery framework for iterating connected products with customer feedback loops — aligns with Accenture's MVP methodology.",
+        tags: ["strategy"],
+        amazon: "https://www.amazon.com/s?k=Continuous+Discovery+Habits+Torres",
+        goodreads: "https://www.goodreads.com/book/show/58046715"
+      },
+      {
+        title: "The Lean Startup",
+        author: "Eric Ries",
+        emoji: "🚀",
+        why: "MVP thinking underpins Accenture's SCPDD slicing methodology. Fluency in lean language improves client credibility in startup-minded organizations.",
+        tags: ["strategy"],
+        amazon: "https://www.amazon.com/s?k=The+Lean+Startup+Ries",
+        goodreads: "https://www.goodreads.com/book/show/10127019"
+      }
+    ]
+  },
+  {
+    section: "Digital Transformation & Industry 4.0",
+    books: [
+      {
+        title: "The Fourth Industrial Revolution",
+        author: "Klaus Schwab",
+        emoji: "🏭",
+        why: "WEF perspective on how AI, IoT, and cloud reshape industries. Essential context for positioning SCPDD within the broader Industry X narrative.",
+        tags: ["strategy","iot","ai"],
+        amazon: "https://www.amazon.com/s?k=Fourth+Industrial+Revolution+Schwab",
+        goodreads: "https://www.goodreads.com/book/show/28251672"
+      },
+      {
+        title: "Crossing the Chasm",
+        author: "Geoffrey A. Moore",
+        emoji: "📉",
+        why: "Classic tech adoption model. Helps consultants position connected product rollouts on the adoption curve when presenting go-to-market strategy.",
+        tags: ["strategy"],
+        amazon: "https://www.amazon.com/s?k=Crossing+the+Chasm+Moore",
+        goodreads: "https://www.goodreads.com/book/show/61329"
+      },
+      {
+        title: "Platform Revolution",
+        author: "Parker, Van Alstyne & Choudary",
+        emoji: "🔄",
+        why: "Connected products increasingly rely on platform ecosystems. This book builds fluency in platform economics for client advisory discussions.",
+        tags: ["strategy","cloud"],
+        amazon: "https://www.amazon.com/s?k=Platform+Revolution+Parker",
+        goodreads: "https://www.goodreads.com/book/show/25622861"
+      }
+    ]
+  },
+  {
+    section: "AI, Cloud & Data for Products",
+    books: [
+      {
+        title: "AI Superpowers",
+        author: "Kai-Fu Lee",
+        emoji: "🤖",
+        why: "Strategic perspective on AI's business impact. Sharpens the lens for advising clients on AI-embedded connected product strategies.",
+        tags: ["ai","strategy"],
+        amazon: "https://www.amazon.com/s?k=AI+Superpowers+Kai+Fu+Lee",
+        goodreads: "https://www.goodreads.com/book/show/38242135"
+      },
+      {
+        title: "Designing Data-Intensive Applications",
+        author: "Martin Kleppmann",
+        emoji: "📊",
+        why: "Not a coding book — it's a systems thinking guide. Helps you ask the right architectural questions when connected products generate data at scale.",
+        tags: ["cloud","iot"],
+        amazon: "https://www.amazon.com/s?k=Designing+Data+Intensive+Applications+Kleppmann",
+        goodreads: "https://www.goodreads.com/book/show/23463279"
+      }
+    ]
+  },
+  {
+    section: "Consulting & Presentation Skills",
+    books: [
+      {
+        title: "The McKinsey Way",
+        author: "Ethan Rasiel",
+        emoji: "💼",
+        why: "Foundational consulting toolkit: structured problem solving, hypothesis-driven analysis, and client communication. Directly applicable to SCPDD engagements.",
+        tags: ["strategy"],
+        amazon: "https://www.amazon.com/s?k=The+McKinsey+Way+Rasiel",
+        goodreads: "https://www.goodreads.com/book/show/123567"
+      },
+      {
+        title: "The Pyramid Principle",
+        author: "Barbara Minto",
+        emoji: "📐",
+        why: "Used by Accenture consultants globally for structuring client decks and executive communication. The SCQV framework elevates presentation quality.",
+        tags: ["strategy"],
+        amazon: "https://www.amazon.com/s?k=Pyramid+Principle+Minto",
+        goodreads: "https://www.goodreads.com/book/show/33206"
+      }
+    ]
+  }
+];
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   [D4] NEWSDATA — Accenture news: live RSS sources + curated items
+        sources[]: live RSS feeds fetched at runtime
+        curated[]: static reference articles, always shown
+   ═══════════════════════════════════════════════════════════════════ */
+
+var NewsData = {
+  sources: [
+    {
+      name: "Accenture Newsroom",
+      badge: "Accenture",
+      desc: "Official press releases, acquisitions & partnerships",
+      url: "https://newsroom.accenture.com/rss/accenture-news.xml"
+    },
+    {
+      name: "Accenture Research",
+      badge: "Research",
+      desc: "Reports, surveys & analyst-grade technology insights",
+      url: "https://www.accenture.com/us-en/insights/research/feed"
+    },
+    {
+      name: "Accenture Industry X Blog",
+      badge: "Industry X",
+      desc: "Smart connected products, digital engineering & manufacturing",
+      url: "https://www.accenture.com/us-en/blogs/blogs-industry-x/rss"
+    }
+  ],
+  /* Static curated Accenture news items as fallback / permanent reference */
+  curated: [
+    {
+      title: "Accenture Completes Acquisition of Avanade: Digital Engineering Scale",
+      date: "2024",
+      source: "Accenture Newsroom",
+      excerpt: "Accenture expands Industry X and digital product engineering capabilities through strategic acquisition, adding thousands of engineers across cloud, IoT and connected products.",
+      url: "https://newsroom.accenture.com/news/2024",
+      tags: ["accenture","strategy"]
+    },
+    {
+      title: "Accenture's Digital Service Factory: End-to-End Connected Product Launch",
+      date: "2023",
+      source: "Industry X Blog",
+      excerpt: "The Digital Service Factory offering helps clients navigate IoT product pitfalls from MVP to scaled launch, combining R&D, engineering, and operations expertise.",
+      url: "https://www.accenture.com/nl-en/blogs/insights/smart-connected-product-design-and-development",
+      tags: ["accenture","iot","strategy"]
+    },
+    {
+      title: "Technology Vision 2024: Human by Design",
+      date: "2024",
+      source: "Accenture Research",
+      excerpt: "Accenture's annual Technology Vision report outlines five key tech trends reshaping industries — with AI-embedded connected products at the center.",
+      url: "https://www.accenture.com/us-en/insights/technology/technology-trends-annual-report",
+      tags: ["accenture","ai","strategy"]
+    },
+    {
+      title: "Winning with Industrial IoT: Accenture's Perspective on Scaling Smart Products",
+      date: "2024",
+      source: "Accenture Research",
+      excerpt: "Research shows companies that combine IoT hardware with cloud-native software platforms achieve 3x higher revenue growth from connected product portfolios.",
+      url: "https://www.accenture.com/us-en/insights/industry-x",
+      tags: ["accenture","iot","cloud"]
+    },
+    {
+      title: "Product Delivery at Scale: Accenture's Slicing Methodology for MVPs",
+      date: "2023",
+      source: "Industry X Blog",
+      excerpt: "The slicing methodology ensures IoT MVP platforms are built for growth from day one — with OTA updates, device management, and security-by-design as foundational features.",
+      url: "https://www.accenture.com/nl-en/blogs/insights/smart-connected-product-design-and-development",
+      tags: ["accenture","iot","strategy"]
+    },
+    {
+      title: "VanBerlo + Accenture: 20 Years of Connected Product Design Experience",
+      date: "2022",
+      source: "Accenture Newsroom",
+      excerpt: "The acquisition of VanBerlo Design Agency brings Accenture deep industrial design expertise, enabling end-to-end product strategy, design, and engineering for connected device clients.",
+      url: "https://vanberloagency.com/",
+      tags: ["accenture","strategy"]
+    },
+    {
+      title: "Accenture's Hardware Platform Asset: Rapid Prototyping for Connected Products",
+      date: "2023",
+      source: "Industry X Blog",
+      excerpt: "Accenture's proprietary hardware platform accelerates high-end connected product prototyping with advanced edge analytics, sensing capabilities, and data-privacy-by-design principles.",
+      url: "https://www.accenture.com/nl-en/blogs/insights/smart-connected-product-design-and-development",
+      tags: ["accenture","iot","cloud"]
+    },
+    {
+      title: "Energy Transition & Utilities: Accenture Designs Smart In-Home Energy Meters",
+      date: "2023",
+      source: "Industry X Blog",
+      excerpt: "From EV charger solutions to smart meters, Accenture Industry X is delivering connected product engineering across the energy transition sector with VanBerlo design capabilities.",
+      url: "https://www.accenture.com/us-en/industries/energy",
+      tags: ["accenture","iot","strategy"]
+    },
+    {
+      title: "Accenture Named a Leader in Engineering Services by Everest Group 2024",
+      date: "2024",
+      source: "Accenture Awards",
+      excerpt: "Accenture is recognized as a Global Leader in Digital Engineering Services, with Industry X capabilities spanning connected product design, R&D digitization and engineering operations.",
+      url: "https://www.accenture.com/us-en/about/awards-recognition",
+      tags: ["accenture","strategy"]
+    },
+    {
+      title: "The Future of Connected Automotive: Accenture & ESR Labs",
+      date: "2023",
+      source: "Accenture Newsroom",
+      excerpt: "Following the acquisition of ESR Labs, Accenture now delivers automotive-grade software, connected car platforms, and in-vehicle UX design for global OEM clients.",
+      url: "https://newsroom.accenture.com/news/accenture-completes-acquisition-of-esr-labs-to-help-automotive-companies-drive-greater-value-from-software.htm",
+      tags: ["accenture","iot","strategy"]
+    }
+  ]
+};
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   [D5] FEED — RSS & YouTube XML fetch engine
+        Uses a 3-proxy cascade for CORS-safe browser fetching:
+          1. rss2json.com  → parsed JSON (best quality)
+          2. allorigins.win → raw XML (fallback)
+          3. corsproxy.io  → raw XML (last resort)
+        Handles both RSS <item> and YouTube Atom <entry> formats.
+        Public API:
+          Feed.fetchFeed(url, onSuccess, onError)
+          Feed.getVid(url)        → YouTube video ID
+          Feed.thumbUrl(vid)      → thumbnail URL
+          Feed.embedUrl(vid)      → embed URL with autoplay
+          Feed.fmtDate(dateStr)   → formatted date string
+          Feed.esc(str)           → HTML-escape
+          Feed.stripHtml(str)     → strip tags, truncate
+   ═══════════════════════════════════════════════════════════════════ */
+
+var Feed = (function() {
+  /* Three independent proxies tried in sequence */
+  var PROXY1 = 'https://api.rss2json.com/v1/api.json?rss_url=';
+  var PROXY2 = 'https://api.allorigins.win/get?url=';
+  var PROXY3 = 'https://corsproxy.io/?url=';
+  var BATCH  = 6;
+
+  function getVid(url) {
+    if (!url) return null;
+    var m = url.match(/[?&]v=([A-Za-z0-9_-]{11})/) || url.match(/youtu\.be\/([A-Za-z0-9_-]{11})/);
+    return m ? m[1] : null;
+  }
+  function thumbUrl(vid) { return vid ? 'https://img.youtube.com/vi/' + vid + '/mqdefault.jpg' : null; }
+  function embedUrl(vid) { return 'https://www.youtube.com/embed/' + vid + '?autoplay=1&rel=0&modestbranding=1&iv_load_policy=3&showinfo=0&fs=1'; }
+
+  function fmtDate(s) {
+    try { return new Date(s).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}); }
+    catch(e) { return ''; }
+  }
+
+  function esc(s) {
+    return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function stripHtml(s) {
+    return (s||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().substring(0,220);
+  }
+
+  function parseXMLItems(xmlText) {
+    var items = [], entryRegex = /<entry>([\s\S]*?)<\/entry>/g, m;
+    while ((m = entryRegex.exec(xmlText)) !== null) {
+      var block = m[1];
+      var vidMatch   = block.match(/<yt:videoId>([^<]+)<\/yt:videoId>/);
+      var titleMatch = block.match(/<title>([^<]*)<\/title>/);
+      var pubMatch   = block.match(/<published>([^<]+)<\/published>/);
+      if (vidMatch) {
+        var vid = vidMatch[1].trim();
+        items.push({
+          link: 'https://www.youtube.com/watch?v=' + vid,
+          title: titleMatch ? titleMatch[1].replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>') : 'Untitled',
+          pubDate: pubMatch ? pubMatch[1] : '',
+          thumbnail: thumbUrl(vid)
+        });
+      }
+    }
+    return items;
+  }
+
+  function parseXMLRSS(xmlText) {
+    var items = [];
+    var itemRegex = /<item>([\s\S]*?)<\/item>/g, m;
+    while ((m = itemRegex.exec(xmlText)) !== null) {
+      var block = m[1];
+      var titleM = block.match(/<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/);
+      var linkM  = block.match(/<link>([^<]+)<\/link>/);
+      var pubM   = block.match(/<pubDate>([^<]+)<\/pubDate>/);
+      var descM  = block.match(/<description>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/description>/);
+      if (titleM && titleM[1].trim()) {
+        items.push({
+          title:       titleM[1].trim(),
+          link:        linkM  ? linkM[1].trim()  : '#',
+          pubDate:     pubM   ? pubM[1].trim()   : '',
+          description: descM  ? stripHtml(descM[1]) : ''
+        });
+      }
+    }
+    return items;
+  }
+
+  function tryProxy2(feedUrl, onSuccess, onError) {
+    fetch(PROXY2 + encodeURIComponent(feedUrl))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        var xml = d.contents || '';
+        var ytItems = parseXMLItems(xml);
+        if (ytItems.length > 0) { onSuccess(ytItems); return; }
+        var rssItems = parseXMLRSS(xml);
+        if (rssItems.length > 0) { onSuccess(rssItems); return; }
+        tryProxy3(feedUrl, onSuccess, onError);
+      })
+      .catch(function(){ tryProxy3(feedUrl, onSuccess, onError); });
+  }
+
+  function tryProxy3(feedUrl, onSuccess, onError) {
+    fetch(PROXY3 + encodeURIComponent(feedUrl))
+      .then(function(r){ return r.text(); })
+      .then(function(xml){
+        var ytItems = parseXMLItems(xml);
+        if (ytItems.length > 0) { onSuccess(ytItems); return; }
+        var rssItems = parseXMLRSS(xml);
+        if (rssItems.length > 0) { onSuccess(rssItems); return; }
+        onError('Feed unavailable – try again later');
+      })
+      .catch(function(e){ onError(e.message || 'Network error'); });
+  }
+
+  function fetchFeed(feedUrl, onSuccess, onError) {
+    /* Proxy 1: rss2json (parsed JSON, best quality) */
+    fetch(PROXY1 + encodeURIComponent(feedUrl))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if (d.status === 'ok' && d.items && d.items.length > 0) {
+          onSuccess(d.items); return;
+        }
+        tryProxy2(feedUrl, onSuccess, onError);
+      })
+      .catch(function(){ tryProxy2(feedUrl, onSuccess, onError); });
+  }
+
+  return { getVid:getVid, thumbUrl:thumbUrl, embedUrl:embedUrl, fmtDate:fmtDate, esc:esc, stripHtml:stripHtml, fetchFeed:fetchFeed, BATCH:BATCH };
+})();
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   [D6] PLAYER — In-app YouTube video player
+        Opens a fullscreen overlay with an embedded iframe.
+        Supports portrait/landscape toggle and native fullscreen API.
+        Public API:
+          Player.open(vid, title, date, channel, link)
+          Player.close()
+          Player.toggleOrientation()
+   ═══════════════════════════════════════════════════════════════════ */
+
+var Player = (function() {
+  var _vid = null;
+  var _isLandscape = true;
+  var _fsGuard = false;
+
+  var overlay = document.getElementById('player-overlay');
+  var iframe  = document.getElementById('player-iframe');
+  var pTitle  = document.getElementById('p-title');
+  var pInfo   = document.getElementById('p-info-title');
+  var pMeta   = document.getElementById('p-info-meta');
+  var pLink   = document.getElementById('p-yt-link');
+  var pOrient = document.getElementById('p-orient-btn');
+
+  function requestFS(el) { return (el.requestFullscreen||el.webkitRequestFullscreen||el.msRequestFullscreen).call(el); }
+  function exitFS() { return (document.exitFullscreen||document.webkitExitFullscreen||document.msExitFullscreen).call(document); }
+  function getFS() { return document.fullscreenElement||document.webkitFullscreenElement||document.msFullscreenElement; }
+
+  function lockOrientation(landscape) {
+    try { if (screen.orientation&&screen.orientation.lock) screen.orientation.lock(landscape?'landscape':'portrait').catch(function(){}); } catch(e){}
+  }
+  function unlockOrientation() {
+    try { if (screen.orientation&&screen.orientation.unlock) screen.orientation.unlock(); } catch(e){}
+  }
+  function setOrientation(landscape) {
+    _isLandscape = landscape;
+    overlay.classList.toggle('landscape', landscape);
+    overlay.classList.toggle('portrait', !landscape);
+    pOrient.textContent = landscape ? '↻ Landscape' : '↻ Portrait';
+  }
+
+  document.addEventListener('fullscreenchange', function() { if (_fsGuard){_fsGuard=false;return;} if (!getFS()&&overlay.classList.contains('active')) close(); });
+  document.addEventListener('webkitfullscreenchange', function() { if (_fsGuard){_fsGuard=false;return;} if (!getFS()&&overlay.classList.contains('active')) close(); });
+
+  function open(vid, title, date, channel, link) {
+    _vid = vid;
+    iframe.src = Feed.embedUrl(vid);
+    pTitle.textContent = title;
+    pInfo.textContent = title;
+    pMeta.textContent = (channel||'') + (date ? ' · ' + date : '');
+    pLink.href = link || ('https://www.youtube.com/watch?v=' + vid);
+    setOrientation(true);
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    try { requestFS(iframe).then(function(){ lockOrientation(true); }).catch(function(){}); } catch(e){}
+  }
+
+  function close() {
+    overlay.classList.remove('active');
+    iframe.src = '';
+    document.body.style.overflow = '';
+    try { if (getFS()) exitFS().catch(function(){}); unlockOrientation(); } catch(e){}
+    _vid = null;
+  }
+
+  function toggleOrientation() {
+    if (_isLandscape) { _fsGuard=true; try{if(getFS())exitFS().catch(function(){});}catch(e){} unlockOrientation(); setOrientation(false); }
+    else { setOrientation(true); try{requestFS(iframe).then(function(){lockOrientation(true);}).catch(function(){});}catch(e){} }
+  }
+
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
+  return { open:open, close:close, toggleOrientation:toggleOrientation };
+})();
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   [D7] UI — Rendering engine for all tab content
+        Handles: tab switching, collapsible groups, RSS cards,
+                 video cards, books, news items.
+        Public API:
+          UI.buildGroup(item, type, container, onOpen)
+          UI.renderRSSItems(gridEl, items, start, count, sourceName)
+          UI.renderVideoItems(gridEl, items, start, count, channelName)
+          UI.renderBooks()
+          UI.renderNews()
+   ═══════════════════════════════════════════════════════════════════ */
+
+var UI = (function() {
+  var loadedFeeds = {};
+
+  /* --- TABS --- */
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+    document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+    document.querySelector('.tab-btn.tab-' + tab).classList.add('active');
+    document.getElementById('panel-' + tab).classList.add('active');
+    if (tab === 'coach') { setTimeout(function(){ Coach.lazyInit(); }, 50); }
+  }
+  document.querySelectorAll('.tab-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(){ switchTab(this.getAttribute('data-tab')); });
+  });
+
+  /* --- Tag badge HTML --- */
+  function tagBadge(tag) {
+    var map = { iot:'tag-iot', ai:'tag-ai', cloud:'tag-cloud', strategy:'tag-strategy', accenture:'tag-accenture' };
+    var labels = { iot:'IoT', ai:'AI', cloud:'Cloud', strategy:'Strategy', accenture:'Accenture' };
+    var cls = map[tag] || 'tag-strategy';
+    return '<span class="item-tag ' + cls + '">' + (labels[tag]||tag.toUpperCase()) + '</span>';
+  }
+
+  /* --- Badge color by category --- */
+  function badgeClass(badge) {
+    var b = (badge||'').toLowerCase();
+    if (b==='iot') return 'badge-rss';
+    if (b==='cloud') return 'badge-vid';
+    if (['accenture','industry x','research'].indexOf(b)>=0) return 'badge-news';
+    if (['strategy','learning','inspiration'].indexOf(b)>=0) return 'badge-bk';
+    return 'badge-rss';
+  }
+
+  /* --- Build collapsible group header --- */
+  function buildGroup(item, type, container, onOpen) {
+    var gid  = 'g-' + type + '-' + item.name.replace(/\W+/g,'');
+    var grid = 'f-' + type + '-' + item.name.replace(/\W+/g,'');
+
+    var div = document.createElement('div');
+    div.className = 'channel-group';
+    div.id = gid;
+    div.innerHTML =
+      '<div class="ch-header">' +
+        '<span class="ch-badge ' + badgeClass(item.badge) + '">' + Feed.esc(item.badge) + '</span>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div class="ch-name">' + Feed.esc(item.name) + '</div>' +
+          (item.desc ? '<div class="ch-desc">' + Feed.esc(item.desc) + '</div>' : '') +
+        '</div>' +
+        '<span class="ch-arrow">▼</span>' +
+      '</div>' +
+      '<div class="feed-grid" id="' + grid + '">' +
+        '<div class="loading-row"><span class="spin">⟳</span> Loading…</div>' +
+      '</div>';
+    container.appendChild(div);
+
+    div.querySelector('.ch-header').addEventListener('click', function() {
+      var grp  = document.getElementById(gid);
+      var gridEl = document.getElementById(grid);
+      if (grp.classList.contains('open')) { grp.classList.remove('open'); return; }
+      grp.classList.add('open');
+      if (loadedFeeds[grid]) return;
+      loadedFeeds[grid] = true;
+      onOpen(gridEl, item);
+    });
+  }
+
+  /* --- RSS items renderer --- */
+  function renderRSSItems(gridEl, items, start, count, sourceName) {
+    var end = Math.min(start + count, items.length);
+    for (var i = start; i < end; i++) {
+      var it = items[i];
+      var link = it.link || it.url || '#';
+      var title = it.title || 'Untitled';
+      var date = Feed.fmtDate(it.pubDate || it.isoDate || it.date || '');
+      var desc = it.description || it.summary || it.content || '';
+      if (desc) desc = Feed.stripHtml(desc);
+
+      var div = document.createElement('div');
+      div.className = 'feed-item';
+      div.innerHTML =
+        '<div class="feed-item-inner">' +
+          '<div class="item-info">' +
+            '<div class="item-title">' + Feed.esc(title) + '</div>' +
+            (desc ? '<div class="item-summary">' + Feed.esc(desc) + '</div>' : '') +
+            '<div class="item-date">' + (date||'') + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<a class="ext-link-btn" href="' + Feed.esc(link) + '" target="_blank" rel="noopener noreferrer">↗ Read Article</a>';
+      gridEl.appendChild(div);
+    }
+    var old = gridEl.querySelector('.load-more-wrap');
+    if (old) old.remove();
+    if (end < items.length) {
+      var wrap = document.createElement('div');
+      wrap.className = 'load-more-wrap';
+      var btn = document.createElement('button');
+      btn.className = 'btn-load-more';
+      btn.textContent = '▼ Show More (' + (items.length - end) + ' remaining)';
+      btn.addEventListener('click', function(){ renderRSSItems(gridEl, items, end, count, sourceName); });
+      wrap.appendChild(btn);
+      gridEl.appendChild(wrap);
+    }
+  }
+
+  /* --- Video items renderer --- */
+  function renderVideoItems(gridEl, items, start, count, channelName) {
+    var end = Math.min(start + count, items.length);
+    for (var i = start; i < end; i++) {
+      var it   = items[i];
+      var vid  = Feed.getVid(it.link);
+      if (!vid) continue;
+      var thumb   = Feed.thumbUrl(vid);
+      var title   = it.title || 'Untitled';
+      var date    = Feed.fmtDate(it.pubDate || it.isoDate || '');
+      var link    = it.link;
+      var panelId = 'ap-' + vid;
+
+      /* ── Wrapper holds video row + analysis panel stacked ── */
+      var wrapper = document.createElement('div');
+      wrapper.style.cssText = 'border-bottom:1px solid rgba(0,0,0,.07)';
+
+      /* ── Video row ── */
+      var div = document.createElement('div');
+      div.className = 'video-item';
+      div.style.borderBottom = 'none';
+      div.setAttribute('data-vid',     vid);
+      div.setAttribute('data-title',   title);
+      div.setAttribute('data-date',    date);
+      div.setAttribute('data-channel', channelName);
+      div.setAttribute('data-link',    link);
+
+      var thumbHtml = thumb
+        ? '<img class="item-thumb" src="' + Feed.esc(thumb) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
+        : '<div class="thumb-placeholder">▶</div>';
+
+      div.innerHTML =
+        thumbHtml +
+        '<div class="item-info">' +
+          '<div class="item-title">' + Feed.esc(title) + '</div>' +
+          '<div class="item-date">'  + Feed.esc(date)  + '</div>' +
+        '</div>' +
+        '<div class="item-actions">' +
+          '<button class="btn-play">▶</button>' +
+          /* ⚡ Analysis button — small, next to play */
+          '<button class="btn-analyse" data-panel="' + panelId + '" title="AI analysis of this video">⚡ Analyse</button>' +
+        '</div>';
+
+      /* ── Analysis panel (collapsed, injected below video row) ── */
+      var panel = document.createElement('div');
+      panel.className = 'analysis-panel';
+      panel.id = panelId;
+      panel.setAttribute('data-vid',     vid);
+      panel.setAttribute('data-title',   title);
+      panel.setAttribute('data-channel', channelName);
+      panel.innerHTML =
+        '<div class="ap-header">' +
+          '<span class="ap-header-title">⚡ AI Analysis</span>' +
+          '<span class="ap-phase-pill" id="' + panelId + '-phase">Ready</span>' +
+          '<button class="btn-ap-close" onclick="VideoAnalysis.closePanel(\'' + panelId + '\')">✕</button>' +
+        '</div>' +
+        '<div class="ap-content" id="' + panelId + '-content">' +
+          '<div class="ap-loading-bar" id="' + panelId + '-loading" style="display:none">' +
+            '<span class="ap-spinner">⟳</span>' +
+            '<div><div>Analysing video…</div>' +
+            '<div class="ap-progress" id="' + panelId + '-progress"></div></div>' +
+          '</div>' +
+          '<div id="' + panelId + '-result"></div>' +
+        '</div>';
+
+      /* Play button */
+      div.querySelector('.btn-play').addEventListener('click', function(e) {
+        e.stopPropagation();
+        var p = this.closest('.video-item');
+        Player.open(p.getAttribute('data-vid'), p.getAttribute('data-title'),
+                    p.getAttribute('data-date'), p.getAttribute('data-channel'),
+                    p.getAttribute('data-link'));
+      });
+
+      /* ⚡ Analyse button */
+      div.querySelector('.btn-analyse').addEventListener('click', function(e) {
+        e.stopPropagation();
+        VideoAnalysis.togglePanel(this.getAttribute('data-panel'), this);
+      });
+
+      /* Click row → play */
+      div.addEventListener('click', function(e) {
+        if (!e.target.closest('.item-actions')) {
+          var pb = this.querySelector('.btn-play'); if (pb) pb.click();
+        }
+      });
+
+      wrapper.appendChild(div);
+      wrapper.appendChild(panel);
+      gridEl.appendChild(wrapper);
+    }
+    var old = gridEl.querySelector('.load-more-wrap');
+    if (old) old.remove();
+    if (end < items.length) {
+      var wrap = document.createElement('div');
+      wrap.className = 'load-more-wrap';
+      var btn = document.createElement('button');
+      btn.className = 'btn-load-more';
+      btn.textContent = '▼ Show More (' + (items.length - end) + ' remaining)';
+      btn.addEventListener('click', function(){ renderVideoItems(gridEl, items, end, count, channelName); });
+      wrap.appendChild(btn);
+      gridEl.appendChild(wrap);
+    }
+  }
+
+  /* --- Books renderer --- */
+  function renderBooks() {
+    var container = document.getElementById('books-list');
+    BooksData.forEach(function(section) {
+      var hdr = document.createElement('div');
+      hdr.className = 'book-section-hdr';
+      hdr.textContent = section.section;
+      container.appendChild(hdr);
+
+      section.books.forEach(function(book, idx) {
+        var panelId = 'bk-' + (book.title||'').replace(/[^a-zA-Z0-9]/g,'').slice(0,24) + '-' + idx;
+
+        var wrapper = document.createElement('div');
+        wrapper.style.cssText = 'border-bottom:1px solid rgba(0,0,0,.07)';
+
+        var card = document.createElement('div');
+        card.className = 'book-card';
+        card.style.borderBottom = 'none';
+        var tagHTML = (book.tags||[]).map(function(t){
+          var map = {iot:'tag-iot',ai:'tag-ai',cloud:'tag-cloud',strategy:'tag-strategy',accenture:'tag-accenture'};
+          var labels = {iot:'IoT',ai:'AI',cloud:'Cloud',strategy:'Strategy',accenture:'Accenture'};
+          return '<span class="item-tag ' + (map[t]||'tag-strategy') + '">' + (labels[t]||t) + '</span>';
+        }).join('');
+
+        card.innerHTML =
+          '<div class="book-cover">' + book.emoji + '</div>' +
+          '<div class="book-info">' +
+            '<div class="book-title">' + Feed.esc(book.title) + '</div>' +
+            '<div class="book-author">' + Feed.esc(book.author) + '</div>' +
+            '<div class="book-why">' + Feed.esc(book.why) + '</div>' +
+            '<div class="book-tags">' + tagHTML + '</div>' +
+            '<div class="book-links">' +
+              '<a class="book-link" href="' + book.amazon + '" target="_blank" rel="noopener noreferrer">↗ Amazon</a>' +
+              '<a class="book-link" href="' + book.goodreads + '" target="_blank" rel="noopener noreferrer">↗ Goodreads</a>' +
+              '<button class="btn-analyse" data-panel="' + panelId + '" title="AI analysis of this book">⚡ Analyse</button>' +
+            '</div>' +
+          '</div>';
+
+        wrapper.appendChild(card);
+
+        /* Analysis panel */
+        var panel = document.createElement('div');
+        panel.className = 'analysis-panel';
+        panel.id = panelId;
+        panel.setAttribute('data-title',  book.title);
+        panel.setAttribute('data-author', book.author);
+        panel.setAttribute('data-why',    book.why || '');
+        panel.innerHTML =
+          '<div class="ap-header">' +
+            '<span class="ap-header-title">⚡ AI Analysis</span>' +
+            '<span class="ap-phase-pill" id="' + panelId + '-phase">Ready</span>' +
+            '<button class="btn-ap-close" onclick="BookAnalysis.closePanel(\'' + panelId + '\')">✕</button>' +
+          '</div>' +
+          '<div class="ap-content" id="' + panelId + '-content">' +
+            '<div class="ap-loading-bar" id="' + panelId + '-loading" style="display:none">' +
+              '<span class="ap-spinner">⟳</span>' +
+              '<div><div>Analysing book…</div>' +
+              '<div class="ap-progress" id="' + panelId + '-progress"></div></div>' +
+            '</div>' +
+            '<div id="' + panelId + '-result"></div>' +
+          '</div>';
+
+        wrapper.appendChild(panel);
+        container.appendChild(wrapper);
+
+        /* Event listener */
+        card.querySelector('.btn-analyse').addEventListener('click', function(e) {
+          e.stopPropagation();
+          BookAnalysis.togglePanel(this.getAttribute('data-panel'), this);
+        });
+      });
+    });
+  }
+
+  /* --- Accenture News renderer --- */
+  function renderNews() {
+    var container = document.getElementById('news-channels');
+
+    /* Live RSS sources */
+    NewsData.sources.forEach(function(src) {
+      buildGroup(src, 'news', container, function(gridEl, item) {
+        Feed.fetchFeed(
+          item.url,
+          function(items) { renderRSSItems(gridEl, items, 0, Feed.BATCH, item.name); gridEl.querySelector('.loading-row') && gridEl.querySelector('.loading-row').remove(); },
+          function(err) { gridEl.innerHTML = '<div class="error-row">⚠ ' + Feed.esc(err) + '</div>'; }
+        );
+      });
+    });
+
+    /* Curated static section */
+    var staticSection = document.createElement('div');
+    staticSection.innerHTML = '<div class="book-section-hdr">📌 SCPDD Reference: Key Accenture Articles & Reports</div>';
+    container.appendChild(staticSection);
+
+    NewsData.curated.forEach(function(item) {
+      var tagMap = {iot:'tag-iot',ai:'tag-ai',cloud:'tag-cloud',strategy:'tag-strategy',accenture:'tag-accenture'};
+      var tagLabels = {iot:'IoT',ai:'AI',cloud:'Cloud',strategy:'Strategy',accenture:'Accenture'};
+      var tagHTML = (item.tags||[]).map(function(t){
+        return '<span class="item-tag ' + (tagMap[t]||'tag-strategy') + '">' + (tagLabels[t]||t) + '</span>';
+      }).join('');
+
+      var div = document.createElement('div');
+      div.className = 'news-item';
+      div.innerHTML =
+        '<div class="news-title">' + Feed.esc(item.title) + '</div>' +
+        '<div class="news-meta">' + Feed.esc(item.source) + ' · ' + Feed.esc(item.date) + '</div>' +
+        '<div class="news-excerpt">' + Feed.esc(item.excerpt) + '</div>' +
+        '<div style="margin-top:8px">' + tagHTML + '</div>' +
+        '<a class="ext-link-btn" href="' + Feed.esc(item.url) + '" target="_blank" rel="noopener noreferrer" style="margin-top:8px">↗ Read on Accenture.com</a>';
+      container.appendChild(div);
+    });
+  }
+
+  return { renderBooks:renderBooks, renderNews:renderNews, buildGroup:buildGroup, renderRSSItems:renderRSSItems, renderVideoItems:renderVideoItems };
+})();
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   [D8] APP — Initialization: wires all modules together on load.
+        Builds RSS, Video, Books, and News tabs.
+        Exposes pwaTriggerInstall() for the install badge.
+   ═══════════════════════════════════════════════════════════════════ */
+
+var App = (function() {
+
+  function pwaTriggerInstall() {
+    if (window._pwaPrompt) {
+      window._pwaPrompt.prompt();
+      window._pwaPrompt.userChoice.then(function(){ window._pwaPrompt=null; document.getElementById('pwa-badge').style.display='none'; });
+    }
+  }
+
+  function init() {
+    /* Build RSS tab */
+    var rc = document.getElementById('rss-channels');
+    Data.rssFeeds.forEach(function(src) {
+      UI.buildGroup(src, 'rss', rc, function(gridEl, item) {
+        function loadRSS() {
+          gridEl.innerHTML = '<div class="loading-row"><span class="spin">⟳</span> Loading…</div>';
+          Feed.fetchFeed(
+            item.url,
+            function(items) {
+              gridEl.innerHTML = '';
+              UI.renderRSSItems(gridEl, items, 0, Feed.BATCH, item.name);
+            },
+            function(err) {
+              gridEl.innerHTML =
+                '<div class="error-row">⚠ Could not load feed' +
+                ' <button class="btn-load-more" style="margin-left:10px;font-size:11px;padding:4px 10px" onclick="this.closest(\'.feed-grid\').loadFn()">↺ Retry</button></div>';
+              gridEl.loadFn = loadRSS;
+            }
+          );
+        }
+        loadRSS();
+      });
+    });
+
+    /* Build Videos tab */
+    var vc = document.getElementById('video-channels');
+    Data.videoChannels.forEach(function(ch) {
+      UI.buildGroup(ch, 'vid', vc, function(gridEl, item) {
+        function loadVid() {
+          gridEl.innerHTML = '<div class="loading-row"><span class="spin">⟳</span> Loading…</div>';
+          Feed.fetchFeed(
+            Data.feedUrl(item),
+            function(items) {
+              gridEl.innerHTML = '';
+              UI.renderVideoItems(gridEl, items, 0, Feed.BATCH, item.name);
+            },
+            function(err) {
+              gridEl.innerHTML =
+                '<div class="error-row">⚠ Could not load channel' +
+                ' <button class="btn-load-more" style="margin-left:10px;font-size:11px;padding:4px 10px" onclick="this.closest(\'.feed-grid\').loadFn()">↺ Retry</button></div>';
+              gridEl.loadFn = loadVid;
+            }
+          );
+        }
+        loadVid();
+      });
+    });
+
+    /* Build Books tab */
+    UI.renderBooks();
+
+    /* Build Accenture News tab */
+    UI.renderNews();
+  }
+
+  init();
+
+  return { pwaTriggerInstall: pwaTriggerInstall };
+})();
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   [D9] GEMINIAPI ★ — REUSABLE Gemini AI engine
+   ─────────────────────────────────────────────────────────────────
+   DESIGNED FOR REPLICATION — copy this module into any project.
+
+    FEATURES:
+      • 2 API keys  — primary + fallback; switches automatically
+      • 3-model cascade — tries models in priority order:
+          1. gemini-2.5-pro      (best quality,  25 req/day free)
+          2. gemini-3.5-flash    (fast,          500/day)
+          3. gemini-2.5-flash    (last resort,   500/day)
+     • Quota tracking — localStorage, daily reset, per-model counters
+     • Auto key switch — if Key 1 hits quota/error → silently use Key 2
+     • Status UI — live pill showing active model + usage (ok/warn/err)
+
+   HOW TO USE IN ANOTHER PROJECT:
+     1. Copy the GeminiAPI module block below into your <script>
+     2. Call GeminiAPI.setupKeys() once (or let it prompt on first use)
+     3. Call GeminiAPI.call(messages, systemPrompt, onSuccess, onError)
+        where messages = [{role:'user'|'assistant', content:'...'}]
+     4. Optionally call GeminiAPI.updateStatusUI() to refresh status pills
+
+   GET FREE API KEYS: https://aistudio.google.com/app/apikey
+   ═══════════════════════════════════════════════════════════════════ */
+
+var GeminiAPI = (function() {
+
+  var KEY_STORE = 'scpdd_gemini_keys_v1';   /* stores {apiKey1, apiKey2} */
+  var QUOTA_STORE = 'scpdd_gemini_quota_v1'; /* stores per-model daily counts + reset date */
+
+  /* Cascade order — exactly as specified */
+  var MODELS = [
+    'gemini-2.5-pro',
+    'gemini-3.5-flash',
+    'gemini-2.5-flash'
+  ];
+  var MODEL_LABELS = {
+    'gemini-2.5-pro':   '2.5 Pro',
+    'gemini-3.5-flash': '3.5 Flash',
+    'gemini-2.5-flash': '2.5 Flash'
+  };
+
+  /* Soft daily quota limits per free-tier model */
+  var QUOTA_LIMITS = {
+    'gemini-2.5-pro':   25,
+    'gemini-3.5-flash': 500,
+    'gemini-2.5-flash': 500
+  };
+
+  /* ── Key management ── */
+  function getKeys() {
+    try { return JSON.parse(localStorage.getItem(KEY_STORE)) || {}; } catch(e) { return {}; }
+  }
+  function saveKeys(k) {
+    try { localStorage.setItem(KEY_STORE, JSON.stringify(k)); } catch(e) {}
+  }
+  function getActiveKey() {
+    var k = getKeys();
+    if (k.key2 && k.use2) return k.key2;
+    return k.key1 || null;
+  }
+  function markKeyFailed(which) {
+    var k = getKeys();
+    if (which === 1) { k.key1Exhausted = true; k.use2 = true; }
+    else             { k.key2Exhausted = true; }
+    saveKeys(k);
+  }
+
+  /* ── Quota tracking ── */
+  function getQuota() {
+    try {
+      var q = JSON.parse(localStorage.getItem(QUOTA_STORE)) || {};
+      var today = new Date().toISOString().slice(0,10);
+      if (q.date !== today) { q = { date: today, counts: {} }; saveQuota(q); }
+      return q;
+    } catch(e) { return { date: new Date().toISOString().slice(0,10), counts: {} }; }
+  }
+  function saveQuota(q) {
+    try { localStorage.setItem(QUOTA_STORE, JSON.stringify(q)); } catch(e) {}
+  }
+  function incrementQuota(model) {
+    var q = getQuota();
+    q.counts[model] = (q.counts[model] || 0) + 1;
+    saveQuota(q);
+  }
+  function isModelQuotaOk(model) {
+    var q = getQuota();
+    var used = q.counts[model] || 0;
+    return used < (QUOTA_LIMITS[model] || 50);
+  }
+
+  /* ── Pick best available model ── */
+  function pickModel() {
+    for (var i = 0; i < MODELS.length; i++) {
+      if (isModelQuotaOk(MODELS[i])) return MODELS[i];
+    }
+    return MODELS[MODELS.length - 1]; /* last resort */
+  }
+
+  /* ── Status label for UI ── */
+  function getStatusLabel() {
+    var q = getQuota();
+    var model = pickModel();
+    var used = q.counts[model] || 0;
+    var limit = QUOTA_LIMITS[model] || 50;
+    return MODEL_LABELS[model] + ' (' + used + '/' + limit + ')';
+  }
+  function getStatusClass() {
+    var model = pickModel();
+    var q = getQuota();
+    var used = q.counts[model] || 0;
+    var limit = QUOTA_LIMITS[model] || 50;
+    var pct = used / limit;
+    if (pct < 0.7) return 'ok';
+    if (pct < 0.95) return 'warn';
+    return 'err';
+  }
+
+  /* ── Update all status pills ── */
+  function updateStatusUI() {
+    var label = getStatusLabel();
+    var cls   = getStatusClass();
+    ['gchat-api-pill','coach-api-status'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = label;
+      el.className = el.className.replace(/\b(ok|warn|err)\b/g,'') + ' ' + cls;
+    });
+  }
+
+  /* ── In-app API Key modal (replaces window.prompt) ── */
+  function promptForKeys(cb) {
+    var k = getKeys();
+    var overlay  = document.getElementById('key-modal-overlay');
+    var inp1     = document.getElementById('key-input-1');
+    var inp2     = document.getElementById('key-input-2');
+    var saveBtn  = document.getElementById('key-modal-save');
+    var cancelBtn= document.getElementById('key-modal-cancel');
+    var statusEl = document.getElementById('key-modal-status');
+
+    if (!overlay) {
+      /* Fallback to prompt if modal not in DOM yet */
+      var key1 = window.prompt('Enter Gemini API Key 1:', k.key1 || '');
+      if (!key1) { cb && cb(null); return; }
+      var key2 = window.prompt('Enter Gemini API Key 2 (optional):', k.key2 || '');
+      k.key1 = key1.trim(); k.key2 = (key2||'').trim();
+      k.use2 = false; k.key1Exhausted = false; k.key2Exhausted = false;
+      saveKeys(k); cb && cb(k.key1); return;
+    }
+
+    /* Pre-fill with existing keys (show only last 8 chars for security) */
+    inp1.value = k.key1 || '';
+    inp2.value = k.key2 || '';
+    inp1.type  = 'password';
+    inp2.type  = 'password';
+    statusEl.className = 'key-modal-status';
+    statusEl.textContent = '';
+
+    /* Show saved status if keys exist */
+    if (k.key1) {
+      statusEl.className = 'key-modal-status saved';
+      statusEl.textContent = '✓ Keys already saved — update below or Cancel to keep existing';
+    }
+
+    overlay.classList.add('open');
+    /* Hide FAB while modal is open */
+    var fab = document.getElementById('thunder-fab');
+    if (fab) fab.classList.add('hidden');
+    setTimeout(function(){ inp1.focus(); }, 120);
+
+    /* Clean up listeners each open */
+    var newSave   = saveBtn.cloneNode(true);
+    var newCancel = cancelBtn.cloneNode(true);
+    saveBtn.parentNode.replaceChild(newSave, saveBtn);
+    cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+
+    document.getElementById('key-modal-save').addEventListener('click', function() {
+      var v1 = (document.getElementById('key-input-1').value || '').trim();
+      var v2 = (document.getElementById('key-input-2').value || '').trim();
+      if (!v1) {
+        var st = document.getElementById('key-modal-status');
+        st.className = 'key-modal-status error';
+        st.textContent = '⚠ API Key 1 is required.';
+        document.getElementById('key-input-1').focus();
+        return;
+      }
+      k.key1 = v1; k.key2 = v2;
+      k.use2 = false; k.key1Exhausted = false; k.key2Exhausted = false;
+      saveKeys(k);
+      var st = document.getElementById('key-modal-status');
+      st.className = 'key-modal-status saved';
+      st.textContent = '✓ Keys saved!';
+      setTimeout(function(){
+        overlay.classList.remove('open');
+        var fab = document.getElementById('thunder-fab');
+        if (fab) fab.classList.remove('hidden');
+        cb && cb(k.key1);
+      }, 700);
+    });
+
+    document.getElementById('key-modal-cancel').addEventListener('click', function() {
+      overlay.classList.remove('open');
+      var fab = document.getElementById('thunder-fab');
+      if (fab) fab.classList.remove('hidden');
+      cb && cb(k.key1 || null);
+    });
+
+    /* Close on backdrop click */
+    overlay.onclick = function(e) {
+      if (e.target === overlay) {
+        overlay.classList.remove('open');
+        var fab2 = document.getElementById('thunder-fab');
+        if (fab2) fab2.classList.remove('hidden');
+        cb && cb(k.key1 || null);
+      }
+    };
+  }
+
+  /* ── Core fetch with cascade ── */
+  function callWithModel(model, apiKey, messages, systemPrompt, onSuccess, onError) {
+    var url = 'https://generativelanguage.googleapis.com/v1beta/models/' +
+              model + ':generateContent?key=' + apiKey;
+
+    /* Build Gemini-format contents from messages array */
+    var contents = messages.map(function(m) {
+      return {
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content }]
+      };
+    });
+
+    /* Prepend system prompt as first user turn if present */
+    if (systemPrompt) {
+      contents = [{ role:'user', parts:[{text:'[SYSTEM INSTRUCTIONS]\n' + systemPrompt + '\n[BEGIN CONVERSATION]'}] },
+                  { role:'model', parts:[{text:'Understood. I am ready.'}] }]
+                  .concat(contents);
+    }
+
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: contents,
+        generationConfig: { temperature: 0.75, maxOutputTokens: 1024 }
+      })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts) {
+        var text = d.candidates[0].content.parts.map(function(p){ return p.text||''; }).join('');
+        incrementQuota(model);
+        updateStatusUI();
+        onSuccess(text, model);
+      } else if (d.error) {
+        var code = d.error.code || 0;
+        /* 429 = quota, 400 = invalid key, 403 = billing */
+        if (code === 429 || code === 403) {
+          onError('QUOTA', model, d.error.message);
+        } else {
+          onError('API_ERR', model, d.error.message);
+        }
+      } else {
+        onError('EMPTY', model, 'Empty response');
+      }
+    })
+    .catch(function(e) {
+      onError('NETWORK', model, e.message || 'Network error');
+    });
+  }
+
+  /* ── Cascade call across all models ── */
+  function cascade(messages, systemPrompt, onSuccess, onFinalError, modelIdx) {
+    modelIdx = modelIdx || 0;
+    if (modelIdx >= MODELS.length) {
+      onFinalError('All Gemini models exhausted. Please add a fresh API key.');
+      return;
+    }
+    var model = MODELS[modelIdx];
+    if (!isModelQuotaOk(model)) {
+      cascade(messages, systemPrompt, onSuccess, onFinalError, modelIdx + 1);
+      return;
+    }
+    var apiKey = getActiveKey();
+    if (!apiKey) {
+      promptForKeys(function(k) {
+        if (k) cascade(messages, systemPrompt, onSuccess, onFinalError, modelIdx);
+        else onFinalError('No API key set. Tap ⚡ and try again.');
+      });
+      return;
+    }
+    callWithModel(model, apiKey, messages, systemPrompt,
+      function(text, usedModel) { onSuccess(text, usedModel); },
+      function(errType, failedModel, errMsg) {
+        if (errType === 'QUOTA') {
+          /* Mark current key exhausted for this model, try next */
+          var q = getQuota();
+          q.counts[failedModel] = (QUOTA_LIMITS[failedModel] || 50) + 1;
+          saveQuota(q);
+          /* If quota on key1, switch to key2 */
+          var k = getKeys();
+          if (!k.use2 && k.key2) { k.use2 = true; saveKeys(k); }
+          cascade(messages, systemPrompt, onSuccess, onFinalError, modelIdx + 1);
+        } else if (errType === 'API_ERR' && (errMsg||'').toLowerCase().includes('key')) {
+          /* Bad key — switch to key2 */
+          var k2 = getKeys();
+          if (!k2.use2 && k2.key2) { k2.use2 = true; saveKeys(k2); cascade(messages, systemPrompt, onSuccess, onFinalError, modelIdx); }
+          else onFinalError('API key error: ' + errMsg + '\n\nTap ⚡ → ⚙ Keys to update.');
+        } else {
+          cascade(messages, systemPrompt, onSuccess, onFinalError, modelIdx + 1);
+        }
+      }
+    );
+  }
+
+  /* ── Public interface ── */
+  function call(messages, systemPrompt, onSuccess, onError) {
+    updateStatusUI();
+    cascade(messages, systemPrompt, onSuccess, onError || function(e){ console.error(e); });
+  }
+
+  function setupKeys() { promptForKeys(function(){ updateStatusUI(); }); }
+  function hasKey() { return !!getActiveKey(); }
+
+  /* ── callAtModelIndex: start cascade from a specific model index ──
+     Used by VideoAnalysis for Map (lite model) and Reduce (pro model).
+     Parameters mirror call() but modelIdx sets the starting point. */
+  function callAtModelIndex(messages, systemPrompt, modelIdx, onSuccess, onError) {
+    updateStatusUI();
+    cascade(messages, systemPrompt, onSuccess, onError || function(){}, modelIdx || 0);
+  }
+
+  return { call:call, callAtModelIndex:callAtModelIndex, setupKeys:setupKeys, hasKey:hasKey, updateStatusUI:updateStatusUI, getStatusLabel:getStatusLabel };
+})();
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   [D10] GCHAT — ⚡ Thunder FAB global AI chatbox
+         General-purpose SCPDD Q&A chat, available on every tab.
+         Uses D9-GeminiAPI for inference.
+         Type "set key" inside the chat to configure API keys.
+         Public API:
+           GChat.toggle()            — open/close
+           GChat.open() / close()    — explicit
+           GChat.send()              — submit textarea
+           GChat.overlayClick(event) — close on backdrop tap
+   ═══════════════════════════════════════════════════════════════════ */
+
+var GChat = (function() {
+
+  var STORE_KEY = 'scpdd_gchat_v1';
+  var msgs = [];   /* [{role,content}] in-session only */
+  var _open = false;
+
+  var SYSTEM = [
+    "You are an expert SCPDD AI assistant embedded in the SCPDD Research app for Accenture Industry X consultants.",
+    "You answer questions about Smart Connected Product Design & Development, IoT, AI, Cloud, Connectivity,",
+    "Digital Twin, product strategy, consulting frameworks, Accenture methodology, and anything relevant to",
+    "an MBA-level SCPDD consultant. Be concise, authoritative, and practical. Use bullet points sparingly.",
+    "Keep answers focused and mobile-friendly."
+  ].join(' ');
+
+  function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function fmt(t) {
+    t = t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+    t = t.replace(/\n{2,}/g,'</p><p style="margin-top:7px">');
+    t = t.replace(/\n/g,'<br>');
+    return t;
+  }
+
+  function getMsgsEl()  { return document.getElementById('gchat-msgs'); }
+  function getInputEl() { return document.getElementById('gchat-input'); }
+  function getSendBtn() { return document.getElementById('gchat-send-btn'); }
+  function getPillEl()  { return document.getElementById('gchat-api-pill'); }
+
+  function appendMsg(role, text) {
+    var el = getMsgsEl();
+    if (!el) return;
+    var d = document.createElement('div');
+    d.className = 'gchat-msg ' + (role==='user'?'user':'ai');
+    d.innerHTML = '<div class="glabel">' + (role==='user'?'You':'⚡ SCPDD AI') + '</div><div>' + fmt(esc(text)) + '</div>';
+    el.appendChild(d);
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function showTyping() {
+    var el = getMsgsEl(); if(!el) return;
+    var d = document.createElement('div');
+    d.id = 'gchat-typing'; d.className = 'gchat-msg ai gchat-typing';
+    d.innerHTML = '<div class="glabel">⚡ SCPDD AI</div><div><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>';
+    el.appendChild(d); el.scrollTop = el.scrollHeight;
+  }
+  function hideTyping() { var t=document.getElementById('gchat-typing'); if(t) t.remove(); }
+
+  function autoResize() {
+    var i = getInputEl(); if(!i) return;
+    i.style.height='auto'; i.style.height=Math.min(i.scrollHeight,100)+'px';
+  }
+
+  function send() {
+    var inp = getInputEl(); if(!inp) return;
+    var text = inp.value.trim(); if(!text) return;
+    inp.value = ''; autoResize();
+    msgs.push({role:'user', content:text});
+    appendMsg('user', text);
+    var btn = getSendBtn(); if(btn) btn.disabled = true;
+    showTyping();
+
+    /* Check for key setup commands */
+    if (text.toLowerCase().includes('set key') || text.toLowerCase().includes('api key') || text.toLowerCase().includes('setup key')) {
+      hideTyping(); if(btn) btn.disabled=false;
+      GeminiAPI.setupKeys();
+      appendMsg('ai','API keys updated! Type your question to start chatting.');
+      return;
+    }
+
+    if (!GeminiAPI.hasKey()) {
+      hideTyping(); if(btn) btn.disabled=false;
+      appendMsg('ai','⚙ No Gemini API key set yet. Type "set key" to add your free Google AI Studio key, or I\'ll prompt you now.');
+      GeminiAPI.setupKeys();
+      return;
+    }
+
+    GeminiAPI.call(msgs, SYSTEM,
+      function(text, model) {
+        hideTyping(); if(btn) btn.disabled=false;
+        msgs.push({role:'assistant', content:text});
+        appendMsg('ai', text);
+        GeminiAPI.updateStatusUI();
+      },
+      function(err) {
+        hideTyping(); if(btn) btn.disabled=false;
+        appendMsg('ai','⚠ ' + err);
+      }
+    );
+  }
+
+  var _greeted = false;   /* guard: only show welcome once ever */
+
+  function open() {
+    _open = true;
+    /* Hide FAB while chat is open */
+    var fab = document.getElementById('thunder-fab');
+    if (fab) fab.classList.add('hidden');
+    var ov = document.getElementById('gchat-overlay');
+    if (ov) ov.classList.add('open');
+    var inp = getInputEl(); if(inp) { setTimeout(function(){inp.focus();},200); }
+    GeminiAPI.updateStatusUI();
+    /* Show welcome ONCE only */
+    if (!_greeted) {
+      _greeted = true;
+      appendMsg('ai','👋 Hi! I\'m your SCPDD AI assistant. Ask me anything about IoT, AI, Cloud, Accenture methodology, connected product strategy — or anything else on your mind.\n\nTo set your Gemini API key, type **set key**.');
+    }
+  }
+
+  function close() {
+    _open = false;
+    var ov = document.getElementById('gchat-overlay');
+    if (ov) ov.classList.remove('open');
+    /* Restore FAB */
+    var fab = document.getElementById('thunder-fab');
+    if (fab) fab.classList.remove('hidden');
+  }
+
+  function toggle() { _open ? close() : open(); }
+
+  function overlayClick(e) {
+    if (e.target === document.getElementById('gchat-overlay')) close();
+  }
+
+  /* Attach textarea resize */
+  document.addEventListener('DOMContentLoaded', function() {
+    var inp = getInputEl();
+    if (inp) inp.addEventListener('input', autoResize);
+  });
+
+  /* Allow VideoAnalysis to push video context into GChat */
+  function _setVideoContext(title, ctx) {
+    if (!msgs.length) open();
+    appendMsg('ai','📹 Video loaded into context: <strong>' + title.replace(/</g,'&lt;') + '</strong><br>Ask me anything about this video\'s SCPDD insights!');
+  }
+
+  return { toggle:toggle, open:open, close:close, send:send, overlayClick:overlayClick, _setVideoContext:_setVideoContext };
+})();
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   [D11] COACH — Daily AI Coach (Tab 5)
+   ─────────────────────────────────────────────────────────────────
+   DESIGNED FOR REPLICATION — copy D9 + D11 + relevant HTML/CSS
+   into any skill-coaching application.
+
+   COACHING PHASES (automatic progression):
+     greet    → asks what task was worked on today
+     probe    → 2-3 follow-up questions on HOW it was done
+     analyse  → structured feedback + skill gap identification
+     train    → micro-training on the most critical gap
+     plan     → next-step skill enhancement recommendation
+     ongoing  → continuous loop for new tasks
+
+   SKILL DOMAINS tracked (9 SCPDD-specific areas):
+     IoT Architecture, Connected Product Strategy, AI/ML for Products,
+     Cloud & Connectivity, Digital Twin & PLM, Executive Consulting,
+     Workshop Facilitation, Business Case & ROI, Cyber-Physical Security
+
+   SKILL_UPDATE protocol:
+     AI appends JSON at end of messages: SKILL_UPDATE::{"gaps":[...]}
+     Coach.parseSkillUpdate() extracts this, updates skillMap,
+     and re-renders the progress bars in the header.
+
+   PERSISTENCE (localStorage key: scpdd_coach_v2):
+     messages[], skillMap{}, phase, sessionCount, profile{}
+     Survives app close, phone restart, tab refresh.
+
+   Public API:
+     Coach.send()           — submit textarea message
+     Coach.resetSession()   — clear chat, keep skill map
+     Coach.exportSession()  — download .txt transcript
+     Coach.lazyInit()       — called once when tab first opened
+   ═══════════════════════════════════════════════════════════════════ */
+
+var Coach = (function() {
+
+  var STORAGE_KEY = 'scpdd_coach_v2';
+
+  /* ── Persistent state ── */
+  var state = {
+    messages: [],
+    profile: {},
+    skillMap: {},
+    phase: 'greet',
+    sessionCount: 0,
+    lastSaved: null
+  };
+
+  function loadState() {
+    try { var r=localStorage.getItem(STORAGE_KEY); if(r){var s=JSON.parse(r);if(s&&s.messages)state=s;} } catch(e){}
+  }
+  function saveState() {
+    try { state.lastSaved=new Date().toISOString(); localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); } catch(e){}
+  }
+
+  /* ── System prompt ── */
+  function buildSystemPrompt() {
+    var sk = Object.keys(state.skillMap).length ? JSON.stringify(state.skillMap) : 'Not yet assessed';
+    return [
+      "You are the Daily AI Coach in the SCPDD Research app for Accenture Industry X consultants.",
+      "You help MBA-level SCPDD consultants grow by analysing daily work, identifying skill gaps, and training them.",
+      "The user is NOT a coder — they work in IoT, AI, Cloud, Connectivity, Product Strategy.",
+      "",
+      "COACHING FLOW:",
+      "1. GREET: Warmly greet, ask what task they worked on today.",
+      "2. PROBE: Ask 2-3 focused follow-up questions (tools, frameworks, stakeholders, challenges, outcomes).",
+      "3. ANALYSE: Structured analysis — what was done well, what could be more efficient, skill gaps identified.",
+      "4. TRAIN: Pick the most critical gap and run a short conversational micro-training with SCPDD examples.",
+      "5. PLAN: Suggest a specific next-step (book chapter, video, framework to try at next client meeting).",
+      "6. ONGOING: Continue the loop for new tasks, update skill map, reference prior sessions.",
+      "",
+      "SKILL DOMAINS: IoT Architecture, Connected Product Strategy, AI/ML for Products, Cloud & Connectivity,",
+      "Digital Twin & PLM, Executive Consulting Skills, Workshop Facilitation, Business Case & ROI, Cyber-Physical Security.",
+      "",
+      "CURRENT SKILL MAP: " + sk,
+      "",
+      "When you identify skill gaps, append at end of message:",
+      "SKILL_UPDATE::{\"gaps\":[{\"name\":\"Skill Name\",\"score\":3,\"note\":\"reason\"}]}",
+      "",
+      "Tone: warm, direct, coach-like. Short paragraphs. Bold key terms. End with a question or action.",
+      "Keep responses mobile-friendly — not too long."
+    ].join('\n');
+  }
+
+  /* ── DOM refs ── */
+  var chatEl, inputEl, sendBtn, barsEl;
+  function getEls() {
+    chatEl  = document.getElementById('coach-chat');
+    inputEl = document.getElementById('coach-input');
+    sendBtn = document.getElementById('coach-send-btn');
+    barsEl  = document.getElementById('coach-skill-bars');
+  }
+
+  function escH(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function formatMsg(text) {
+    text = text.replace(/SKILL_UPDATE::\{[\s\S]*?\}/g,'').trim();
+    text = text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+    var hasLi = false;
+    text = text.replace(/(?:^|\n)[ \t]*[-*•]\s+(.+)/gm, function(_,p){ hasLi=true; return '<li>'+p+'</li>'; });
+    if (hasLi) text = '<ul style="padding-left:16px;margin:6px 0">'+text+'</ul>';
+    text = text.replace(/\n{2,}/g,'</p><p style="margin-top:8px">').replace(/\n/g,'<br>');
+    return text;
+  }
+
+  function appendMsg(role, text, chips) {
+    if (!chatEl) getEls();
+    var w = document.createElement('div');
+    w.className = 'chat-msg '+(role==='user'?'user':'ai');
+    w.innerHTML = '<div class="msg-label">'+(role==='user'?'You':'🧠 AI Coach')+'</div><div class="msg-body">'+formatMsg(text)+'</div>';
+    if (chips && chips.length) {
+      var cw = document.createElement('div'); cw.className='chip-wrap';
+      chips.forEach(function(c){
+        var b=document.createElement('button'); b.className='chip'; b.textContent=c;
+        b.addEventListener('click',function(){ if(inputEl) inputEl.value=c; b.classList.add('used'); Coach.send(); });
+        cw.appendChild(b);
+      });
+      w.appendChild(cw);
+    }
+    chatEl.appendChild(w); chatEl.scrollTop=chatEl.scrollHeight;
+  }
+
+  function showTyping() {
+    if (!chatEl) getEls();
+    var t=document.createElement('div'); t.className='chat-msg ai typing'; t.id='coach-typing';
+    t.innerHTML='<div class="msg-label">🧠 AI Coach</div><div><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>';
+    chatEl.appendChild(t); chatEl.scrollTop=chatEl.scrollHeight;
+  }
+  function hideTyping(){ var t=document.getElementById('coach-typing'); if(t) t.remove(); }
+
+  function updateSkillBars() {
+    if (!barsEl) getEls();
+    var keys=Object.keys(state.skillMap); if(!keys.length){barsEl&&(barsEl.style.display='none');return;}
+    barsEl.style.display='block';
+    barsEl.innerHTML='<div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:4px">Skill Progress</div>';
+    keys.forEach(function(k){
+      var s=state.skillMap[k]; var pct=Math.round((s.score/10)*100);
+      barsEl.innerHTML+='<div class="skill-bar-wrap"><div class="skill-bar-label"><span>'+escH(k)+'</span><span>'+s.score+'/10</span></div><div class="skill-bar-track"><div class="skill-bar-fill" style="width:'+pct+'%"></div></div></div>';
+    });
+  }
+
+  function parseSkillUpdate(text) {
+    var m=text.match(/SKILL_UPDATE::(\{[\s\S]*?\})/); if(!m) return;
+    try {
+      var d=JSON.parse(m[1]);
+      if(d.gaps) d.gaps.forEach(function(g){
+        if(!g.name) return;
+        if(!state.skillMap[g.name]) state.skillMap[g.name]={score:g.score||2,notes:[]};
+        else if(g.score) state.skillMap[g.name].score=Math.max(state.skillMap[g.name].score,g.score);
+        if(g.note) state.skillMap[g.name].notes.push(g.note);
+      });
+      updateSkillBars(); saveState();
+    } catch(e){}
+  }
+
+  function advancePhase(t) {
+    t=t.toLowerCase();
+    if(state.phase==='greet') state.phase='probe';
+    else if(state.phase==='probe'&&(t.includes('skill gap')||t.includes('analysis')||t.includes('could have'))) state.phase='analyse';
+    else if(state.phase==='analyse') state.phase='train';
+    else if(state.phase==='train'&&(t.includes('next step')||t.includes('recommend')||t.includes('suggest'))) state.phase='plan';
+    else if(state.phase==='plan') state.phase='ongoing';
+  }
+
+  function getChips(phase) {
+    if(phase==='greet') return ['Client workshop facilitation','Prepared a proposal deck','IoT architecture review','Stakeholder presentation','Business case analysis'];
+    if(phase==='probe') return ['Used Excel & PowerPoint','Applied McKinsey framework','Had trouble with technical depth','Client pushed back','Cross-functional team work'];
+    if(phase==='analyse') return ['Start training on top gap','Show all identified gaps','Prioritise by client impact'];
+    if(phase==='train') return ['Give me an example','Quiz me on this','Move to next skill'];
+    if(phase==='plan') return ['Show my skill progress','Start a new task','Focus this week'];
+    return ['Worked on a new task today','Show my skill progress','Continue where we left off'];
+  }
+
+  function doCall() {
+    if (!GeminiAPI.hasKey()) {
+      appendMsg('ai','⚙ Please set your Gemini API key first. Type **set key** or tap the ⚡ button and type "set key" in the chat.');
+      return;
+    }
+    if (sendBtn) sendBtn.disabled=true;
+    showTyping();
+    GeminiAPI.call(
+      state.messages.map(function(m){ return {role:m.role, content:m.content.replace(/SKILL_UPDATE::\{[\s\S]*?\}/g,'').trim()}; }),
+      buildSystemPrompt(),
+      function(text, model) {
+        hideTyping(); if(sendBtn) sendBtn.disabled=false;
+        parseSkillUpdate(text);
+        state.messages.push({role:'assistant',content:text});
+        saveState();
+        appendMsg('ai', text, getChips(state.phase));
+        advancePhase(text);
+        GeminiAPI.updateStatusUI();
+      },
+      function(err) {
+        hideTyping(); if(sendBtn) sendBtn.disabled=false;
+        appendMsg('ai','⚠ '+err,[]);
+      }
+    );
+  }
+
+  function send() {
+    if(!inputEl) getEls();
+    var text=(inputEl.value||'').trim(); if(!text) return;
+
+    /* Key setup shortcut inside coach */
+    if(text.toLowerCase().includes('set key')||text.toLowerCase().includes('api key')) {
+      inputEl.value='';
+      GeminiAPI.setupKeys();
+      appendMsg('ai','Keys updated! Continue with your coaching session.');
+      return;
+    }
+
+    inputEl.value=''; autoResize();
+    state.messages.push({role:'user',content:text});
+    appendMsg('user',text,[]);
+    saveState(); doCall();
+  }
+
+  function autoResize() {
+    if(!inputEl) return;
+    inputEl.style.height='auto'; inputEl.style.height=Math.min(inputEl.scrollHeight,110)+'px';
+  }
+
+  function exportSession() {
+    var lines=['SCPDD Daily AI Coach — Session Export','='.repeat(44),''];
+    lines.push('Skills Identified:');
+    Object.keys(state.skillMap).forEach(function(k){ lines.push('  • '+k+' — '+state.skillMap[k].score+'/10'); });
+    lines.push('','Conversation:','-'.repeat(44));
+    state.messages.forEach(function(m){
+      lines.push((m.role==='user'?'YOU: ':'COACH: ')+m.content.replace(/SKILL_UPDATE::\{[\s\S]*?\}/g,'').trim()); lines.push('');
+    });
+    var blob=new Blob([lines.join('\n')],{type:'text/plain'});
+    var a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+    a.download='SCPDD_Coaching_'+new Date().toISOString().slice(0,10)+'.txt'; a.click();
+  }
+
+  function resetSession() {
+    if(!confirm('Start a new coaching session? Skill progress is kept.')) return;
+    var kept={skillMap:state.skillMap,sessionCount:(state.sessionCount||0)+1,profile:state.profile};
+    state=Object.assign({messages:[],phase:'greet',lastSaved:null},kept);
+    saveState(); if(chatEl) chatEl.innerHTML=''; init(true);
+  }
+
+  function init(reset) {
+    getEls(); loadState(); updateSkillBars();
+    if(inputEl) inputEl.addEventListener('input',autoResize);
+    GeminiAPI.updateStatusUI();
+    if(!state.messages.length||reset) { doCall(); }
+    else {
+      state.messages.forEach(function(m,i){
+        var chips=(i===state.messages.length-1&&m.role==='assistant')?getChips(state.phase):[];
+        appendMsg(m.role,m.content,chips);
+      });
+    }
+  }
+
+  var _inited=false;
+  function lazyInit() { if(_inited) return; _inited=true; init(false); }
+
+  return { send:send, resetSession:resetSession, exportSession:exportSession, lazyInit:lazyInit };
+})();
+
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   [D-SHARED] Shared rendering: used by VideoAnalysis + BookAnalysis
+   ═══════════════════════════════════════════════════════════════════ */
+function renderAnalysisHtml(data, hasTranscript) {
+  var typeArr   = Array.isArray(data.content_type) ? data.content_type : [data.content_type||''];
+  var themeArr  = Array.isArray(data.scpdd_themes) ? data.scpdd_themes : [data.scpdd_themes||''];
+  var insights  = Array.isArray(data.key_insights) ? data.key_insights : [];
+  var takeaways = Array.isArray(data.takeaways) ? data.takeaways : [];
+  var howto     = Array.isArray(data.how_to_apply) ? data.how_to_apply : [];
+  var skillDoms = Array.isArray(data.skill_domains) ? data.skill_domains : [];
+  var badge = hasTranscript
+    ? '<div style="font-size:11px;color:#1a4a2e;font-weight:700;margin-bottom:8px;">✓ Based on actual video transcript</div>'
+    : '<div style="font-size:11px;color:#1a3a5c;font-weight:700;margin-bottom:8px;">✓ Analysed by Gemini AI</div>';
+  var out = badge;
+  out += '<div class="an-sec"><div class="an-hdr">📋 Summary</div><div class="an-body">' + (data.summary ? escH(data.summary) : '—') + '</div></div>';
+  if (typeArr.filter(Boolean).length) {
+    out += '<div class="an-sec"><div class="an-hdr">🎯 Content Type</div><div class="an-body">' +
+      typeArr.filter(Boolean).map(function(t){return '<span class="an-tag">'+escH(t)+'</span>';}).join('') +
+      '</div></div>';
+  }
+  if (themeArr.filter(Boolean).length) {
+    out += '<div class="an-sec"><div class="an-hdr">🔗 SCPDD Themes</div><div class="an-body">' +
+      themeArr.filter(Boolean).map(function(t){return '<span class="an-tag">'+escH(t)+'</span>';}).join('') +
+      '</div></div>';
+  }
+  if (insights.length) {
+    out += '<div class="an-sec"><div class="an-hdr">🔑 Key Insights</div><div class="an-body">' +
+      insights.map(function(k){return '<div class="an-li">'+escH(k)+'</div>';}).join('') +
+      '</div></div>';
+  }
+  if (takeaways.length) {
+    out += '<div class="an-sec"><div class="an-hdr">✅ Consultant Takeaways</div><div class="an-body">' +
+      takeaways.map(function(t){return '<div class="an-li">'+escH(t)+'</div>';}).join('') +
+      '</div></div>';
+  }
+  if (howto.length) {
+    out += '<div class="an-sec"><div class="an-hdr">🛠 How to Apply in Client Work</div><div class="an-body">' +
+      howto.map(function(s,i){return '<div class="an-li"><span class="an-num">'+(i+1)+'</span>'+escH(s)+'</div>';}).join('') +
+      '</div></div>';
+  }
+  if (skillDoms.filter(Boolean).length) {
+    out += '<div class="an-sec"><div class="an-hdr">🧠 Skill Domains Strengthened</div><div class="an-body">' +
+      skillDoms.filter(Boolean).map(function(t){return '<span class="an-tag">'+escH(t)+'</span>';}).join('') +
+      '</div></div>';
+  }
+  out += '<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(26,58,92,.2);font-size:11px;color:var(--muted);">Tap ⚡ to probe deeper in the AI chat.</div>';
+  return out;
+}
+function escH(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtRawToSections(raw) {
+  var html = '';
+  var cleaned = raw.replace(/```json|```/g,'').trim();
+  var s2 = cleaned.indexOf('{'), e2 = cleaned.lastIndexOf('}');
+  if (s2 !== -1 && e2 !== -1) cleaned = cleaned.substring(s2, e2+1);
+  if (cleaned.charAt(0) === '{' && cleaned.charAt(cleaned.length-1) === '}') {
+    try {
+      var obj = JSON.parse(cleaned);
+      var map = { summary:'📋 Summary', content_type:'🎯 Content Type', scpdd_themes:'🔗 SCPDD Themes', key_insights:'🔑 Key Insights', takeaways:'✅ Consultant Takeaways', how_to_apply:'🛠 How to Apply', skill_domains:'🧠 Skill Domains' };
+      for (var k in map) {
+        if (obj[k]) {
+          html += '<div class="an-sec"><div class="an-hdr">' + map[k] + '</div><div class="an-body">';
+          if (Array.isArray(obj[k])) {
+            obj[k].forEach(function(v){ html += '<div class="an-li">' + escH(v) + '</div>'; });
+          } else {
+            html += escH(obj[k]);
+          }
+          html += '</div></div>';
+        }
+      }
+      if (html) return html;
+    } catch(e) {}
+  }
+  var lines = raw.split('\n');
+  var section = null;
+  var body = [];
+  function flush() {
+    if (section && body.length) {
+      html += '<div class="an-sec"><div class="an-hdr">' + escH(section) + '</div><div class="an-body">';
+      body.forEach(function(l){
+        l = l.trim();
+        if (!l) return;
+        if (/^[-*•]\s/.test(l) || /^\d+[.)]\s/.test(l)) {
+          html += '<div class="an-li">' + escH(l.replace(/^[-*•]\s+/, '').replace(/^\d+[.)]\s+/, '')) + '</div>';
+        } else {
+          html += escH(l) + '<br>';
+        }
+      });
+      html += '</div></div>';
+    }
+  }
+  var sectionHeaders = ['summary','content.type','scpdd.theme','key.insight','takeaway','how.to.apply','skill.domain','overview','conclusion','analysis'];
+  lines.forEach(function(line){
+    var l = line.trim();
+    if (!l) return;
+    var isHeader = false;
+    for (var h = 0; h < sectionHeaders.length; h++) {
+      var pat = new RegExp('^\\*{0,2}\\s*' + sectionHeaders[h].replace(/\./g, '[ .:\\-]') + '\\s*[:]?\\s*\\*{0,2}$', 'i');
+      if (pat.test(l)) { isHeader = true; break; }
+    }
+    if (isHeader) { flush(); section = l.replace(/[*:]/g,'').trim(); body = []; }
+    else if (!section && /^[A-Z][A-Za-z\s]{2,40}:$/.test(l)) { flush(); section = l.replace(/:$/,'').trim(); body = []; }
+    else { body.push(line); }
+  });
+  flush();
+  return html || '<div class="an-sec"><div class="an-body">' + escH(raw).replace(/\\n/g,'<br>') + '</div></div>';
+}
+
+function cleanAndParseGeminiJSON(text) {
+  var clean = text.replace(/```json|```/g,'').trim();
+  var s2 = clean.indexOf('{'), e2 = clean.lastIndexOf('}');
+  if (s2 !== -1 && e2 !== -1) clean = clean.substring(s2, e2+1);
+  clean = clean.replace(/,(\s*[}\]])/g, '$1');
+  return JSON.parse(clean);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   [D-ANALYSIS] VIDEO ANALYSIS — Transcript + Native Video
+   ─────────────────────────────────────────────────────────────────
+   TECHNIQUE: Fetches transcript via youtubetranscript.com / YT
+   timedtext. Fails clearly if none available. Sends fileData (YT
+   URL) + transcript text to Gemini. Ported from Trading.html
+   (AiAnalyze pattern), adapted for SCPDD prompt & GChat feed.
+   ═══════════════════════════════════════════════════════════════════ */
+var VideoAnalysis = (function() {
+  var transcriptChunksGlobal = [];
+
+  function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function optimizeTranscript(raw) {
+    var text = raw;
+    text = text.replace(/\[\d{2}:\d{2}:\d{2}\]/g, '');
+    text = text.replace(/\(\d{2}:\d{2}\)/g, '');
+    text = text.replace(/\d{1,2}:\d{2}:\d{2}/g, '');
+    ['uh','um','like','basically','तो','है ना','मतलब','ठीक है','देखिए','ना','हाँ'].forEach(function(w){
+      text = text.replace(new RegExp('\\b' + w + '\\b', 'gi'), '');
+    });
+    text = text.replace(/[A-Za-z0-9\s]+:/g, '');
+    return text.replace(/\n+/g,' ').replace(/\s{2,}/g,' ').trim();
+  }
+
+  function chunkText(text, maxLength) {
+    var words = text.split(' '), chunks = [], cur = '';
+    words.forEach(function(w){
+      if ((cur + w).length > maxLength) { if (cur) chunks.push(cur.trim()); cur = ''; }
+      cur += w + ' ';
+    });
+    if (cur.trim()) chunks.push(cur.trim());
+    return chunks;
+  }
+
+  async function fetchTranscript(vid, onProgress) {
+    var sources = [
+      async function() {
+        var r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://youtubetranscript.com/?server_vid2=' + vid));
+        var j = await r.json();
+        var raw = j.contents || '';
+        var text = raw.replace(/<text[^>]*>/gi,' ').replace(/<\/text>/gi,' ').replace(/<[^>]+>/g,'')
+          .replace(/&amp;/g,'&').replace(/&#39;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/\s+/g,' ').trim();
+        if (text.length > 200) { console.log('[Transcript] youtubetranscript.com: ' + text.length + ' chars'); return text; }
+        return '';
+      },
+      async function() {
+        var r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://www.youtube.com/api/timedtext?v=' + vid + '&lang=hi&fmt=json3'));
+        var j = await r.json();
+        var raw = j.contents || '';
+        var obj = JSON.parse(raw);
+        if (!obj.events) return '';
+        var text = obj.events.filter(function(e){ return e.segs; })
+          .map(function(e){ return e.segs.map(function(s){ return s.utf8||''; }).join(''); })
+          .join(' ').replace(/\n/g,' ').replace(/\s+/g,' ').trim();
+        if (text.length > 200) { console.log('[Transcript] YT timedtext hi: ' + text.length + ' chars'); return text; }
+        return '';
+      },
+      async function() {
+        var r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://www.youtube.com/api/timedtext?v=' + vid + '&lang=en&fmt=json3'));
+        var j = await r.json();
+        var raw = j.contents || '';
+        var obj = JSON.parse(raw);
+        if (!obj.events) return '';
+        var text = obj.events.filter(function(e){ return e.segs; })
+          .map(function(e){ return e.segs.map(function(s){ return s.utf8||''; }).join(''); })
+          .join(' ').replace(/\n/g,' ').replace(/\s+/g,' ').trim();
+        if (text.length > 200) { console.log('[Transcript] YT timedtext en: ' + text.length + ' chars'); return text; }
+        return '';
+      },
+      async function() {
+        var r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://www.youtube.com/api/timedtext?v=' + vid + '&lang=hi&kind=asr&fmt=json3'));
+        var j = await r.json();
+        var raw = j.contents || '';
+        var obj = JSON.parse(raw);
+        if (!obj.events) return '';
+        var text = obj.events.filter(function(e){ return e.segs; })
+          .map(function(e){ return e.segs.map(function(s){ return s.utf8||''; }).join(''); })
+          .join(' ').replace(/\n/g,' ').replace(/\s+/g,' ').trim();
+        if (text.length > 200) { console.log('[Transcript] YT auto-asr hi: ' + text.length + ' chars'); return text; }
+        return '';
+      }
+    ];
+    for (var i = 0; i < sources.length; i++) {
+      if (onProgress) onProgress(i, sources.length, '⟳');
+      try {
+        var result = await sources[i]();
+        if (result && result.length > 200) { if (onProgress) onProgress(i, sources.length, '✓'); return result; }
+        if (onProgress) onProgress(i, sources.length, '✕');
+      } catch(e) { console.log('[Transcript] Source ' + i + ' failed:', e.message); if (onProgress) onProgress(i, sources.length, '✕'); }
+    }
+    console.log('[Transcript] All sources failed for vid:', vid);
+    return '';
+  }
+
+  function renderHtml(d, h) { return renderAnalysisHtml(d, h); }
+  function fmtRawSec(r) { return fmtRawToSections(r); }
+
+  async function run(panelId, btnEl) {
+    var panel = document.getElementById(panelId);
+    if (!panel) return;
+
+    if (panel.classList.contains('open')) { panel.classList.remove('open'); return; }
+    panel.classList.add('open');
+
+    var vid   = panel.getAttribute('data-vid')     || '';
+    var title = panel.getAttribute('data-title')   || 'SCPDD Video';
+    var feed  = panel.getAttribute('data-channel') || '';
+    var ytUrl = 'https://www.youtube.com/watch?v=' + vid;
+
+    var resultEl = document.getElementById(panelId + '-result');
+    var loadingEl = document.getElementById(panelId + '-loading');
+    var phaseEl = document.getElementById(panelId + '-phase');
+
+    if (btnEl) { btnEl.classList.add('loading'); btnEl.textContent = '⟳ …'; }
+    if (phaseEl) phaseEl.textContent = 'Fetching…';
+    if (loadingEl) loadingEl.style.display = 'flex';
+
+    var keys = [];
+    try {
+      var stored = JSON.parse(localStorage.getItem('scpdd_gemini_keys_v1') || '{}');
+      if (stored.key1) keys.push(stored.key1);
+      if (stored.key2) keys.push(stored.key2);
+    } catch(e) {}
+    if (!keys.length) {
+      if (loadingEl) loadingEl.style.display = 'none';
+      if (phaseEl) phaseEl.textContent = 'No Key';
+      if (btnEl) { btnEl.textContent = '⚡ Analyse'; btnEl.classList.remove('loading'); }
+      if (resultEl) resultEl.innerHTML = '<div style="padding:10px;color:#7a4200;font-size:13px;font-weight:700;">⚠ No Gemini API key set.<br>Tap <b>🔑 Keys</b> in the chat header.</div>';
+      GeminiAPI.setupKeys();
+      return;
+    }
+
+    var progressEl = document.getElementById(panelId + '-progress');
+    if (progressEl) progressEl.textContent = 'Fetching transcript…';
+
+    var rawTranscript = await fetchTranscript(vid, function(cur, total, sym) {
+      if (progressEl && sym) progressEl.textContent = 'Transcript ' + (cur+1) + '/' + total + ' ' + sym;
+    });
+    var hasTranscript = rawTranscript.length > 200;
+
+    if (progressEl) progressEl.textContent = hasTranscript ? '✓ Transcript' : 'No transcript — analysing video directly';
+    if (phaseEl) phaseEl.textContent = 'Analysing…';
+
+    var apiKey = keys[0];
+
+    var payload = {
+      contents: [{
+        parts: [
+          { fileData: { mimeType: 'video/*', fileUri: ytUrl } },
+          {
+            text:
+              'You are a senior SCPDD consultant at Accenture Industry X.\n' +
+              'Watch this video carefully and analyse its ACTUAL content.\n\n' +
+              'Return a JSON object with these exact keys:\n' +
+              '"summary": 2-3 sentences on what this video specifically covers,\n' +
+              '"content_type": array e.g. ["Keynote","Product Demo","Tech Deep-Dive","Strategy Talk","Case Study","Tutorial"],\n' +
+              '"scpdd_themes": array from: IoT Architecture, Connected Product Strategy, AI/ML for Products, Cloud & Connectivity, Digital Twin & PLM, Executive Consulting, Workshop Facilitation, Business Case & ROI, Cyber-Physical Security, Industry 4.0, Edge Computing, Smart Manufacturing,\n' +
+              '"key_insights": array of exactly 5 specific insights from this video,\n' +
+              '"takeaways": array of 4 actionable takeaways for an Accenture SCPDD consultant,\n' +
+              '"how_to_apply": array of 5 exact steps to apply these lessons in a client meeting or proposal,\n' +
+              '"skill_domains": array of SCPDD skill domains this video strengthens.\n' +
+              'Pure JSON only. No markdown. No generic advice.'
+          }
+        ]
+      }],
+      generationConfig: { temperature: 0.2, maxOutputTokens: 2048 }
+    };
+
+    /* gemini-2.0-flash supports native video URL understanding (as noted in Trading.html) */
+    var models = ['gemini-2.5-pro', 'gemini-3.5-flash', 'gemini-2.5-flash'];
+    var finalResult = null;
+    var usedModel = '';
+
+    for (var m = 0; m < models.length; m++) {
+      try {
+        if (progressEl) progressEl.textContent = 'Gemini ' + models[m] + '…';
+        var res = await fetch(
+          'https://generativelanguage.googleapis.com/v1beta/models/' + models[m] + ':generateContent?key=' + apiKey,
+          { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }
+        );
+        var data = await res.json();
+        if (res.ok) {
+          var text = data.candidates && data.candidates[0] &&
+                     data.candidates[0].content && data.candidates[0].content.parts &&
+                     data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+          if (text) { finalResult = text; usedModel = models[m]; break; }
+        } else {
+          console.warn('[Video] ' + models[m] + ' HTTP ' + res.status, data.error && data.error.message);
+        }
+      } catch(e) { console.warn('[Video] ' + models[m], e.message); }
+    }
+
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (phaseEl) phaseEl.textContent = usedModel;
+    if (btnEl) { btnEl.textContent = '✓ Done'; btnEl.classList.remove('loading'); btnEl.classList.add('done'); }
+
+    if (!finalResult) {
+      if (resultEl) resultEl.innerHTML = '<div style="padding:10px;color:#7a2020;font-size:13px;">⚠ Failed. Check API key.</div>';
+      return;
+    }
+
+    try {
+      var clean = finalResult.replace(/```json|```/g,'').trim();
+      var s2 = clean.indexOf('{'), e2 = clean.lastIndexOf('}');
+      if (s2 !== -1 && e2 !== -1) clean = clean.substring(s2, e2+1);
+      clean = clean.replace(/,(\s*[}\]])/g, '$1');
+      var parsed = JSON.parse(clean);
+      if (resultEl) resultEl.innerHTML = renderHtml(parsed, hasTranscript);
+      transcriptChunksGlobal = chunkText(clean, 500);
+      if (window.GChat && GChat._setVideoContext) {
+        GChat._setVideoContext(title + ' (' + feed + ')', clean);
+      }
+    } catch(err) {
+      try {
+        var reparsed = JSON.parse(clean);
+        if (resultEl) resultEl.innerHTML = renderHtml(reparsed, hasTranscript);
+      } catch(e2) {
+        if (resultEl) resultEl.innerHTML = fmtRawToSections(finalResult);
+      }
+      transcriptChunksGlobal = [finalResult];
+      if (window.GChat && GChat._setVideoContext) {
+        GChat._setVideoContext(title + ' (' + feed + ')', finalResult);
+      }
+    }
+  }
+
+  function closePanel(panelId) {
+    var panel = document.getElementById(panelId);
+    if (panel) panel.classList.remove('open');
+  }
+
+  return { togglePanel: run, closePanel: closePanel };
+})();
+
+/* ═══════════════════════════════════════════════════════════════════
+   [D-BOOKS] BOOK ANALYSIS — Gemini-powered book summariser
+   ─────────────────────────────────────────────────────────────────
+   Sends book title + author to Gemini, returns section-wise analysis.
+   No transcript fetch needed — Gemini knows these books from training.
+   ═══════════════════════════════════════════════════════════════════ */
+var BookAnalysis = (function() {
+
+  function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function chunkText(text, maxLength) {
+    var words = text.split(' '), chunks = [], cur = '';
+    words.forEach(function(w){
+      if ((cur + w).length > maxLength) { if (cur) chunks.push(cur.trim()); cur = ''; }
+      cur += w + ' ';
+    });
+    if (cur.trim()) chunks.push(cur.trim());
+    return chunks;
+  }
+
+  async function run(panelId, btnEl) {
+    var panel = document.getElementById(panelId);
+    if (!panel) return;
+
+    if (panel.classList.contains('open')) { panel.classList.remove('open'); return; }
+    panel.classList.add('open');
+
+    var title  = panel.getAttribute('data-title')  || 'SCPDD Book';
+    var author = panel.getAttribute('data-author') || '';
+    var whytxt = panel.getAttribute('data-why')    || '';
+
+    var resultEl  = document.getElementById(panelId + '-result');
+    var loadingEl = document.getElementById(panelId + '-loading');
+    var phaseEl   = document.getElementById(panelId + '-phase');
+    var progressEl = document.getElementById(panelId + '-progress');
+
+    if (btnEl) { btnEl.classList.add('loading'); btnEl.textContent = '⟳ …'; }
+    if (phaseEl) phaseEl.textContent = 'Analysing…';
+    if (progressEl) progressEl.textContent = 'Connecting…';
+    if (loadingEl) loadingEl.style.display = 'flex';
+
+    var keys = [];
+    try {
+      var stored = JSON.parse(localStorage.getItem('scpdd_gemini_keys_v1') || '{}');
+      if (stored.key1) keys.push(stored.key1);
+      if (stored.key2) keys.push(stored.key2);
+    } catch(e) {}
+    if (!keys.length) {
+      if (loadingEl) loadingEl.style.display = 'none';
+      if (phaseEl) phaseEl.textContent = 'No Key';
+      if (btnEl) { btnEl.textContent = '⚡ Analyse'; btnEl.classList.remove('loading'); }
+      if (resultEl) resultEl.innerHTML = '<div style="padding:10px;color:#7a4200;font-size:13px;font-weight:700;">⚠ No Gemini API key set.<br>Tap <b>🔑 Keys</b> in the chat header.</div>';
+      GeminiAPI.setupKeys();
+      return;
+    }
+
+    var apiKey = keys[0];
+
+    var payload = {
+      contents: [{
+        parts: [{
+          text:
+            'You are a senior SCPDD consultant at Accenture Industry X.\n' +
+            'Read this book carefully and analyse its ACTUAL content.\n' +
+            'Title: ' + title + '\n' +
+            'Author: ' + author + '\n' +
+            (whytxt ? 'Context: ' + whytxt + '\n' : '') +
+            '\nReturn a JSON object with these exact keys:\n' +
+            '"summary": 2-3 sentences on what this book specifically covers,\n' +
+            '"content_type": array e.g. ["Keynote","Product Demo","Tech Deep-Dive","Strategy Talk","Case Study","Tutorial","Book"],\n' +
+            '"scpdd_themes": array from: IoT Architecture, Connected Product Strategy, AI/ML for Products, Cloud & Connectivity, Digital Twin & PLM, Executive Consulting, Workshop Facilitation, Business Case & ROI, Cyber-Physical Security, Industry 4.0, Edge Computing, Smart Manufacturing,\n' +
+            '"key_insights": array of exactly 5 specific insights from this book,\n' +
+            '"takeaways": array of 4 actionable takeaways for an Accenture SCPDD consultant,\n' +
+            '"how_to_apply": array of 5 exact steps to apply these lessons in a client meeting or proposal,\n' +
+            '"skill_domains": array of SCPDD skill domains this book strengthens.\n' +
+            'Pure JSON only. No markdown. No generic advice.'
+        }]
+      }],
+      generationConfig: { temperature: 0.2, maxOutputTokens: 8192 }
+    };
+
+    var models = ['gemini-2.5-pro', 'gemini-3.5-flash', 'gemini-2.5-flash'];
+    var finalResult = null;
+    var usedModel = '';
+
+    for (var m = 0; m < models.length; m++) {
+      try {
+        if (phaseEl) phaseEl.textContent = 'Gemini ' + models[m] + '…';
+        if (progressEl) progressEl.textContent = 'Calling ' + models[m] + '…';
+        var res = await fetch(
+          'https://generativelanguage.googleapis.com/v1beta/models/' + models[m] + ':generateContent?key=' + apiKey,
+          { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }
+        );
+        var data = await res.json();
+        if (res.ok) {
+          var text = data.candidates && data.candidates[0] &&
+                     data.candidates[0].content && data.candidates[0].content.parts &&
+                     data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+          if (text) { finalResult = text; usedModel = models[m]; break; }
+        } else {
+          console.warn('[Book] ' + models[m] + ' HTTP ' + res.status, data.error && data.error.message);
+        }
+      } catch(e) { console.warn('[Book] ' + models[m], e.message); }
+    }
+
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (phaseEl) phaseEl.textContent = usedModel;
+    if (progressEl) progressEl.textContent = usedModel ? '✓ ' + usedModel : '✕ Failed';
+    if (btnEl) { btnEl.textContent = '✓ Done'; btnEl.classList.remove('loading'); btnEl.classList.add('done'); }
+
+    if (!finalResult) {
+      if (resultEl) resultEl.innerHTML = '<div style="padding:10px;color:#7a2020;font-size:13px;">⚠ Failed. Check API key.</div>';
+      return;
+    }
+
+    var clean = finalResult.replace(/```json|```/g,'').trim();
+    var s2 = clean.indexOf('{'), e2 = clean.lastIndexOf('}');
+    if (s2 !== -1 && e2 !== -1) clean = clean.substring(s2, e2+1);
+    clean = clean.replace(/,(\s*[}\]])/g, '$1');
+
+    try {
+      var parsed = JSON.parse(clean);
+      if (resultEl) resultEl.innerHTML = renderAnalysisHtml(parsed, false);
+    } catch(err) {
+      console.error('[Book] Parse error:', err.message, 'clean length:', clean.length);
+      try {
+        var reparsed = JSON.parse(clean);
+        if (resultEl) resultEl.innerHTML = renderAnalysisHtml(reparsed, false);
+      } catch(e2) {
+        console.error('[Book] Second parse failed:', e2.message);
+        if (resultEl) resultEl.innerHTML = fmtRawToSections(finalResult);
+      }
+    }
+    var chunks = chunkText(finalResult, 500);
+    if (window.GChat && GChat._setVideoContext) {
+      GChat._setVideoContext(title + ' (' + author + ')', finalResult);
+    }
+  }
+
+  function closePanel(panelId) {
+    var panel = document.getElementById(panelId);
+    if (panel) panel.classList.remove('open');
+  }
+
+  return { togglePanel: run, closePanel: closePanel };
+})();
+
+/* ═══════════════════════════════════════════════════════════════════
+   [D-BOOKPDF] BOOK PDF UPLOAD — Chapter-wise summaries from PDF
+   ─────────────────────────────────────────────────────────────────
+   Powered by PDF.js (local parsing) + TF-IDF extractive summariser.
+   No AI needed for extraction. 2-box layout per chapter.
+   ═══════════════════════════════════════════════════════════════════ */
+(function() {
+  var STOP_WORDS = new Set(['a','an','the','and','or','but','in','on','at','to','for','of','with','by','from','is','are','was','were','be','been','being','have','has','had','do','does','did','will','would','could','should','may','might','that','this','these','those','it','its','they','their','which','who','as','if','not','also','but','about']);
+
+  function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function _tokenWords(text) {
+    return text.toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(function(w){ return w.length > 2 && !STOP_WORDS.has(w); });
+  }
+
+  function _detectTitle(paragraphs) {
+    for (var i = 0; i < Math.min(paragraphs.length, 5); i++) {
+      var p = paragraphs[i];
+      if (p.startsWith('## ')) return p.slice(3).trim();
+      var words = p.split(/\s+/);
+      if (words.length <= 14 && /^[A-Z]/.test(p) && !/[.!?,;]$/.test(p)) return p.trim();
+    }
+    return null;
+  }
+
+  function _splitSentences(text) {
+    return (text.match(/[^.!?…]+(?:[.!?…]+(?:\s|$)|\s*$)/g) || [text]).map(function(s){ return s.trim(); }).filter(Boolean);
+  }
+
+  function summarisePageLocal(pageText, pageNum) {
+    var paragraphs = pageText.split(/\n\n+/).map(function(p){ return p.replace(/^## /,'').trim(); }).filter(Boolean);
+    var fullText   = paragraphs.join(' ');
+    var title      = _detectTitle(pageText.split(/\n\n+/)) || 'Chapter ' + pageNum;
+    var bodyText   = fullText.replace(title, '').trim();
+
+    var allWords  = _tokenWords(bodyText);
+    var freq      = {};
+    for (var w = 0; w < allWords.length; w++) { var word = allWords[w]; freq[word] = (freq[word] || 0) + 1; }
+    var vals = Object.keys(freq).map(function(k){ return freq[k]; });
+    var maxFreq = vals.length ? Math.max.apply(null, vals) : 1;
+    for (var f in freq) freq[f] /= maxFreq;
+
+    var sentences = _splitSentences(bodyText);
+    var scored = sentences.map(function(s, idx){
+      var words = _tokenWords(s);
+      if (!words.length) return { s:s, score:0, idx:idx };
+      var tf = words.reduce(function(sum, w){ return sum + (freq[w] || 0); }, 0) / words.length;
+      var pos = idx === 0 ? 0.25 : idx <= 2 ? 0.1 : 0;
+      var num = /\d/.test(s) ? 0.12 : 0;
+      var len = words.length < 6 || words.length > 45 ? -0.15 : 0;
+      var key = /key|important|significant|critical|major|result|conclude|show|find|reveal/i.test(s) ? 0.1 : 0;
+      return { s:s, score:tf + pos + num + len + key, idx:idx };
+    });
+    var ranked  = scored.slice().sort(function(a,b){ return b.score - a.score; });
+    var top4    = ranked.slice(0, 4).sort(function(a,b){ return a.idx - b.idx; });
+    var bullets = top4.map(function(r){ return '• ' + r.s; }).join('\n');
+
+    var body = bullets.length > 20 ? bullets : paragraphs.slice(0,3).map(function(p){ return '• ' + p.substring(0,200); }).join('\n');
+
+    var garbageRatio = (body.match(/[◆■□♦●]{1}/g)||[]).length / Math.max(body.length, 1);
+    if (garbageRatio > 0.15) return { title:title, summary:'', points:'', garbled:true };
+    return { title:title, summary:paragraphs.slice(0,1).join(' ').substring(0,300), points:body, garbled:false };
+  }
+
+  var currentPdfDoc = null;
+  var currentFileName = '';
+  var allChapters = [];
+
+  function openPdfDocument(file) {
+    return file.arrayBuffer().then(function(buf){
+      return pdfjsLib.getDocument({ data: buf }).promise;
+    });
+  }
+
+  function extractPageText(pdfDoc, pageNum) {
+    return pdfDoc.getPage(pageNum).then(function(page){
+      return page.getTextContent({ includeMarkedContent: false }).then(function(content){
+        var nodes = content.items.filter(function(it){ return it.str && it.str.trim(); });
+        if (!nodes.length) return '';
+        var ys = nodes.map(function(n){ return Math.round(n.transform[5]); });
+        var uniqueY = ys.filter(function(v,i,a){ return a.indexOf(v) === i; }).sort(function(a,b){ return b - a; });
+        var lineMap = {};
+        uniqueY.forEach(function(y){ lineMap[y] = []; });
+        nodes.forEach(function(n){ lineMap[Math.round(n.transform[5])].push(n); });
+
+        var lines = uniqueY.map(function(y){
+          var sorted = lineMap[y].sort(function(a,b){ return a.transform[4] - b.transform[4]; });
+          return sorted.map(function(n){ return n.str; }).join(' ').trim();
+        }).filter(Boolean);
+
+        var paragraphs = [];
+        var current = [];
+        uniqueY.forEach(function(y, i){
+          if (i === 0) { if (lines[i]) current.push(lines[i]); return; }
+          var prevY = uniqueY[i-1];
+          var gap = prevY - y;
+          var avgH = Math.abs((nodes.find(function(n){ return Math.round(n.transform[5]) === y; }) || {height:12}).height || 12);
+          if (gap > avgH * 1.8) { if (current.length) { paragraphs.push(current.join(' ')); current = []; } }
+          if (lines[i]) current.push(lines[i]);
+        });
+        if (current.length) paragraphs.push(current.join(' '));
+
+        var finalParagraphs = [];
+        for (var pi = 0; pi < paragraphs.length; pi++) {
+          var para = paragraphs[pi];
+          var words = para.split(/\s+/);
+          var isHdr = words.length <= 12 && /^[A-Z]/.test(para) && !/[.!?,]$/.test(para);
+          var paraText = para.replace(/\s+/g, ' ').trim();
+          if (paraText.length > 2) finalParagraphs.push(isHdr ? '## ' + paraText : paraText);
+        }
+        var joined = finalParagraphs.join('\n\n');
+        if (joined.length > 0) {
+          var badCount = (joined.match(/\uFFFD/g) || []).length;
+          if (badCount / joined.length > 0.4) return '';
+        }
+        return joined;
+      });
+    });
+  }
+
+  function renderChapter(item, idx) {
+    var itemId = 'ch-' + idx;
+    var existing = document.getElementById(itemId);
+    var html =
+      '<div class="chapter-hdr">' + esc(item.title) + '</div>' +
+      '<div class="chapter-body">' +
+        '<div class="chapter-row">' +
+          '<div class="chapter-row-label">📋 Summary</div>' +
+          '<div class="chapter-row-content">' + esc(item.summary.substring(0,500)) + '</div>' +
+        '</div>' +
+        '<div class="chapter-row">' +
+          '<div class="chapter-row-label">🔑 Key Points</div>' +
+          '<div class="chapter-row-content">' + esc(item.points).replace(/\n/g,'<br>') + '</div>' +
+        '</div>' +
+      '</div>';
+    if (existing) { existing.innerHTML = html; }
+    else {
+      var div = document.createElement('div');
+      div.className = 'chapter-item';
+      div.id = itemId;
+      div.innerHTML = html;
+      document.getElementById('book-chapters').appendChild(div);
+    }
+  }
+
+  function processPdf(file) {
+    var statusEl = document.getElementById('book-pdf-status');
+    var btnEl = document.getElementById('book-pdf-btn');
+    var chaptersEl = document.getElementById('book-chapters');
+    var saveBarEl = document.getElementById('book-save-bar');
+
+    btnEl.classList.add('loading');
+    btnEl.textContent = '⟳ Reading…';
+    statusEl.textContent = 'Opening PDF…';
+    chaptersEl.style.display = 'block';
+    chaptersEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">⏳ Extracting pages…</div>';
+    saveBarEl.style.display = 'none';
+    allChapters = [];
+    currentFileName = file.name;
+
+    openPdfDocument(file).then(function(pdfDoc){
+      currentPdfDoc = pdfDoc;
+      var totalPages = pdfDoc.numPages;
+      statusEl.textContent = totalPages + ' pages found…';
+      chaptersEl.innerHTML = '';
+
+      function processPage(pageNum) {
+        if (pageNum > totalPages) {
+          statusEl.textContent = '✅ ' + allChapters.length + ' chapters · ' + file.name;
+          btnEl.classList.remove('loading');
+          btnEl.textContent = '📤 Choose PDF';
+          saveBarEl.style.display = 'block';
+          return;
+        }
+        statusEl.textContent = '📄 Page ' + pageNum + '/' + totalPages + '…';
+        extractPageText(pdfDoc, pageNum).then(function(pageText){
+          if (pageText && pageText.length > 30) {
+            var result = summarisePageLocal(pageText, pageNum);
+            if (!result.garbled) {
+              result.pageNum = pageNum;
+              allChapters.push(result);
+              renderChapter(result, allChapters.length - 1);
+            }
+          }
+          processPage(pageNum + 1);
+        }).catch(function(){
+          processPage(pageNum + 1);
+        });
+      }
+      processPage(1);
+    }).catch(function(err){
+      statusEl.textContent = '✕ Error: ' + err.message;
+      btnEl.classList.remove('loading');
+      btnEl.textContent = '📤 Choose PDF';
+      chaptersEl.innerHTML = '<div style="text-align:center;padding:20px;color:#7a2020;font-size:12px;">⚠ Failed to open PDF: ' + esc(err.message) + '</div>';
+    });
+  }
+
+  function saveSummaries() {
+    if (!allChapters.length) return;
+    var lines = [];
+    lines.push('SCPDD Book Summary — ' + currentFileName);
+    lines.push('='.repeat(50));
+    lines.push('');
+    allChapters.forEach(function(ch, i){
+      lines.push(ch.title);
+      lines.push('-'.repeat(ch.title.length));
+      lines.push('');
+      lines.push('Summary:');
+      lines.push(ch.summary);
+      lines.push('');
+      lines.push('Key Points:');
+      lines.push(ch.points);
+      lines.push('');
+      lines.push('---');
+      lines.push('');
+    });
+    var blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = currentFileName.replace(/\.pdf$/i,'') + '_Summaries.txt';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    var input = document.getElementById('book-pdf-input');
+    if (input) {
+      input.addEventListener('change', function(e){
+        var file = e.target.files && e.target.files[0];
+        if (file && file.type === 'application/pdf') processPdf(file);
+      });
+    }
+    var saveBtn = document.getElementById('book-save-btn');
+    if (saveBtn) saveBtn.addEventListener('click', saveSummaries);
+  });
+})();
+
+/* ═══════════════════════════════════════════════════════════════════
+   [D12] PWA — Progressive Web App: manifest + Service Worker
+         Manifest is generated at runtime (no static file needed).
+         Service Worker is registered inline via base64 data URL.
+         Caches the app shell for offline use.
+         Proxy/CDN URLs (rss2json, YouTube, etc.) are always
+         fetched live — never cached.
+   ═══════════════════════════════════════════════════════════════════ */
+
+(function() {
+  var manifest = {
+    name:"SCPDD Research", short_name:"SCPDD",
+    description:"Smart Connected Product Design & Development — Accenture Consultant Research Hub",
+    start_url:"./", display:"standalone", orientation:"portrait-primary",
+    background_color:"#c8a97e", theme_color:"#b8925f",
+    icons:[{
+      src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='28' fill='%23b8925f'/%3E%3Ccircle cx='96' cy='80' r='32' fill='none' stroke='%231a1a1a' stroke-width='8'/%3E%3Crect x='72' y='116' width='48' height='8' rx='4' fill='%231a1a1a'/%3E%3Crect x='80' y='132' width='32' height='8' rx='4' fill='%231a1a1a'/%3E%3C/svg%3E",
+      sizes:"192x192", type:"image/svg+xml", purpose:"any maskable"
+    }]
+  };
+  try {
+    var blob = new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'});
+    document.getElementById('pwa-manifest-link').href = URL.createObjectURL(blob);
+  } catch(e){}
+
+  var SW =
+    'const C="scpdd-v6";' +
+    'self.addEventListener("install",e=>{self.skipWaiting();e.waitUntil(caches.open(C).then(c=>c.addAll(["./"])))});' +
+    'self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});' +
+    'self.addEventListener("fetch",e=>{const u=e.request.url;' +
+    'if(e.request.method!=="GET"||u.startsWith("chrome-extension")||u.startsWith("data:"))return;' +
+    'if(u.includes("rss2json")||u.includes("allorigins")||u.includes("corsproxy.io")||u.includes("youtube.com")||u.includes("ytimg.com")||u.includes("googleapis")||u.includes("gstatic")){e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));return;}' +
+    'e.respondWith(caches.match(e.request).then(c=>{if(c)return c;return fetch(e.request).then(r=>{if(r&&r.status===200&&r.type!=="opaque")caches.open(C).then(x=>x.put(e.request,r.clone()));return r;}).catch(()=>caches.match("./"))}));});';
+
+  if ('serviceWorker' in navigator) {
+    try {
+      var b64 = btoa(unescape(encodeURIComponent(SW)));
+      navigator.serviceWorker.register('data:application/javascript;base64,'+b64,{scope:'./'})
+        .then(function(r){console.log('SW ok',r.scope);})
+        .catch(function(e){console.info('SW skip:',e.message);});
+    } catch(e){}
+  }
+
+  window._pwaPrompt = null;
+  window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault(); window._pwaPrompt=e;
+    document.getElementById('pwa-badge').style.display='flex';
+  });
+  window.addEventListener('appinstalled', function(){ document.getElementById('pwa-badge').style.display='none'; });
+})();
+
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     API KEY INPUT MODAL
+     Shown when GeminiAPI.promptForKeys() is called.
+     Replaces native window.prompt() with a proper in-app dialog.
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="key-modal-overlay">
+  <div id="key-modal">
+    <div class="key-modal-hdr">
+      <div style="flex:1">
+        <div class="key-modal-hdr-title">🔑 Gemini API Keys</div>
+        <div class="key-modal-hdr-sub">Free keys · 2-key cascade · Daily quota tracking</div>
+      </div>
+    </div>
+    <div class="key-modal-body">
+      <div class="key-modal-field">
+        <div class="key-modal-label" style="display:flex;justify-content:space-between;align-items:center">
+          <span>🔑 API Key 1 — Primary <span style="font-weight:400;text-transform:none;letter-spacing:0">(required)</span></span>
+          <button type="button" onclick="var i=document.getElementById('key-input-1');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'👁 Show':'🙈 Hide'" style="font-size:11px;background:none;border:1px solid var(--border);padding:2px 7px;border-radius:3px;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--muted)">👁 Show</button>
+        </div>
+        <input class="key-modal-input" id="key-input-1" type="password"
+          placeholder="Paste your Gemini API key here (AIza…)"
+          autocomplete="off" spellcheck="false">
+      </div>
+      <div class="key-modal-field">
+        <div class="key-modal-label" style="display:flex;justify-content:space-between;align-items:center">
+          <span>🔑 API Key 2 — Fallback <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></span>
+          <button type="button" onclick="var i=document.getElementById('key-input-2');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'👁 Show':'🙈 Hide'" style="font-size:11px;background:none;border:1px solid var(--border);padding:2px 7px;border-radius:3px;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--muted)">👁 Show</button>
+        </div>
+        <input class="key-modal-input" id="key-input-2" type="password"
+          placeholder="Second key for quota backup (leave blank if one key)"
+          autocomplete="off" spellcheck="false">
+      </div>
+      <div class="key-modal-hint">
+        Get free API keys at
+        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">
+          aistudio.google.com/app/apikey
+        </a>.<br>
+        Keys are stored locally on your device only — never sent anywhere except Google.
+      </div>
+      <div class="key-modal-status" id="key-modal-status"></div>
+    </div>
+    <div class="key-modal-actions">
+      <button class="btn-key-cancel" id="key-modal-cancel">Cancel</button>
+      <button class="btn-key-save"   id="key-modal-save">💾 Save Keys</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
