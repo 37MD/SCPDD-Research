@@ -22,9 +22,8 @@
 ║    📲 PWA            — Installable, offline-capable                  ║
 ╠══════════════════════════════════════════════════════════════════════╣
 ║  AI ENGINE (Reusable across projects)                                ║
-║    GeminiAPI module  — 2 API keys + 5-model cascade                  ║
-║    Models: gemini-2.5-pro → 2.0-flash → 1.5-flash-8b                ║
-║            → 2.0-flash-lite → 2.5-flash                             ║
+║    GeminiAPI module  — 2 API keys + 3-model cascade                  ║
+║    Models: gemini-2.5-pro → 3.5-flash → 2.5-flash                   ║
 ║    Quota   : persistent localStorage tracking, daily reset           ║
 ║    Fallback: Key 1 → Key 2 → next model → error message             ║
 ╠══════════════════════════════════════════════════════════════════════╣
@@ -1946,14 +1945,12 @@ var App = (function() {
    ─────────────────────────────────────────────────────────────────
    DESIGNED FOR REPLICATION — copy this module into any project.
 
-   FEATURES:
-     • 2 API keys  — primary + fallback; switches automatically
-     • 5-model cascade — tries models in priority order:
-         1. gemini-2.5-pro      (best quality,  25 req/day free)
-         2. gemini-2.0-flash    (fast,          500/day)
-         3. gemini-1.5-flash-8b (lite fallback, 1000/day)
-         4. gemini-2.0-flash-lite (ultra-lite,  1000/day)
-         5. gemini-2.5-flash    (last resort,   500/day)
+    FEATURES:
+      • 2 API keys  — primary + fallback; switches automatically
+      • 3-model cascade — tries models in priority order:
+          1. gemini-2.5-pro      (best quality,  25 req/day free)
+          2. gemini-3.5-flash    (fast,          500/day)
+          3. gemini-2.5-flash    (last resort,   500/day)
      • Quota tracking — localStorage, daily reset, per-model counters
      • Auto key switch — if Key 1 hits quota/error → silently use Key 2
      • Status UI — live pill showing active model + usage (ok/warn/err)
@@ -1976,26 +1973,20 @@ var GeminiAPI = (function() {
   /* Cascade order — exactly as specified */
   var MODELS = [
     'gemini-2.5-pro',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash-8b',
-    'gemini-2.0-flash-lite',
+    'gemini-3.5-flash',
     'gemini-2.5-flash'
   ];
   var MODEL_LABELS = {
-    'gemini-2.5-pro':       '2.5 Pro',
-    'gemini-2.0-flash':     '2.0 Flash',
-    'gemini-1.5-flash-8b':  '1.5 Flash Lite',
-    'gemini-2.0-flash-lite':'2.0 Flash Lite',
-    'gemini-2.5-flash':     '2.5 Flash'
+    'gemini-2.5-pro':   '2.5 Pro',
+    'gemini-3.5-flash': '3.5 Flash',
+    'gemini-2.5-flash': '2.5 Flash'
   };
 
   /* Soft daily quota limits per free-tier model */
   var QUOTA_LIMITS = {
-    'gemini-2.5-pro':       25,
-    'gemini-2.0-flash':     500,
-    'gemini-1.5-flash-8b':  1000,
-    'gemini-2.0-flash-lite':1000,
-    'gemini-2.5-flash':     500
+    'gemini-2.5-pro':   25,
+    'gemini-3.5-flash': 500,
+    'gemini-2.5-flash': 500
   };
 
   /* ── Key management ── */
@@ -2923,23 +2914,22 @@ var VideoAnalysis = (function() {
       var clean = finalResult.replace(/```json|```/g,'').trim();
       var s2 = clean.indexOf('{'), e2 = clean.lastIndexOf('}');
       if (s2 !== -1 && e2 !== -1) clean = clean.substring(s2, e2+1);
-      clean = clean.replace(/,([\s\r\n]*[}\]])/g, '$1');
+      clean = clean.replace(/,(\s*[}\]])/g, '$1');
       var parsed = JSON.parse(clean);
       if (resultEl) resultEl.innerHTML = renderHtml(parsed, hasTranscript);
       transcriptChunksGlobal = chunkText(clean, 500);
-
       if (window.GChat && GChat._setVideoContext) {
         GChat._setVideoContext(title + ' (' + feed + ')', clean);
       }
     } catch(err) {
-      var displayHtml;
+      var fallbackHtml = '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#1a3a5c;margin-bottom:6px;">✓ Raw Analysis</div>';
       try {
         var reparsed = JSON.parse(clean);
-        displayHtml = renderHtml(reparsed, hasTranscript);
+        fallbackHtml = renderHtml(reparsed, hasTranscript);
       } catch(e2) {
-        displayHtml = '<pre style="white-space:pre-wrap;font-size:12px;line-height:1.6;color:var(--text);">' + esc(finalResult) + '</pre>';
+        fallbackHtml += '<div style="font-size:13px;line-height:1.7;color:var(--text);">' + esc(finalResult).replace(/\\n/g,'<br>') + '</div>';
       }
-      if (resultEl) resultEl.innerHTML = displayHtml;
+      if (resultEl) resultEl.innerHTML = fallbackHtml;
       transcriptChunksGlobal = [finalResult];
       if (window.GChat && GChat._setVideoContext) {
         GChat._setVideoContext(title + ' (' + feed + ')', finalResult);
