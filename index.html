@@ -2728,55 +2728,132 @@ var Coach = (function() {
 
 
 /* ═══════════════════════════════════════════════════════════════════
-   [D-ANALYSIS] VIDEO ANALYSIS — Real Gemini Video Understanding
+   [D-ANALYSIS] VIDEO ANALYSIS — RAG Transcript Engine
    ─────────────────────────────────────────────────────────────────
-   IMPLEMENTATION: Ported from Interview-1 app (IVAnalyze module).
-   TECHNIQUE: Sends the actual YouTube URL to Gemini as a fileData
-   part with mimeType:'video/*'. Gemini watches the real video and
-   returns structured JSON analysis of actual content.
-   No transcript fetch, no Map-Reduce of fake context — Gemini
-   analyses the video directly.
-
-   PAYLOAD STRUCTURE (from Interview-1 reference):
-     contents: [{
-       parts: [
-         { fileData: { mimeType: 'video/*', fileUri: ytUrl } },
-         { text: '<structured JSON prompt>' }
-       ]
-     }]
-
-   CASCADE: Uses GeminiAPI key rotation (same keys as Coach/GChat).
-   CACHE:   Analysis result stored in memory per video (panelId).
-   RAG CHAT: After analysis, follow-up questions are answered using
-             the structured JSON result as grounding context.
-
-   OUTPUT SECTIONS (SCPDD lens):
-     • Summary           — what this video specifically covers
-     • Content Type      — keynote / product demo / tech deep-dive / strategy talk
-     • SCPDD Themes      — IoT / AI / Cloud / Connected Product / Consulting
-     • Key Insights      — 5 specific points from actual video content
-     • Consultant Takeaways — 4 actionable points for SCPDD client work
-     • How to Apply      — 5 exact steps for next client meeting / proposal
-     • Skill Domains     — which SCPDD domains this video strengthens
+   TECHNIQUE: Fetches real transcript via 4-source cascade, then
+   sends chunked transcript to Gemini for structured SCPDD analysis.
+   RAG CHAT: Follow-up questions use keyword-scored chunk retrieval.
+   Fully ported from Trading-Final_Working.html (AiAnalyze + Thunder
+   pattern). DO NOT MODIFY THIS ENGINE.
    ═══════════════════════════════════════════════════════════════════ */
 var VideoAnalysis = (function() {
 
-  /* In-memory cache: panelId → {result:string, parsed:object} */
+  /* In-memory cache: panelId → {result:string, parsed:object, chunks:[]} */
   var _cache = {};
 
   /* ── Helpers ── */
   function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
   function arr(v) { return Array.isArray(v) ? v : (v ? [v] : []); }
 
+  /* ── Strip timestamps & filler words from raw transcript ── */
+  function optimizeTranscript(raw) {
+    var text = raw;
+    text = text.replace(/\[\d{2}:\d{2}:\d{2}\]/g, '');
+    text = text.replace(/\(\d{2}:\d{2}\)/g, '');
+    text = text.replace(/\d{1,2}:\d{2}:\d{2}/g, '');
+    ['uh','um','like','basically','तो','है ना','मतलब','ठीक है','देखिए','ना','हाँ'].forEach(function(w){
+      text = text.replace(new RegExp('\\b' + w + '\\b', 'gi'), '');
+    });
+    text = text.replace(/[A-Za-z0-9\s]+:/g, '');
+    return text.replace(/\n+/g,' ').replace(/\s{2,}/g,' ').trim();
+  }
+
+  /* ── Split transcript into RAG chunks ── */
+  function chunkText(text, maxLength) {
+    var words = text.split(' '), chunks = [], cur = '';
+    words.forEach(function(w){
+      if ((cur + w).length > maxLength) { if (cur) chunks.push(cur.trim()); cur = ''; }
+      cur += w + ' ';
+    });
+    if (cur.trim()) chunks.push(cur.trim());
+    return chunks;
+  }
+
+  /* ── RAG: keyword-score chunks, return best match ── */
+  function findRelevantChunk(query, chunks) {
+    if (!chunks || !chunks.length) return '';
+    var words = query.toLowerCase().split(/\W+/).filter(function(w){ return w.length > 3; });
+    if (!words.length) return chunks[0];
+    var best = chunks[0], max = -1;
+    chunks.forEach(function(c){
+      var score = 0, lc = c.toLowerCase();
+      words.forEach(function(w){ if (lc.indexOf(w) !== -1) score++; });
+      if (score > max) { max = score; best = c; }
+    });
+    return best;
+  }
+
+  /* ── Fetch real transcript from 4 sources in cascade ── */
+  async function fetchTranscript(vid) {
+    var sources = [
+      /* Source 1: youtubetranscript.com — most reliable for Hindi/English */
+      async function() {
+        var r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://youtubetranscript.com/?server_vid2=' + vid));
+        var j = await r.json();
+        var raw = j.contents || '';
+        var text = raw.replace(/<text[^>]*>/gi,' ').replace(/<\/text>/gi,' ').replace(/<[^>]+>/g,'')
+          .replace(/&amp;/g,'&').replace(/&#39;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/\s+/g,' ').trim();
+        if (text.length > 200) { console.log('[Transcript] youtubetranscript.com: ' + text.length + ' chars'); return text; }
+        return '';
+      },
+      /* Source 2: YouTube timedtext Hindi */
+      async function() {
+        var r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://www.youtube.com/api/timedtext?v=' + vid + '&lang=hi&fmt=json3'));
+        var j = await r.json();
+        var obj = JSON.parse(j.contents || '{}');
+        if (!obj.events) return '';
+        var text = obj.events.filter(function(e){ return e.segs; })
+          .map(function(e){ return e.segs.map(function(s){ return s.utf8||''; }).join(''); })
+          .join(' ').replace(/\n/g,' ').replace(/\s+/g,' ').trim();
+        if (text.length > 200) { console.log('[Transcript] YT timedtext hi: ' + text.length + ' chars'); return text; }
+        return '';
+      },
+      /* Source 3: YouTube timedtext English */
+      async function() {
+        var r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://www.youtube.com/api/timedtext?v=' + vid + '&lang=en&fmt=json3'));
+        var j = await r.json();
+        var obj = JSON.parse(j.contents || '{}');
+        if (!obj.events) return '';
+        var text = obj.events.filter(function(e){ return e.segs; })
+          .map(function(e){ return e.segs.map(function(s){ return s.utf8||''; }).join(''); })
+          .join(' ').replace(/\n/g,' ').replace(/\s+/g,' ').trim();
+        if (text.length > 200) { console.log('[Transcript] YT timedtext en: ' + text.length + ' chars'); return text; }
+        return '';
+      },
+      /* Source 4: YouTube auto-generated Hindi ASR */
+      async function() {
+        var r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://www.youtube.com/api/timedtext?v=' + vid + '&lang=hi&kind=asr&fmt=json3'));
+        var j = await r.json();
+        var obj = JSON.parse(j.contents || '{}');
+        if (!obj.events) return '';
+        var text = obj.events.filter(function(e){ return e.segs; })
+          .map(function(e){ return e.segs.map(function(s){ return s.utf8||''; }).join(''); })
+          .join(' ').replace(/\n/g,' ').replace(/\s+/g,' ').trim();
+        if (text.length > 200) { console.log('[Transcript] YT auto-asr hi: ' + text.length + ' chars'); return text; }
+        return '';
+      }
+    ];
+
+    for (var i = 0; i < sources.length; i++) {
+      try {
+        var result = await sources[i]();
+        if (result && result.length > 200) return result;
+      } catch(e) {
+        console.log('[Transcript] Source ' + i + ' failed:', e.message);
+      }
+    }
+    console.log('[Transcript] All sources failed for vid:', vid);
+    return '';
+  }
+
   /* ── Render structured JSON into panel HTML (SCPDD-themed) ── */
-  function renderHtml(d) {
-    var typeArr    = arr(d.content_type   || d.interview_type);
-    var themeArr   = arr(d.scpdd_themes   || d.skills_covered);
-    var insights   = arr(d.key_insights   || d.key_points);
-    var takeaways  = arr(d.takeaways);
-    var howto      = arr(d.how_to_apply);
-    var skillDoms  = arr(d.skill_domains);
+  function renderHtml(d, hasTranscript) {
+    var typeArr   = arr(d.content_type  || d.trading_type);
+    var themeArr  = arr(d.scpdd_themes  || d.assets);
+    var insights  = arr(d.key_insights  || d.key_points);
+    var takeaways = arr(d.takeaways);
+    var howto     = arr(d.how_to_apply  || d.how_to_steps);
+    var skillDoms = arr(d.skill_domains);
 
     function tags(a) {
       return a.filter(Boolean).map(function(t){
@@ -2789,8 +2866,11 @@ var VideoAnalysis = (function() {
     function lbl(icon, text) {
       return '<strong style="display:block;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;color:#1a3a5c;margin:10px 0 4px;">' + icon + ' ' + text + '</strong>';
     }
+    var badge = hasTranscript
+      ? '<div style="font-size:11px;color:#1a4a2e;font-weight:700;margin-bottom:8px;">✓ Based on actual video transcript</div>'
+      : '<div style="font-size:11px;color:#1a3a5c;font-weight:700;margin-bottom:8px;">✓ Analysed by Gemini AI</div>';
 
-    return (
+    return badge +
       lbl('📋','Summary') + '<p style="margin:0 0 4px;">' + esc(d.summary||'') + '</p>' +
       lbl('🎯','Content Type') + '<p>' + tags(typeArr) + '</p>' +
       lbl('🔗','SCPDD Themes') + '<p>' + tags(themeArr) + '</p>' +
@@ -2798,8 +2878,7 @@ var VideoAnalysis = (function() {
       lbl('✅','Consultant Takeaways') + bullets(takeaways) +
       (howto.length ? lbl('📌','How to Apply in Client Work') + bullets(howto) : '') +
       (skillDoms.length ? lbl('🧠','Skill Domains Strengthened') + '<p>' + tags(skillDoms) + '</p>' : '') +
-      '<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(26,58,92,.2);font-size:11px;color:var(--muted);">✓ Analysed by Gemini AI · Watching actual video content · Tap ⚡ to probe deeper</div>'
-    );
+      '<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(26,58,92,.2);font-size:11px;color:var(--muted);">Tap ⚡ to probe deeper in the AI chat.</div>';
   }
 
   /* ── Phase / progress helpers ── */
@@ -2813,113 +2892,109 @@ var VideoAnalysis = (function() {
     var el = document.getElementById(panelId + '-loading'); if (el) el.style.display = show ? 'flex' : 'none';
   }
 
-  /* ── Core: send YouTube URL to Gemini as fileData ──
-     Gemini watches the actual video. No transcript fetch needed.
-     Payload mirrors Interview-1 IVAnalyze.run() exactly.         ── */
-  function runGeminiVideoAnalysis(vid, title, channel, panelId, onDone, onError) {
-    var ytUrl   = 'https://www.youtube.com/watch?v=' + vid;
-    var keys    = [];
-
-    /* Collect keys from GeminiAPI's localStorage store */
+  /* ── Core: fetch transcript, chunk it, send to Gemini ── */
+  async function runAnalysis(vid, title, channel, panelId, onDone, onError) {
+    /* Collect keys */
+    var keys = [];
     try {
       var stored = JSON.parse(localStorage.getItem('scpdd_gemini_keys_v1') || '{}');
       if (stored.key1) keys.push(stored.key1);
       if (stored.key2) keys.push(stored.key2);
     } catch(e) {}
+    if (!keys.length) { onError('No API key set. Tap 🔑 Keys to add your Gemini API key.'); return; }
 
-    if (!keys.length) {
-      onError('No API key set. Tap 🔑 Keys to add your Gemini API key.');
-      return;
-    }
-
-    /* Model cascade — try each model × each key */
-    var MODELS = [
-      'gemini-2.5-pro',
-      'gemini-2.0-flash',
-      'gemini-1.5-flash-8b',
-      'gemini-2.0-flash-lite',
-      'gemini-2.5-flash'
-    ];
+    var apiKey = keys[0];
+    var MODELS = ['gemini-2.5-pro','gemini-2.0-flash','gemini-1.5-flash-8b','gemini-2.0-flash-lite','gemini-2.5-flash'];
     var API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/';
 
-    /* SCPDD-specific analysis prompt */
-    var prompt =
-      'You are a senior SCPDD (Smart Connected Product Design & Development) consultant at Accenture Industry X.\n' +
-      'Watch this video carefully and analyse its ACTUAL content.\n\n' +
-      'Return a JSON object with these EXACT keys (no markdown, pure JSON):\n' +
-      '"summary": 2-3 sentences on what this video specifically teaches,\n' +
-      '"content_type": array — e.g. ["Keynote","Product Demo","Tech Deep-Dive","Strategy Talk","Case Study","Tutorial"],\n' +
-      '"scpdd_themes": array of specific SCPDD themes from: IoT Architecture, Connected Product Strategy, AI/ML for Products, Cloud & Connectivity, Digital Twin & PLM, Executive Consulting, Workshop Facilitation, Business Case & ROI, Cyber-Physical Security, Industry 4.0, Edge Computing, Smart Manufacturing,\n' +
-      '"key_insights": array of exactly 5 specific insights from the actual video content,\n' +
-      '"takeaways": array of 4 actionable takeaways an Accenture SCPDD consultant should implement,\n' +
-      '"how_to_apply": array of 5 exact steps to apply these lessons in a client meeting or proposal,\n' +
-      '"skill_domains": array of SCPDD skill domains this video strengthens.\n' +
-      'Base EVERYTHING on the actual video content you watch. Pure JSON only. No markdown fences.';
+    /* Step 1: Fetch transcript */
+    setProgress(panelId, 'Fetching transcript…');
+    var rawTranscript = await fetchTranscript(vid);
+    var hasTranscript = rawTranscript.length > 200;
+    var transcriptText = hasTranscript ? optimizeTranscript(rawTranscript) : '';
 
-    /* Payload with fileData — Gemini watches the actual YouTube video */
-    var payload = {
-      contents: [{
-        parts: [
-          { fileData: { mimeType: 'video/*', fileUri: ytUrl } },
-          { text: prompt }
-        ]
-      }],
-      generationConfig: { temperature: 0.2, maxOutputTokens: 2048 }
-    };
+    /* Step 2: Build prompt — transcript-grounded if available, title-based fallback */
+    var prompt;
+    if (hasTranscript) {
+      /* Use first 6000 chars to stay within token limits */
+      var excerpt = transcriptText.substring(0, 6000);
+      prompt =
+        'You are a senior SCPDD consultant at Accenture Industry X.\n' +
+        'Analyse the following YouTube video transcript and return a JSON object.\n\n' +
+        'Video title: "' + title + '" | Channel: ' + channel + '\n\n' +
+        'TRANSCRIPT:\n' + excerpt + '\n\n' +
+        'Return a JSON object with these EXACT keys (pure JSON, no markdown):\n' +
+        '"summary": 2-3 sentences on what this video specifically covers,\n' +
+        '"content_type": array e.g. ["Keynote","Product Demo","Tech Deep-Dive","Strategy Talk","Case Study","Tutorial"],\n' +
+        '"scpdd_themes": array from: IoT Architecture, Connected Product Strategy, AI/ML for Products, Cloud & Connectivity, Digital Twin & PLM, Executive Consulting, Workshop Facilitation, Business Case & ROI, Cyber-Physical Security, Industry 4.0, Edge Computing, Smart Manufacturing,\n' +
+        '"key_insights": array of exactly 5 specific insights from the transcript,\n' +
+        '"takeaways": array of 4 actionable takeaways for an Accenture SCPDD consultant,\n' +
+        '"how_to_apply": array of 5 exact steps to apply these lessons in a client meeting or proposal,\n' +
+        '"skill_domains": array of SCPDD skill domains this video strengthens.\n' +
+        'Base everything on the actual transcript content. Pure JSON only.';
+    } else {
+      prompt =
+        'You are a senior SCPDD consultant at Accenture Industry X.\n' +
+        'Based on this YouTube video title and channel, provide a structured SCPDD analysis.\n\n' +
+        'Video: "' + title + '" | Channel: ' + channel + '\n\n' +
+        'Return a JSON object with these EXACT keys (pure JSON, no markdown):\n' +
+        '"summary": 2-3 sentences on what this video likely covers,\n' +
+        '"content_type": array e.g. ["Keynote","Strategy Talk"],\n' +
+        '"scpdd_themes": array of relevant SCPDD themes,\n' +
+        '"key_insights": array of 5 likely insights based on the title,\n' +
+        '"takeaways": array of 4 actionable SCPDD takeaways,\n' +
+        '"how_to_apply": array of 5 application steps for client work,\n' +
+        '"skill_domains": array of SCPDD skill domains.\n' +
+        'Pure JSON only. No markdown.';
+    }
 
+    /* Step 3: Send to Gemini with model cascade */
     var modelIdx = 0;
-    var keyIdx   = 0;
 
-    function tryNext() {
+    async function tryModel() {
       if (modelIdx >= MODELS.length) {
         onError('All Gemini models tried — analysis failed. Check API key and quota.');
         return;
       }
+      var model = MODELS[modelIdx];
+      var key   = keys[modelIdx % keys.length];
+      setProgress(panelId, (hasTranscript ? '✓ Transcript · ' : 'No transcript · ') + 'Gemini ' + model + '…');
 
-      var model  = MODELS[modelIdx];
-      var apiKey = keys[keyIdx % keys.length];
-      keyIdx++;
-
-      setProgress(panelId, 'Gemini ' + model + ' watching video…');
-
-      fetch(API_BASE + model + ':generateContent?key=' + apiKey, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
-      .then(function(res) { return res.json().then(function(d){ return {status:res.status, data:d}; }); })
-      .then(function(r) {
-        if (r.status === 200) {
-          var t = r.data.candidates &&
-                  r.data.candidates[0] &&
-                  r.data.candidates[0].content &&
-                  r.data.candidates[0].content.parts &&
-                  r.data.candidates[0].content.parts[0] &&
-                  r.data.candidates[0].content.parts[0].text;
-          if (t) { onDone(t, model); return; }
-          /* empty response — try next model */
-          modelIdx++; tryNext();
-        } else if (r.status === 429 || r.status === 403) {
-          /* quota/auth — try next key, then next model */
-          if (keyIdx < keys.length) { tryNext(); }
-          else { modelIdx++; keyIdx = 0; tryNext(); }
+      try {
+        var res = await fetch(API_BASE + model + ':generateContent?key=' + key, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.2, maxOutputTokens: 2048 }
+          })
+        });
+        var data = await res.json();
+        if (res.ok) {
+          var text = data.candidates && data.candidates[0] &&
+                     data.candidates[0].content && data.candidates[0].content.parts &&
+                     data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+          if (text) {
+            /* Store chunks for RAG */
+            var chunks = chunkText(transcriptText || title + ' ' + text, 500);
+            onDone(text, model, hasTranscript, chunks);
+            return;
+          }
         } else {
-          /* other error — try next model */
-          console.warn('[VideoAnalysis]', model, 'HTTP', r.status, r.data.error && r.data.error.message);
-          modelIdx++; tryNext();
+          console.warn('[VideoAnalysis]', model, 'HTTP', res.status, data.error && data.error.message);
         }
-      })
-      .catch(function(e) {
+      } catch(e) {
         console.warn('[VideoAnalysis] network error', e.message);
-        modelIdx++; tryNext();
-      });
+      }
+      modelIdx++;
+      await tryModel();
     }
 
-    tryNext();
+    await tryModel();
   }
 
   /* ── Wire RAG follow-up chat after analysis completes ── */
-  function wireChat(panelId, analysisContext) {
+  function wireChat(panelId, analysisContext, ragChunks) {
     var inputEl = document.getElementById(panelId + '-input');
     var sendBtn = document.getElementById(panelId + '-send');
     var msgsEl  = document.getElementById(panelId + '-msgs');
@@ -2927,13 +3002,11 @@ var VideoAnalysis = (function() {
     sendBtn.setAttribute('data-wired', '1');
 
     function esc2(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
     function fmtChat(t) {
       t = t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
       t = t.replace(/\n{2,}/g,'</p><p style="margin-top:6px">').replace(/\n/g,'<br>');
       return '<p>' + t + '</p>';
     }
-
     function appendMsg(role, text) {
       var d = document.createElement('div');
       d.className = 'ap-msg ' + role;
@@ -2952,6 +3025,12 @@ var VideoAnalysis = (function() {
       typ.innerHTML = '<div class="ap-lbl">⚡ AI</div><div><span></span><span></span><span></span></div>';
       msgsEl.appendChild(typ); msgsEl.scrollTop = msgsEl.scrollHeight;
 
+      /* RAG: find best matching chunk */
+      var ctx = findRelevantChunk(q, ragChunks);
+      var sysCtx = ctx
+        ? 'Context from video analysis:\n' + ctx + '\n\nFull analysis:\n' + analysisContext
+        : analysisContext;
+
       /* Keys */
       var keys = [];
       try {
@@ -2960,13 +3039,8 @@ var VideoAnalysis = (function() {
         if (stored.key2) keys.push(stored.key2);
       } catch(e){}
 
-      var sysPrompt =
-        'You are an SCPDD expert at Accenture Industry X. ' +
-        'Answer concisely and practically based on this video analysis:\n\n' +
-        analysisContext + '\n\nFocus on SCPDD consulting relevance. Max 200 words.';
-
       var payload = {
-        systemInstruction: { parts: [{ text: sysPrompt }] },
+        systemInstruction: { parts: [{ text: 'You are an SCPDD expert at Accenture Industry X. Answer concisely based on the following context:\n\n' + sysCtx + '\n\nFocus on SCPDD consulting relevance. Max 200 words.' }] },
         contents: [{ parts: [{ text: q }] }],
         generationConfig: { temperature: 0.3, maxOutputTokens: 600 }
       };
@@ -2975,11 +3049,8 @@ var VideoAnalysis = (function() {
       var mi = 0;
 
       function tryModel() {
-        if (mi >= models.length) {
-          typ.remove(); sendBtn.disabled = false;
-          appendMsg('ai','⚠ All models tried. Check your API key.'); return;
-        }
-        var key = keys[(mi) % (keys.length||1)];
+        if (mi >= models.length) { typ.remove(); sendBtn.disabled=false; appendMsg('ai','⚠ All models tried. Check your API key.'); return; }
+        var key = keys[mi % (keys.length||1)];
         if (!key) { appendMsg('ai','⚠ No API key. Tap 🔑 Keys.'); typ.remove(); sendBtn.disabled=false; return; }
         fetch('https://generativelanguage.googleapis.com/v1beta/models/'+models[mi]+':generateContent?key='+key,
           {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
@@ -3014,7 +3085,7 @@ var VideoAnalysis = (function() {
     /* Open panel */
     panel.classList.add('open');
 
-    /* Already analysed — restore from cache, show result */
+    /* Already analysed — restore from cache */
     if (_cache[panelId]) {
       if (btnEl) { btnEl.textContent = '✓ Done'; btnEl.classList.add('done'); }
       return;
@@ -3038,13 +3109,13 @@ var VideoAnalysis = (function() {
     var vid     = panel.getAttribute('data-vid')     || '';
 
     showLoading(panelId, true);
-    setPhase(panelId, 'Watching…');
+    setPhase(panelId, 'Fetching…');
 
-    runGeminiVideoAnalysis(vid, title, channel, panelId,
+    runAnalysis(vid, title, channel, panelId,
       /* onDone */
-      function(rawText, usedModel) {
+      function(rawText, usedModel, hasTranscript, ragChunks) {
         showLoading(panelId, false);
-        setPhase(panelId, '✓ Done · ' + usedModel);
+        setPhase(panelId, (hasTranscript ? '✓ Transcript · ' : '') + usedModel);
 
         if (btnEl) { btnEl.textContent = '✓ Done'; btnEl.classList.remove('loading'); btnEl.classList.add('done'); }
 
@@ -3058,21 +3129,20 @@ var VideoAnalysis = (function() {
           var s2 = clean.indexOf('{'), e2 = clean.lastIndexOf('}');
           if (s2 !== -1 && e2 !== -1) clean = clean.substring(s2, e2+1);
           var parsed = JSON.parse(clean);
-          _cache[panelId] = { result: rawText, parsed: parsed };
-          if (resultEl) resultEl.innerHTML = renderHtml(parsed);
+          _cache[panelId] = { result: rawText, parsed: parsed, chunks: ragChunks };
+          if (resultEl) resultEl.innerHTML = renderHtml(parsed, hasTranscript);
           analysisCtx = clean;
         } catch(err) {
-          /* Not valid JSON — show raw text */
-          _cache[panelId] = { result: rawText };
+          _cache[panelId] = { result: rawText, chunks: ragChunks };
           if (resultEl) resultEl.innerHTML =
             '<div style="white-space:pre-wrap;font-size:12px;padding:6px">' + esc(rawText) + '</div>';
         }
 
         /* Show follow-up RAG chat */
         if (chatWrap) chatWrap.style.display = 'block';
-        wireChat(panelId, analysisCtx);
+        wireChat(panelId, analysisCtx, ragChunks);
 
-        /* Feed result into GChat as context (mirrors Thunder.setVideoContext) */
+        /* Feed result into GChat as context */
         if (window.GChat && GChat._setVideoContext) {
           GChat._setVideoContext(title + ' (' + channel + ')', analysisCtx);
         }
