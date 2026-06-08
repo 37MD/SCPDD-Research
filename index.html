@@ -2734,7 +2734,7 @@ var VideoAnalysis = (function() {
     return chunks;
   }
 
-  async function fetchTranscript(vid) {
+  async function fetchTranscript(vid, onProgress) {
     var sources = [
       async function() {
         var r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://youtubetranscript.com/?server_vid2=' + vid));
@@ -2783,10 +2783,12 @@ var VideoAnalysis = (function() {
       }
     ];
     for (var i = 0; i < sources.length; i++) {
+      if (onProgress) onProgress(i, sources.length, '⟳');
       try {
         var result = await sources[i]();
-        if (result && result.length > 200) return result;
-      } catch(e) { console.log('[Transcript] Source ' + i + ' failed:', e.message); }
+        if (result && result.length > 200) { if (onProgress) onProgress(i, sources.length, '✓'); return result; }
+        if (onProgress) onProgress(i, sources.length, '✕');
+      } catch(e) { console.log('[Transcript] Source ' + i + ' failed:', e.message); if (onProgress) onProgress(i, sources.length, '✕'); }
     }
     console.log('[Transcript] All sources failed for vid:', vid);
     return '';
@@ -2848,19 +2850,24 @@ var VideoAnalysis = (function() {
     var progressEl = document.getElementById(panelId + '-progress');
     if (progressEl) progressEl.textContent = 'Fetching transcript…';
 
-    var rawTranscript = await fetchTranscript(vid);
+    var rawTranscript = await fetchTranscript(vid, function(cur, total, sym) {
+      if (progressEl && sym) progressEl.textContent = 'Transcript ' + (cur+1) + '/' + total + ' ' + sym;
+    });
     var hasTranscript = rawTranscript.length > 200;
     if (!hasTranscript) {
       if (loadingEl) loadingEl.style.display = 'none';
       if (phaseEl) phaseEl.textContent = 'No Transcript';
       if (btnEl) { btnEl.textContent = '⚡ Analyse'; btnEl.classList.remove('loading'); }
-      if (resultEl) resultEl.innerHTML = '<div style="padding:10px;color:#7a2020;font-size:13px;">⚠ No transcript available for this video.<br>Analysis requires captions.</div>';
+      if (resultEl) resultEl.innerHTML = '<div style="padding:10px;color:#7a2020;font-size:13px;">⚠ No transcript available for all videos.<br>Analysis requires captions.</div>';
       return;
     }
 
+    if (progressEl) progressEl.textContent = '✓ Transcript ' + rawTranscript.length + ' chars';
+    if (phaseEl) phaseEl.textContent = 'Compiling…';
+    await new Promise(function(r){ setTimeout(r, 300); });
+
     var transcriptText = optimizeTranscript(rawTranscript);
     var excerpt = transcriptText.substring(0, 6000);
-    if (progressEl) progressEl.textContent = '✓ Transcript (' + transcriptText.length + ' chars)';
     if (phaseEl) phaseEl.textContent = 'Analysing…';
 
     var apiKey = keys[0];
