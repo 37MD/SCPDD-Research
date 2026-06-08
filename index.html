@@ -80,6 +80,10 @@
 <!-- Fonts: DM Serif Display (headings) + DM Sans (body) -->
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700;900&family=DM+Serif+Display&display=swap" rel="stylesheet">
 
+<!-- PDF.js for book PDF upload parsing -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>if(window.pdfjsLib){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}</script>
+
 <style>
 /* ═══════════════════════════════════════════════════════════════════
    [B1] BASE — Motion, design tokens, body, scrollbar
@@ -254,6 +258,23 @@ body {
 .book-link:hover            { background:var(--card); }
 .book-section-hdr           { padding:12px 16px 8px; background:rgba(0,0,0,.07); border-bottom:1px solid rgba(0,0,0,.10); font-size:11px; font-weight:900; letter-spacing:.15em; text-transform:uppercase; color:var(--muted); }
 
+/* Book PDF upload bar */
+.book-upload-bar { display:flex; align-items:center; gap:8px; padding:8px 12px; background:rgba(26,58,92,.06); border:1px solid rgba(26,58,92,.2); border-radius:3px; margin:6px; flex-wrap:wrap; }
+.book-upload-label { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; flex:1; }
+.book-upload-status { font-size:10px; color:var(--muted); }
+#book-pdf-btn { font-family:'DM Sans',sans-serif; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.08em; padding:4px 11px; border-radius:2px; cursor:pointer; background:linear-gradient(135deg,#1a3a5c,#2d6fa8); color:#fff; border:none; transition:opacity .15s; }
+#book-pdf-btn:hover { opacity:.85; }
+#book-pdf-btn.loading { opacity:.6; cursor:wait; }
+
+/* Chapter summary items — 2-box layout */
+.chapter-item { margin-bottom:14px; border:1px solid rgba(26,58,92,.25); border-radius:3px; overflow:hidden; background:rgba(26,58,92,.04); }
+.chapter-hdr { padding:7px 12px; background:linear-gradient(135deg,#1a3a5c,#2d6fa8); color:#fff; font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:.1em; }
+.chapter-body { padding:0; }
+.chapter-row { padding:9px 12px; border-bottom:1px solid rgba(26,58,92,.1); }
+.chapter-row:last-child { border-bottom:none; }
+.chapter-row-label { font-size:9px; font-weight:900; text-transform:uppercase; letter-spacing:.12em; color:#1a3a5c; margin-bottom:4px; }
+.chapter-row-content { font-size:13px; line-height:1.6; color:var(--text); }
+.chapter-row-content li { margin-bottom:3px; }
 /* News tab */
 .news-item                  { padding:12px 14px; border-bottom:1px solid rgba(0,0,0,.09); }
 .news-item:last-of-type     { border-bottom:none; }
@@ -462,6 +483,10 @@ body {
 .btn-analyse:hover   { opacity:.85; }
 .btn-analyse.loading { opacity:.6; cursor:wait; }
 .btn-analyse.done    { background:linear-gradient(135deg,#1a4a2e,#2d7a4a); }
+
+/* Generic outline button (used in book PDF upload) */
+.btn-outline { display:inline-flex; align-items:center; gap:3px; font-family:'DM Sans',sans-serif; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.08em; padding:4px 11px; border-radius:2px; cursor:pointer; background:var(--lighter); color:var(--accent); border:1px solid var(--border); transition:background .15s; white-space:nowrap; }
+.btn-outline:hover { background:var(--card); }
 
 /* Expandable analysis panel — sits below the video row */
 .analysis-panel {
@@ -688,6 +713,23 @@ body {
         <div class="banner-sub">Strategy · IoT · Product Management · Connected Business Models</div>
       </div>
     </div>
+
+    <!-- Book PDF upload bar -->
+    <div class="book-upload-bar">
+      <span class="book-upload-label">📄 Upload a Book PDF</span>
+      <button class="btn-outline" id="book-pdf-btn" onclick="document.getElementById('book-pdf-input').click()">📤 Choose PDF</button>
+      <input type="file" id="book-pdf-input" accept=".pdf,application/pdf" style="display:none">
+      <span class="book-upload-status" id="book-pdf-status"></span>
+    </div>
+
+    <!-- Chapter summaries container (hidden until PDF loaded) -->
+    <div id="book-chapters" style="display:none;margin:0 6px 10px;"></div>
+
+    <!-- Save button (hidden until summaries ready) -->
+    <div id="book-save-bar" style="display:none;margin:0 6px 10px;">
+      <button class="btn-outline" id="book-save-btn" style="background:linear-gradient(135deg,#1a4a2e,#2d7a4a);color:#fff;border:none;">💾 Save All Summaries</button>
+    </div>
+
     <div class="tip-box"><strong>Consultant Tip:</strong> These books form the intellectual bedrock of SCPDD consulting. Use the frameworks from these during client workshops and proposals.</div>
     <div id="books-list"></div><!-- populated by D7-UI.renderBooks() -->
   </div>
@@ -3233,6 +3275,244 @@ var BookAnalysis = (function() {
   }
 
   return { togglePanel: run, closePanel: closePanel };
+})();
+
+/* ═══════════════════════════════════════════════════════════════════
+   [D-BOOKPDF] BOOK PDF UPLOAD — Chapter-wise summaries from PDF
+   ─────────────────────────────────────────────────────────────────
+   Powered by PDF.js (local parsing) + TF-IDF extractive summariser.
+   No AI needed for extraction. 2-box layout per chapter.
+   ═══════════════════════════════════════════════════════════════════ */
+(function() {
+  var STOP_WORDS = new Set(['a','an','the','and','or','but','in','on','at','to','for','of','with','by','from','is','are','was','were','be','been','being','have','has','had','do','does','did','will','would','could','should','may','might','that','this','these','those','it','its','they','their','which','who','as','if','not','also','but','about']);
+
+  function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function _tokenWords(text) {
+    return text.toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(function(w){ return w.length > 2 && !STOP_WORDS.has(w); });
+  }
+
+  function _detectTitle(paragraphs) {
+    for (var i = 0; i < Math.min(paragraphs.length, 5); i++) {
+      var p = paragraphs[i];
+      if (p.startsWith('## ')) return p.slice(3).trim();
+      var words = p.split(/\s+/);
+      if (words.length <= 14 && /^[A-Z]/.test(p) && !/[.!?,;]$/.test(p)) return p.trim();
+    }
+    return null;
+  }
+
+  function _splitSentences(text) {
+    return (text.match(/[^.!?…]+(?:[.!?…]+(?:\s|$)|\s*$)/g) || [text]).map(function(s){ return s.trim(); }).filter(Boolean);
+  }
+
+  function summarisePageLocal(pageText, pageNum) {
+    var paragraphs = pageText.split(/\n\n+/).map(function(p){ return p.replace(/^## /,'').trim(); }).filter(Boolean);
+    var fullText   = paragraphs.join(' ');
+    var title      = _detectTitle(pageText.split(/\n\n+/)) || 'Chapter ' + pageNum;
+    var bodyText   = fullText.replace(title, '').trim();
+
+    var allWords  = _tokenWords(bodyText);
+    var freq      = {};
+    for (var w = 0; w < allWords.length; w++) { var word = allWords[w]; freq[word] = (freq[word] || 0) + 1; }
+    var vals = Object.keys(freq).map(function(k){ return freq[k]; });
+    var maxFreq = vals.length ? Math.max.apply(null, vals) : 1;
+    for (var f in freq) freq[f] /= maxFreq;
+
+    var sentences = _splitSentences(bodyText);
+    var scored = sentences.map(function(s, idx){
+      var words = _tokenWords(s);
+      if (!words.length) return { s:s, score:0, idx:idx };
+      var tf = words.reduce(function(sum, w){ return sum + (freq[w] || 0); }, 0) / words.length;
+      var pos = idx === 0 ? 0.25 : idx <= 2 ? 0.1 : 0;
+      var num = /\d/.test(s) ? 0.12 : 0;
+      var len = words.length < 6 || words.length > 45 ? -0.15 : 0;
+      var key = /key|important|significant|critical|major|result|conclude|show|find|reveal/i.test(s) ? 0.1 : 0;
+      return { s:s, score:tf + pos + num + len + key, idx:idx };
+    });
+    var ranked  = scored.slice().sort(function(a,b){ return b.score - a.score; });
+    var top4    = ranked.slice(0, 4).sort(function(a,b){ return a.idx - b.idx; });
+    var bullets = top4.map(function(r){ return '• ' + r.s; }).join('\n');
+
+    var body = bullets.length > 20 ? bullets : paragraphs.slice(0,3).map(function(p){ return '• ' + p.substring(0,200); }).join('\n');
+
+    var garbageRatio = (body.match(/[◆■□♦●]{1}/g)||[]).length / Math.max(body.length, 1);
+    if (garbageRatio > 0.15) return { title:title, summary:'', points:'', garbled:true };
+    return { title:title, summary:paragraphs.slice(0,1).join(' ').substring(0,300), points:body, garbled:false };
+  }
+
+  var currentPdfDoc = null;
+  var currentFileName = '';
+  var allChapters = [];
+
+  function openPdfDocument(file) {
+    return file.arrayBuffer().then(function(buf){
+      return pdfjsLib.getDocument({ data: buf }).promise;
+    });
+  }
+
+  function extractPageText(pdfDoc, pageNum) {
+    return pdfDoc.getPage(pageNum).then(function(page){
+      return page.getTextContent({ includeMarkedContent: false }).then(function(content){
+        var nodes = content.items.filter(function(it){ return it.str && it.str.trim(); });
+        if (!nodes.length) return '';
+        var ys = nodes.map(function(n){ return Math.round(n.transform[5]); });
+        var uniqueY = ys.filter(function(v,i,a){ return a.indexOf(v) === i; }).sort(function(a,b){ return b - a; });
+        var lineMap = {};
+        uniqueY.forEach(function(y){ lineMap[y] = []; });
+        nodes.forEach(function(n){ lineMap[Math.round(n.transform[5])].push(n); });
+
+        var lines = uniqueY.map(function(y){
+          var sorted = lineMap[y].sort(function(a,b){ return a.transform[4] - b.transform[4]; });
+          return sorted.map(function(n){ return n.str; }).join(' ').trim();
+        }).filter(Boolean);
+
+        var paragraphs = [];
+        var current = [];
+        uniqueY.forEach(function(y, i){
+          if (i === 0) { if (lines[i]) current.push(lines[i]); return; }
+          var prevY = uniqueY[i-1];
+          var gap = prevY - y;
+          var avgH = Math.abs((nodes.find(function(n){ return Math.round(n.transform[5]) === y; }) || {height:12}).height || 12);
+          if (gap > avgH * 1.8) { if (current.length) { paragraphs.push(current.join(' ')); current = []; } }
+          if (lines[i]) current.push(lines[i]);
+        });
+        if (current.length) paragraphs.push(current.join(' '));
+
+        var finalParagraphs = [];
+        for (var pi = 0; pi < paragraphs.length; pi++) {
+          var para = paragraphs[pi];
+          var words = para.split(/\s+/);
+          var isHdr = words.length <= 12 && /^[A-Z]/.test(para) && !/[.!?,]$/.test(para);
+          var paraText = para.replace(/\s+/g, ' ').trim();
+          if (paraText.length > 2) finalParagraphs.push(isHdr ? '## ' + paraText : paraText);
+        }
+        var joined = finalParagraphs.join('\n\n');
+        if (joined.length > 0) {
+          var badCount = (joined.match(/\uFFFD/g) || []).length;
+          if (badCount / joined.length > 0.4) return '';
+        }
+        return joined;
+      });
+    });
+  }
+
+  function renderChapter(item, idx) {
+    var itemId = 'ch-' + idx;
+    var existing = document.getElementById(itemId);
+    var html =
+      '<div class="chapter-hdr">' + esc(item.title) + '</div>' +
+      '<div class="chapter-body">' +
+        '<div class="chapter-row">' +
+          '<div class="chapter-row-label">📋 Summary</div>' +
+          '<div class="chapter-row-content">' + esc(item.summary.substring(0,500)) + '</div>' +
+        '</div>' +
+        '<div class="chapter-row">' +
+          '<div class="chapter-row-label">🔑 Key Points</div>' +
+          '<div class="chapter-row-content">' + esc(item.points).replace(/\n/g,'<br>') + '</div>' +
+        '</div>' +
+      '</div>';
+    if (existing) { existing.innerHTML = html; }
+    else {
+      var div = document.createElement('div');
+      div.className = 'chapter-item';
+      div.id = itemId;
+      div.innerHTML = html;
+      document.getElementById('book-chapters').appendChild(div);
+    }
+  }
+
+  function processPdf(file) {
+    var statusEl = document.getElementById('book-pdf-status');
+    var btnEl = document.getElementById('book-pdf-btn');
+    var chaptersEl = document.getElementById('book-chapters');
+    var saveBarEl = document.getElementById('book-save-bar');
+
+    btnEl.classList.add('loading');
+    btnEl.textContent = '⟳ Reading…';
+    statusEl.textContent = 'Opening PDF…';
+    chaptersEl.style.display = 'block';
+    chaptersEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">⏳ Extracting pages…</div>';
+    saveBarEl.style.display = 'none';
+    allChapters = [];
+    currentFileName = file.name;
+
+    openPdfDocument(file).then(function(pdfDoc){
+      currentPdfDoc = pdfDoc;
+      var totalPages = pdfDoc.numPages;
+      statusEl.textContent = totalPages + ' pages found…';
+      chaptersEl.innerHTML = '';
+
+      function processPage(pageNum) {
+        if (pageNum > totalPages) {
+          statusEl.textContent = '✅ ' + allChapters.length + ' chapters · ' + file.name;
+          btnEl.classList.remove('loading');
+          btnEl.textContent = '📤 Choose PDF';
+          saveBarEl.style.display = 'block';
+          return;
+        }
+        statusEl.textContent = '📄 Page ' + pageNum + '/' + totalPages + '…';
+        extractPageText(pdfDoc, pageNum).then(function(pageText){
+          if (pageText && pageText.length > 30) {
+            var result = summarisePageLocal(pageText, pageNum);
+            if (!result.garbled) {
+              result.pageNum = pageNum;
+              allChapters.push(result);
+              renderChapter(result, allChapters.length - 1);
+            }
+          }
+          processPage(pageNum + 1);
+        }).catch(function(){
+          processPage(pageNum + 1);
+        });
+      }
+      processPage(1);
+    }).catch(function(err){
+      statusEl.textContent = '✕ Error: ' + err.message;
+      btnEl.classList.remove('loading');
+      btnEl.textContent = '📤 Choose PDF';
+      chaptersEl.innerHTML = '<div style="text-align:center;padding:20px;color:#7a2020;font-size:12px;">⚠ Failed to open PDF: ' + esc(err.message) + '</div>';
+    });
+  }
+
+  function saveSummaries() {
+    if (!allChapters.length) return;
+    var lines = [];
+    lines.push('SCPDD Book Summary — ' + currentFileName);
+    lines.push('='.repeat(50));
+    lines.push('');
+    allChapters.forEach(function(ch, i){
+      lines.push(ch.title);
+      lines.push('-'.repeat(ch.title.length));
+      lines.push('');
+      lines.push('Summary:');
+      lines.push(ch.summary);
+      lines.push('');
+      lines.push('Key Points:');
+      lines.push(ch.points);
+      lines.push('');
+      lines.push('---');
+      lines.push('');
+    });
+    var blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = currentFileName.replace(/\.pdf$/i,'') + '_Summaries.txt';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    var input = document.getElementById('book-pdf-input');
+    if (input) {
+      input.addEventListener('change', function(e){
+        var file = e.target.files && e.target.files[0];
+        if (file && file.type === 'application/pdf') processPdf(file);
+      });
+    }
+    var saveBtn = document.getElementById('book-save-btn');
+    if (saveBtn) saveBtn.addEventListener('click', saveSummaries);
+  });
 })();
 
 /* ═══════════════════════════════════════════════════════════════════
