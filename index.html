@@ -2700,82 +2700,170 @@ var Coach = (function() {
 
 
 /* ═══════════════════════════════════════════════════════════════════
-   [D-ANALYSIS] VIDEO ANALYSIS — Native Video Understanding
+   [D-ANALYSIS] VIDEO ANALYSIS — Transcript + Native Video
    ─────────────────────────────────────────────────────────────────
-   TECHNIQUE: Sends YouTube URL to Gemini via fileData (mimeType:
-   video/*) for native video understanding — no transcript fetching.
-   Ported from Trading.html (AiAnalyze pattern).
+   TECHNIQUE: Fetches transcript via youtubetranscript.com / YT
+   timedtext. Fails clearly if none available. Sends fileData (YT
+   URL) + transcript text to Gemini. Ported from Trading.html
+   (AiAnalyze pattern), adapted for SCPDD prompt & GChat feed.
    ═══════════════════════════════════════════════════════════════════ */
 var VideoAnalysis = (function() {
-
-  var _cache = {};
+  var transcriptChunksGlobal = [];
 
   function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-  function arr(v) { return Array.isArray(v) ? v : (v ? [v] : []); }
 
-  /* ── Render structured JSON into panel HTML (SCPDD-themed) ── */
-  function renderHtml(d) {
-    var typeArr   = arr(d.content_type  || d.trading_type);
-    var themeArr  = arr(d.scpdd_themes  || d.assets);
-    var insights  = arr(d.key_insights  || d.key_points);
-    var takeaways = arr(d.takeaways);
-    var howto     = arr(d.how_to_apply  || d.how_to_steps);
-    var skillDoms = arr(d.skill_domains);
-
-    function tags(a) {
-      return a.filter(Boolean).map(function(t){
-        return '<span style="display:inline-block;background:linear-gradient(135deg,#1a3a5c,#2d6fa8);color:#fff;border-radius:3px;padding:2px 9px;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin:2px 3px 2px 0;">' + esc(t) + '</span>';
-      }).join('');
-    }
-    function ul(a) {
-      return a.length ? '<ul style="padding-left:16px;margin:4px 0 8px;">' + a.filter(Boolean).map(function(x){ return '<li style="margin-bottom:3px;">' + esc(x) + '</li>'; }).join('') + '</ul>' : '';
-    }
-    function ol(a) {
-      return a.length ? '<ol style="padding-left:16px;margin:4px 0 8px;">' + a.filter(Boolean).map(function(x){ return '<li style="margin-bottom:3px;">' + esc(x) + '</li>'; }).join('') + '</ol>' : '';
-    }
-    function lbl(icon, text) {
-      return '<strong style="display:block;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;color:#1a3a5c;margin:10px 0 4px;">' + icon + ' ' + text + '</strong>';
-    }
-
-    return '<div style="font-size:11px;color:#1a3a5c;font-weight:700;margin-bottom:8px;">✓ Analysed by Gemini AI</div>' +
-      lbl('📋','Summary') + '<p style="margin:0 0 4px;">' + esc(d.summary||'') + '</p>' +
-      lbl('🎯','Content Type') + '<p>' + tags(typeArr) + '</p>' +
-      lbl('🔗','SCPDD Themes') + '<p>' + tags(themeArr) + '</p>' +
-      lbl('🔑','Key Insights') + ul(insights) +
-      lbl('✅','Consultant Takeaways') + ul(takeaways) +
-      (howto.length ? lbl('📌','How to Apply in Client Work') + ol(howto) : '') +
-      (skillDoms.length ? lbl('🧠','Skill Domains Strengthened') + '<p>' + tags(skillDoms) + '</p>' : '') +
-      '<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(26,58,92,.2);font-size:11px;color:var(--muted);">Tap ⚡ to probe deeper in the AI chat.</div>';
+  function optimizeTranscript(raw) {
+    var text = raw;
+    text = text.replace(/\[\d{2}:\d{2}:\d{2}\]/g, '');
+    text = text.replace(/\(\d{2}:\d{2}\)/g, '');
+    text = text.replace(/\d{1,2}:\d{2}:\d{2}/g, '');
+    ['uh','um','like','basically','तो','है ना','मतलब','ठीक है','देखिए','ना','हाँ'].forEach(function(w){
+      text = text.replace(new RegExp('\\b' + w + '\\b', 'gi'), '');
+    });
+    text = text.replace(/[A-Za-z0-9\s]+:/g, '');
+    return text.replace(/\n+/g,' ').replace(/\s{2,}/g,' ').trim();
   }
 
-  function setPhase(panelId, text) {
-    var el = document.getElementById(panelId + '-phase'); if (el) el.textContent = text;
-  }
-  function setProgress(panelId, text) {
-    var el = document.getElementById(panelId + '-progress'); if (el) el.textContent = text;
-  }
-  function showLoading(panelId, show) {
-    var el = document.getElementById(panelId + '-loading'); if (el) el.style.display = show ? 'flex' : 'none';
+  function chunkText(text, maxLength) {
+    var words = text.split(' '), chunks = [], cur = '';
+    words.forEach(function(w){
+      if ((cur + w).length > maxLength) { if (cur) chunks.push(cur.trim()); cur = ''; }
+      cur += w + ' ';
+    });
+    if (cur.trim()) chunks.push(cur.trim());
+    return chunks;
   }
 
-  /* ── Core: send YouTube video URL to Gemini via fileData (Trading.html method) ── */
-  async function runAnalysis(vid, title, channel, panelId, onDone, onError) {
+  async function fetchTranscript(vid) {
+    var sources = [
+      async function() {
+        var r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://youtubetranscript.com/?server_vid2=' + vid));
+        var j = await r.json();
+        var raw = j.contents || '';
+        var text = raw.replace(/<text[^>]*>/gi,' ').replace(/<\/text>/gi,' ').replace(/<[^>]+>/g,'')
+          .replace(/&amp;/g,'&').replace(/&#39;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/\s+/g,' ').trim();
+        if (text.length > 200) { console.log('[Transcript] youtubetranscript.com: ' + text.length + ' chars'); return text; }
+        return '';
+      },
+      async function() {
+        var r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://www.youtube.com/api/timedtext?v=' + vid + '&lang=hi&fmt=json3'));
+        var j = await r.json();
+        var raw = j.contents || '';
+        var obj = JSON.parse(raw);
+        if (!obj.events) return '';
+        var text = obj.events.filter(function(e){ return e.segs; })
+          .map(function(e){ return e.segs.map(function(s){ return s.utf8||''; }).join(''); })
+          .join(' ').replace(/\n/g,' ').replace(/\s+/g,' ').trim();
+        if (text.length > 200) { console.log('[Transcript] YT timedtext hi: ' + text.length + ' chars'); return text; }
+        return '';
+      },
+      async function() {
+        var r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://www.youtube.com/api/timedtext?v=' + vid + '&lang=en&fmt=json3'));
+        var j = await r.json();
+        var raw = j.contents || '';
+        var obj = JSON.parse(raw);
+        if (!obj.events) return '';
+        var text = obj.events.filter(function(e){ return e.segs; })
+          .map(function(e){ return e.segs.map(function(s){ return s.utf8||''; }).join(''); })
+          .join(' ').replace(/\n/g,' ').replace(/\s+/g,' ').trim();
+        if (text.length > 200) { console.log('[Transcript] YT timedtext en: ' + text.length + ' chars'); return text; }
+        return '';
+      },
+      async function() {
+        var r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://www.youtube.com/api/timedtext?v=' + vid + '&lang=hi&kind=asr&fmt=json3'));
+        var j = await r.json();
+        var raw = j.contents || '';
+        var obj = JSON.parse(raw);
+        if (!obj.events) return '';
+        var text = obj.events.filter(function(e){ return e.segs; })
+          .map(function(e){ return e.segs.map(function(s){ return s.utf8||''; }).join(''); })
+          .join(' ').replace(/\n/g,' ').replace(/\s+/g,' ').trim();
+        if (text.length > 200) { console.log('[Transcript] YT auto-asr hi: ' + text.length + ' chars'); return text; }
+        return '';
+      }
+    ];
+    for (var i = 0; i < sources.length; i++) {
+      try {
+        var result = await sources[i]();
+        if (result && result.length > 200) return result;
+      } catch(e) { console.log('[Transcript] Source ' + i + ' failed:', e.message); }
+    }
+    console.log('[Transcript] All sources failed for vid:', vid);
+    return '';
+  }
+
+  function renderHtml(data) {
+    var typeArr   = Array.isArray(data.content_type) ? data.content_type : [data.content_type||''];
+    var themeArr  = Array.isArray(data.scpdd_themes) ? data.scpdd_themes : [data.scpdd_themes||''];
+    var insights  = Array.isArray(data.key_insights) ? data.key_insights : [];
+    var takeaways = Array.isArray(data.takeaways) ? data.takeaways : [];
+    var howto     = Array.isArray(data.how_to_apply) ? data.how_to_apply : [];
+    var skillDoms = Array.isArray(data.skill_domains) ? data.skill_domains : [];
+    return '<div style="font-size:11px;color:#1a4a2e;font-weight:700;margin-bottom:8px;">✓ Based on actual video transcript</div>' +
+      '<strong>📋 Summary</strong><p>'+(data.summary||'')+'</p>'+
+      '<strong>🎯 Content Type</strong><p>'+typeArr.filter(Boolean).map(function(t){return '<span style="display:inline-block;background:linear-gradient(135deg,#1a3a5c,#2d6fa8);color:#fff;border-radius:3px;padding:2px 9px;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin:2px 3px 2px 0;">'+esc(t)+'</span>';}).join('')+'</p>'+
+      '<strong>🔗 SCPDD Themes</strong><p>'+themeArr.filter(Boolean).map(function(t){return '<span style="display:inline-block;background:linear-gradient(135deg,#1a3a5c,#2d6fa8);color:#fff;border-radius:3px;padding:2px 9px;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin:2px 3px 2px 0;">'+esc(t)+'</span>';}).join('')+'</p>'+
+      '<strong>🔑 Key Insights</strong>'+insights.map(function(k){return '<p>• '+esc(k)+'</p>';}).join('')+
+      '<strong>✅ Consultant Takeaways</strong>'+takeaways.map(function(t){return '<p>• '+esc(t)+'</p>';}).join('')+
+      '<strong>🛠 How to Apply in Client Work</strong>'+howto.map(function(s,i){return '<p>'+(i+1)+'. '+esc(s)+'</p>';}).join('')+
+      (skillDoms.length ? '<strong>🧠 Skill Domains Strengthened</strong><p>'+skillDoms.filter(Boolean).map(function(t){return '<span style="display:inline-block;background:linear-gradient(135deg,#1a3a5c,#2d6fa8);color:#fff;border-radius:3px;padding:2px 9px;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin:2px 3px 2px 0;">'+esc(t)+'</span>';}).join('')+'</p>' : '')+
+      '<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(26,58,92,.2);font-size:11px;color:var(--muted);">Tap ⚡ to probe deeper in the AI chat.</div>';
+  }
+
+  async function run(panelId, btnEl) {
+    var panel = document.getElementById(panelId);
+    if (!panel) return;
+
+    if (panel.classList.contains('open')) { panel.classList.remove('open'); return; }
+    panel.classList.add('open');
+
+    var vid   = panel.getAttribute('data-vid')     || '';
+    var title = panel.getAttribute('data-title')   || 'SCPDD Video';
+    var feed  = panel.getAttribute('data-channel') || '';
+    var ytUrl = 'https://www.youtube.com/watch?v=' + vid;
+
+    var resultEl = document.getElementById(panelId + '-result');
+    var loadingEl = document.getElementById(panelId + '-loading');
+    var phaseEl = document.getElementById(panelId + '-phase');
+
+    if (btnEl) { btnEl.classList.add('loading'); btnEl.textContent = '⟳ …'; }
+    if (phaseEl) phaseEl.textContent = 'Fetching…';
+    if (loadingEl) loadingEl.style.display = 'flex';
+
     var keys = [];
     try {
       var stored = JSON.parse(localStorage.getItem('scpdd_gemini_keys_v1') || '{}');
       if (stored.key1) keys.push(stored.key1);
       if (stored.key2) keys.push(stored.key2);
     } catch(e) {}
-    if (!keys.length) { onError('No API key set. Tap 🔑 Keys to add your Gemini API key.'); return; }
+    if (!keys.length) {
+      if (loadingEl) loadingEl.style.display = 'none';
+      if (phaseEl) phaseEl.textContent = 'No Key';
+      if (btnEl) { btnEl.textContent = '⚡ Analyse'; btnEl.classList.remove('loading'); }
+      if (resultEl) resultEl.innerHTML = '<div style="padding:10px;color:#7a4200;font-size:13px;font-weight:700;">⚠ No Gemini API key set.<br>Tap <b>🔑 Keys</b> in the chat header.</div>';
+      GeminiAPI.setupKeys();
+      return;
+    }
+
+    var progressEl = document.getElementById(panelId + '-progress');
+    if (progressEl) progressEl.textContent = 'Fetching transcript…';
+
+    var rawTranscript = await fetchTranscript(vid);
+    var hasTranscript = rawTranscript.length > 200;
+    if (!hasTranscript) {
+      if (loadingEl) loadingEl.style.display = 'none';
+      if (phaseEl) phaseEl.textContent = 'No Transcript';
+      if (btnEl) { btnEl.textContent = '⚡ Analyse'; btnEl.classList.remove('loading'); }
+      if (resultEl) resultEl.innerHTML = '<div style="padding:10px;color:#7a2020;font-size:13px;">⚠ No transcript available for this video.<br>Analysis requires captions.</div>';
+      return;
+    }
+
+    var transcriptText = optimizeTranscript(rawTranscript);
+    var excerpt = transcriptText.substring(0, 6000);
+    if (progressEl) progressEl.textContent = '✓ Transcript (' + transcriptText.length + ' chars)';
+    if (phaseEl) phaseEl.textContent = 'Analysing…';
 
     var apiKey = keys[0];
-    /* MAP: cheap flash models do initial video understanding (gemini-2.0-flash supports native video)
-       REDUCE: pro model synthesises final structured analysis if flash fails */
-    var MODELS = ['gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-2.5-pro'];
-    var API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/';
-    var ytUrl = 'https://www.youtube.com/watch?v=' + vid;
-
-    setProgress(panelId, 'Sending video to Gemini…');
 
     var payload = {
       contents: [{
@@ -2785,6 +2873,7 @@ var VideoAnalysis = (function() {
             text:
               'You are a senior SCPDD consultant at Accenture Industry X.\n' +
               'Watch this video carefully and analyse its ACTUAL content.\n\n' +
+              'TRANSCRIPT (for reference):\n' + excerpt + '\n\n' +
               'Return a JSON object with these exact keys:\n' +
               '"summary": 2-3 sentences on what this video specifically covers,\n' +
               '"content_type": array e.g. ["Keynote","Product Demo","Tech Deep-Dive","Strategy Talk","Case Study","Tutorial"],\n' +
@@ -2800,104 +2889,57 @@ var VideoAnalysis = (function() {
       generationConfig: { temperature: 0.2, maxOutputTokens: 2048 }
     };
 
-    var modelIdx = 0;
-    async function tryModel() {
-      if (modelIdx >= MODELS.length) {
-        onError('All Gemini models tried — analysis failed. Check API key and quota.');
-        return;
-      }
-      var model = MODELS[modelIdx];
-      var key   = keys[modelIdx % keys.length];
-      setProgress(panelId, 'Gemini ' + model + '…');
+    /* gemini-2.0-flash supports native video URL understanding (as noted in Trading.html) */
+    var models = ['gemini-2.5-pro', 'gemini-3.5-flash', 'gemini-2.5-flash'];
+    var finalResult = null;
+    var usedModel = '';
 
+    for (var m = 0; m < models.length; m++) {
       try {
-        var res = await fetch(API_BASE + model + ':generateContent?key=' + key, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
+        if (progressEl) progressEl.textContent = 'Gemini ' + models[m] + '…';
+        var res = await fetch(
+          'https://generativelanguage.googleapis.com/v1beta/models/' + models[m] + ':generateContent?key=' + apiKey,
+          { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }
+        );
         var data = await res.json();
         if (res.ok) {
           var text = data.candidates && data.candidates[0] &&
                      data.candidates[0].content && data.candidates[0].content.parts &&
                      data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
-          if (text) { onDone(text, model, true, []); return; }
+          if (text) { finalResult = text; usedModel = models[m]; break; }
         } else {
-          console.warn('[VideoAnalysis]', model, 'HTTP', res.status, data.error && data.error.message);
+          console.warn('[Video] ' + models[m] + ' HTTP ' + res.status, data.error && data.error.message);
         }
-      } catch(e) {
-        console.warn('[VideoAnalysis]', model, e.message);
-      }
-      modelIdx++;
-      await tryModel();
+      } catch(e) { console.warn('[Video] ' + models[m], e.message); }
     }
-    await tryModel();
-  }
 
-  function togglePanel(panelId, btnEl) {
-    var panel = document.getElementById(panelId);
-    if (!panel) return;
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (phaseEl) phaseEl.textContent = usedModel;
+    if (btnEl) { btnEl.textContent = '✓ Done'; btnEl.classList.remove('loading'); btnEl.classList.add('done'); }
 
-    if (panel.classList.contains('open')) { panel.classList.remove('open'); return; }
-    panel.classList.add('open');
-
-    if (_cache[panelId]) {
-      if (btnEl) { btnEl.textContent = '✓ Done'; btnEl.classList.add('done'); }
+    if (!finalResult) {
+      if (resultEl) resultEl.innerHTML = '<div style="padding:10px;color:#7a2020;font-size:13px;">⚠ Failed. Check API key.</div>';
       return;
     }
 
-    var stored = {};
-    try { stored = JSON.parse(localStorage.getItem('scpdd_gemini_keys_v1')||'{}'); } catch(e){}
-    if (!stored.key1) {
-      var resultEl = document.getElementById(panelId + '-result');
-      if (resultEl) resultEl.innerHTML = '<div style="padding:10px;color:#7a4200;font-size:13px;font-weight:700;">⚠ No Gemini API key set.<br>Tap <b>🔑 Keys</b> in the chat header to add your free Google AI key.</div>';
-      GeminiAPI.setupKeys();
-      return;
-    }
+    try {
+      var clean = finalResult.replace(/```json|```/g,'').trim();
+      var s2 = clean.indexOf('{'), e2 = clean.lastIndexOf('}');
+      if (s2 !== -1 && e2 !== -1) clean = clean.substring(s2, e2+1);
+      var parsed = JSON.parse(clean);
+      if (resultEl) resultEl.innerHTML = renderHtml(parsed);
+      transcriptChunksGlobal = chunkText(clean, 500);
 
-    if (btnEl) { btnEl.classList.add('loading'); btnEl.textContent = '⟳ …'; }
-
-    var title   = panel.getAttribute('data-title')   || 'SCPDD Video';
-    var channel = panel.getAttribute('data-channel') || '';
-    var vid     = panel.getAttribute('data-vid')     || '';
-
-    showLoading(panelId, true);
-    setPhase(panelId, 'Analysing…');
-
-    runAnalysis(vid, title, channel, panelId,
-      function(rawText, usedModel, hasTranscript, ragChunks) {
-        showLoading(panelId, false);
-        setPhase(panelId, usedModel);
-        if (btnEl) { btnEl.textContent = '✓ Done'; btnEl.classList.remove('loading'); btnEl.classList.add('done'); }
-
-        var resultEl = document.getElementById(panelId + '-result');
-        var analysisCtx = rawText;
-        try {
-          var clean = rawText.replace(/```json|```/g,'').trim();
-          var s2 = clean.indexOf('{'), e2 = clean.lastIndexOf('}');
-          if (s2 !== -1 && e2 !== -1) clean = clean.substring(s2, e2+1);
-          var parsed = JSON.parse(clean);
-          _cache[panelId] = { result: rawText, parsed: parsed };
-          if (resultEl) resultEl.innerHTML = renderHtml(parsed);
-          analysisCtx = clean;
-        } catch(err) {
-          _cache[panelId] = { result: rawText };
-          if (resultEl) resultEl.innerHTML = '<div style="white-space:pre-wrap;font-size:12px;padding:6px">' + esc(rawText) + '</div>';
-        }
-
-        if (window.GChat && GChat._setVideoContext) {
-          GChat._setVideoContext(title + ' (' + channel + ')', analysisCtx);
-        }
-        GeminiAPI.updateStatusUI();
-      },
-      function(errMsg) {
-        showLoading(panelId, false);
-        setPhase(panelId, 'Error');
-        if (btnEl) { btnEl.textContent = '⚡ Analyse'; btnEl.classList.remove('loading'); }
-        var resultEl = document.getElementById(panelId + '-result');
-        if (resultEl) resultEl.innerHTML = '<div style="padding:10px;color:#7a2020;font-size:13px;">⚠ ' + esc(errMsg) + '</div>';
+      if (window.GChat && GChat._setVideoContext) {
+        GChat._setVideoContext(title + ' (' + feed + ')', clean);
       }
-    );
+    } catch(err) {
+      if (resultEl) resultEl.innerHTML = '<div style="white-space:pre-wrap;font-size:13px;">' + esc(finalResult) + '</div>';
+      transcriptChunksGlobal = [finalResult];
+      if (window.GChat && GChat._setVideoContext) {
+        GChat._setVideoContext(title + ' (' + feed + ')', finalResult);
+      }
+    }
   }
 
   function closePanel(panelId) {
@@ -2905,7 +2947,7 @@ var VideoAnalysis = (function() {
     if (panel) panel.classList.remove('open');
   }
 
-  return { togglePanel:togglePanel, closePanel:closePanel };
+  return { togglePanel: run, closePanel: closePanel };
 })();
 
 /* ═══════════════════════════════════════════════════════════════════
