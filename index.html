@@ -3122,9 +3122,11 @@ var BookAnalysis = (function() {
     var resultEl  = document.getElementById(panelId + '-result');
     var loadingEl = document.getElementById(panelId + '-loading');
     var phaseEl   = document.getElementById(panelId + '-phase');
+    var progressEl = document.getElementById(panelId + '-progress');
 
     if (btnEl) { btnEl.classList.add('loading'); btnEl.textContent = '⟳ …'; }
     if (phaseEl) phaseEl.textContent = 'Analysing…';
+    if (progressEl) progressEl.textContent = 'Connecting…';
     if (loadingEl) loadingEl.style.display = 'flex';
 
     var keys = [];
@@ -3164,7 +3166,7 @@ var BookAnalysis = (function() {
             'Pure JSON only. No markdown. No generic advice.'
         }]
       }],
-      generationConfig: { temperature: 0.2, maxOutputTokens: 2048 }
+      generationConfig: { temperature: 0.2, maxOutputTokens: 8192 }
     };
 
     var models = ['gemini-2.5-pro', 'gemini-3.5-flash', 'gemini-2.5-flash'];
@@ -3174,6 +3176,7 @@ var BookAnalysis = (function() {
     for (var m = 0; m < models.length; m++) {
       try {
         if (phaseEl) phaseEl.textContent = 'Gemini ' + models[m] + '…';
+        if (progressEl) progressEl.textContent = 'Calling ' + models[m] + '…';
         var res = await fetch(
           'https://generativelanguage.googleapis.com/v1beta/models/' + models[m] + ':generateContent?key=' + apiKey,
           { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }
@@ -3192,6 +3195,7 @@ var BookAnalysis = (function() {
 
     if (loadingEl) loadingEl.style.display = 'none';
     if (phaseEl) phaseEl.textContent = usedModel;
+    if (progressEl) progressEl.textContent = usedModel ? '✓ ' + usedModel : '✕ Failed';
     if (btnEl) { btnEl.textContent = '✓ Done'; btnEl.classList.remove('loading'); btnEl.classList.add('done'); }
 
     if (!finalResult) {
@@ -3208,10 +3212,12 @@ var BookAnalysis = (function() {
       var parsed = JSON.parse(clean);
       if (resultEl) resultEl.innerHTML = renderAnalysisHtml(parsed, false);
     } catch(err) {
+      console.error('[Book] Parse error:', err.message, 'clean length:', clean.length);
       try {
         var reparsed = JSON.parse(clean);
         if (resultEl) resultEl.innerHTML = renderAnalysisHtml(reparsed, false);
       } catch(e2) {
+        console.error('[Book] Second parse failed:', e2.message);
         if (resultEl) resultEl.innerHTML = fmtRawToSections(finalResult);
       }
     }
