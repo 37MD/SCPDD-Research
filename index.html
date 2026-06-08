@@ -5,7 +5,7 @@
 ║  Smart Connected Product Design & Development                        ║
 ║  Accenture Industry X — Consultant Research & Coaching Hub          ║
 ╠══════════════════════════════════════════════════════════════════════╣
-║  VERSION : 1.0.10  (SW cache: scpdd-v7)                              ║
+║  VERSION : 1.0.13  (SW cache: scpdd-v7)                              ║
 ║  LAST    : June 2026                                                 ║
 ╠══════════════════════════════════════════════════════════════════════╣
 ║  TABS                                                                ║
@@ -825,7 +825,7 @@ body {
 var CONFIG = {
   APP_NAME:    'SCPDD Research',
   APP_VERSION: '1.0.6',
-  SW_CACHE:    'scpdd-v10',
+  SW_CACHE:    'scpdd-v13',
   /* RSS proxy cascade — tried in order until one works */
   RSS_PROXY1:  'https://api.rss2json.com/v1/api.json?rss_url=',
   RSS_PROXY2:  'https://api.allorigins.win/get?url=',
@@ -2845,16 +2845,19 @@ var VideoAnalysis = (function() {
     /* SCPDD-specific analysis prompt */
     var prompt =
       'You are a senior SCPDD (Smart Connected Product Design & Development) consultant at Accenture Industry X.\n' +
-      'Watch this video carefully and analyse its ACTUAL content.\n\n' +
-      'Return a JSON object with these EXACT keys (no markdown, pure JSON):\n' +
-      '"summary": 2-3 sentences on what this video specifically teaches,\n' +
-      '"content_type": array — e.g. ["Keynote","Product Demo","Tech Deep-Dive","Strategy Talk","Case Study","Tutorial"],\n' +
-      '"scpdd_themes": array of specific SCPDD themes from: IoT Architecture, Connected Product Strategy, AI/ML for Products, Cloud & Connectivity, Digital Twin & PLM, Executive Consulting, Workshop Facilitation, Business Case & ROI, Cyber-Physical Security, Industry 4.0, Edge Computing, Smart Manufacturing,\n' +
-      '"key_insights": array of exactly 5 specific insights from the actual video content,\n' +
-      '"takeaways": array of 4 actionable takeaways an Accenture SCPDD consultant should implement,\n' +
-      '"how_to_apply": array of 5 exact steps to apply these lessons in a client meeting or proposal,\n' +
-      '"skill_domains": array of SCPDD skill domains this video strengthens.\n' +
-      'Base EVERYTHING on the actual video content you watch. Pure JSON only. No markdown fences.';
+      'Watch this video in FULL — including all spoken dialogue, visuals, slides, and on-screen text.\n' +
+      'Use the complete transcript and audio of the video to generate a deep, accurate analysis.\n\n' +
+      'Return ONLY a valid JSON object with these EXACT keys. No markdown. No preamble. No trailing text.\n\n' +
+      '{\n' +
+      '  "summary": "2-3 sentences describing what this video SPECIFICALLY covers — quote exact topics, speakers, frameworks mentioned",\n' +
+      '  "content_type": ["array of types — Keynote / Product Demo / Tech Deep-Dive / Strategy Talk / Case Study / Tutorial / Panel Discussion"],\n' +
+      '  "scpdd_themes": ["array — pick from: IoT Architecture, Connected Product Strategy, AI/ML for Products, Cloud & Connectivity, Digital Twin & PLM, Executive Consulting, Workshop Facilitation, Business Case & ROI, Cyber-Physical Security, Industry 4.0, Edge Computing, Smart Manufacturing, Agentic AI, Generative AI, Platform Engineering"],\n' +
+      '  "key_insights": ["exactly 5 specific verbatim insights from this video — quote actual words, data, frameworks, or examples mentioned"],\n' +
+      '  "takeaways": ["4 concrete actions an Accenture SCPDD consultant should take based on THIS video content"],\n' +
+      '  "how_to_apply": ["5 precise steps to use these lessons in a client engagement, proposal deck, or workshop"],\n' +
+      '  "skill_domains": ["SCPDD skill domains this video directly strengthens"]\n' +
+      '}\n\n' +
+      'CRITICAL: Base EVERY field on the actual spoken/shown content of this video. Be specific, not generic.';
 
     /* Payload with fileData — Gemini watches the actual YouTube video */
     var payload = {
@@ -2864,7 +2867,7 @@ var VideoAnalysis = (function() {
           { text: prompt }
         ]
       }],
-      generationConfig: { temperature: 0.2, maxOutputTokens: 2048 }
+      generationConfig: { temperature: 0.2, maxOutputTokens: 2048, responseMimeType: 'application/json' }
     };
 
     var modelIdx = 0;
@@ -2880,7 +2883,7 @@ var VideoAnalysis = (function() {
       var apiKey = keys[keyIdx % keys.length];
       keyIdx++;
 
-      setProgress(panelId, 'Gemini ' + model + ' watching video…');
+      setProgress(panelId, 'Gemini ' + model + ' — reading full transcript & audio…');
 
       fetch(API_BASE + model + ':generateContent?key=' + apiKey, {
         method: 'POST',
@@ -2968,7 +2971,7 @@ var VideoAnalysis = (function() {
       var payload = {
         systemInstruction: { parts: [{ text: sysPrompt }] },
         contents: [{ parts: [{ text: q }] }],
-        generationConfig: { temperature: 0.3, maxOutputTokens: 600 }
+        generationConfig: { temperature: 0.3, maxOutputTokens: 1024 }
       };
 
       var models = ['gemini-2.5-pro','gemini-2.0-flash','gemini-1.5-flash-8b','gemini-2.0-flash-lite','gemini-2.5-flash'];
@@ -3038,7 +3041,8 @@ var VideoAnalysis = (function() {
     var vid     = panel.getAttribute('data-vid')     || '';
 
     showLoading(panelId, true);
-    setPhase(panelId, 'Watching…');
+    setPhase(panelId, 'Loading transcript…');
+    setProgress(panelId, 'Sending video to Gemini — full transcript & audio will be analysed…');
 
     runGeminiVideoAnalysis(vid, title, channel, panelId,
       /* onDone */
@@ -3051,21 +3055,26 @@ var VideoAnalysis = (function() {
         var resultEl = document.getElementById(panelId + '-result');
         var chatWrap = document.getElementById(panelId + '-chat');
 
-        /* Parse JSON */
+        /* Parse JSON — responseMimeType:application/json gives clean JSON directly */
         var analysisCtx = rawText;
         try {
-          var clean = rawText.replace(/```json|```/g,'').trim();
+          /* Strip any accidental markdown fences just in case */
+          var clean = rawText.split('\u0060\u0060\u0060json').join('').split('\u0060\u0060\u0060').join('').trim();
+          /* Find outermost JSON object */
           var s2 = clean.indexOf('{'), e2 = clean.lastIndexOf('}');
-          if (s2 !== -1 && e2 !== -1) clean = clean.substring(s2, e2+1);
+          if (s2 !== -1 && e2 !== -1) clean = clean.substring(s2, e2 + 1);
           var parsed = JSON.parse(clean);
           _cache[panelId] = { result: rawText, parsed: parsed };
           if (resultEl) resultEl.innerHTML = renderHtml(parsed);
           analysisCtx = clean;
         } catch(err) {
-          /* Not valid JSON — show raw text */
+          /* Fallback: try to display whatever Gemini returned */
           _cache[panelId] = { result: rawText };
           if (resultEl) resultEl.innerHTML =
-            '<div style="white-space:pre-wrap;font-size:12px;padding:6px">' + esc(rawText) + '</div>';
+            '<div style="padding:10px">' +
+            '<div style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;color:#1a3a5c;margin-bottom:6px">📋 Analysis</div>' +
+            '<div style="white-space:pre-wrap;font-size:13px;line-height:1.6;color:var(--text)">' + esc(rawText) + '</div>' +
+            '</div>';
         }
 
         /* Show follow-up RAG chat */
